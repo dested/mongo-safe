@@ -3,6 +3,7 @@ import {Bolt, Carburetor, CarburetorBase, DBCar, Door} from './models/dbCar';
 import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
+import {Combine, ReplaceKey} from './typeUtils';
 
 test('simple', async () => {
   const aggregator = Aggregator.start<DBCar>();
@@ -171,4 +172,91 @@ test('$unwind.3', async () => {
   >(true);
 });
 
-export type ReplaceKey<T, TKey extends keyof T, TReplace> = Omit<T, TKey> & {[key in TKey]: TReplace};
+test('$graphLookup.otherTable', async () => {
+  const aggregator = Aggregator.start<DBCar>().$graphLookup(
+    (aggregator, aggregatorLookup: AggregatorLookup<DBWindow>) => {
+      return {
+        collectionName: 'window',
+        startWith: aggregatorLookup.referenceKey((a) => a.tint),
+        as: 'shoes',
+        connectFromField: aggregator.key((a) => a.carburetor),
+        connectToField: aggregator.key((a) => a.doors),
+      };
+    }
+  );
+
+  expect(aggregator.query()).toEqual([
+    {
+      $graphLookup: {
+        collectionName: 'window',
+        startWith: '$tint',
+        as: 'shoes',
+        connectFromField: 'carburetor',
+        connectToField: 'doors',
+      },
+    },
+  ]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, Combine<DBCar, 'shoes', DBWindow[]>>>(true);
+});
+
+test('$graphLookup.sameTable', async () => {
+  const aggregator = Aggregator.start<DBCar>().$graphLookup(
+    (aggregator, aggregatorLookup: AggregatorLookup<DBCar>) => {
+      return {
+        collectionName: 'car',
+        startWith: aggregatorLookup.referenceKey((a) => a.color),
+        as: 'shoes',
+        connectFromField: aggregator.key((a) => a.carburetor),
+        connectToField: aggregator.key((a) => a.doors),
+      };
+    }
+  );
+
+  expect(aggregator.query()).toEqual([
+    {
+      $graphLookup: {
+        collectionName: 'car',
+        startWith: '$color',
+        as: 'shoes',
+        connectFromField: 'carburetor',
+        connectToField: 'doors',
+      },
+    },
+  ]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, Combine<DBCar, 'shoes', DBCar[]>>>(true);
+});
+
+test('$graphLookup.depthField', async () => {
+  const aggregator = Aggregator.start<DBCar>().$graphLookup(
+    (aggregator, aggregatorLookup: AggregatorLookup<DBWindow>) => {
+      return {
+        collectionName: 'window',
+        startWith: aggregatorLookup.referenceKey((a) => a.tint),
+        as: 'shoes',
+        connectFromField: aggregator.key((a) => a.carburetor),
+        connectToField: aggregator.key((a) => a.doors),
+        depthField: 'numConnections',
+      };
+    }
+  );
+
+  expect(aggregator.query()).toEqual([
+    {
+      $graphLookup: {
+        collectionName: 'window',
+        startWith: '$tint',
+        as: 'shoes',
+        connectFromField: 'carburetor',
+        connectToField: 'doors',
+        depthField: 'numConnections',
+      },
+    },
+  ]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, Combine<DBCar, 'shoes', Combine<DBWindow, 'numConnections', number>[]>>>(true);
+});

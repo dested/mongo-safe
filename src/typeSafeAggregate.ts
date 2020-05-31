@@ -158,15 +158,29 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $geoNear(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $graphLookup<TOther>(
-    collectionName: string,
-    startWith: keyof TOther,
-    connectFromField: keyof T,
-    connectToField: keyof T,
-    as: string
-  ): Aggregator<T> {
-    // todo not done
-    return null!;
+  $graphLookup<
+    TOther,
+    TAs extends string,
+    TStartsWith,
+    TConnectFromField,
+    TConnectToField,
+    TDepthField extends string = never
+  >(
+    callback: (
+      aggregator: this,
+      aggregatorLookup: AggregatorLookup<TOther>
+    ) => {
+      collectionName: string;
+      startWith: ExpressionStringReferenceKey<TOther, TStartsWith>;
+      connectFromField: ExpressionStringKey<T, TConnectFromField>;
+      connectToField: ExpressionStringKey<T, TConnectToField>;
+      as: TAs;
+      maxDepth?: number;
+      depthField?: TDepthField;
+    }
+  ): Aggregator<T & {[key in TAs]: (TOther & {[key in TDepthField]: number})[]}> {
+    this.currentPipeline = {$graphLookup: callback(this, new AggregatorLookup<TOther>(this.variableLookupLevel))};
+    return new Aggregator<T & {[key in TAs]: (TOther & {[key in TDepthField]: number})[]}>(this);
     /*{
       from: 'partner',
         startWith: '$parentPartnerId',
