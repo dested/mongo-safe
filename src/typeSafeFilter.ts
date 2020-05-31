@@ -65,19 +65,19 @@ export type QuerySelector<T> = {
   $maxDistance?: number;
   // Array
   // TODO: define better types for $all and $elemMatch
-  $all?: T extends Array<infer U> ? FilterQuery2<U>[] : never;
-  $elemMatch?: T extends Array<infer U> ? FilterQuery2<U> : never;
+  $all?: T extends Array<infer U> ? SafeFilterQuery<U>[] : never;
+  $elemMatch?: T extends Array<infer U> ? SafeFilterQuery<U> : never;
   $size?: T extends Array<infer U> ? number : never;
   // Bitwise
 };
 
 export type RootQuerySelector<T> = {
   /** https://docs.mongodb.com/manual/reference/operator/query/and/#op._S_and */
-  $and?: Array<FilterQuery2<T>>;
+  $and?: Array<SafeFilterQuery<T>>;
   /** https://docs.mongodb.com/manual/reference/operator/query/nor/#op._S_nor */
-  $nor?: Array<FilterQuery2<T>>;
+  $nor?: Array<SafeFilterQuery<T>>;
   /** https://docs.mongodb.com/manual/reference/operator/query/or/#op._S_or */
-  $or?: Array<FilterQuery2<T>>;
+  $or?: Array<SafeFilterQuery<T>>;
   /** https://docs.mongodb.com/manual/reference/operator/query/text */
   $text?: {
     $search: string;
@@ -91,7 +91,7 @@ export type RootQuerySelector<T> = {
   // this will mark all unrecognized properties as any (including nested queries)
 };
 
-export type FilterQuery2<T> = {
+export type SafeFilterQuery<T> = {
   [P in keyof T]?: MongoAltQuery<T[P]> | QuerySelector<MongoAltQuery<T[P]>>;
 } &
   RootQuerySelector<T>;
@@ -114,7 +114,7 @@ export type UpdateQuery2<T> = {
     | {[key: string]: true | {$type: 'date' | 'timestamp'}};
   $addToSet?: {[P in keyof T]?: any} | {[key: string]: any};
   $pop?: {[P in keyof T]?: -1 | 1} | {[key: string]: -1 | 1};
-  $pull?: FilterQuery2<T>;
+  $pull?: SafeFilterQuery<T>;
   $push?: Partial<T> | {[key: string]: any};
   $pushAll?: Partial<T> | {[key: string]: any[]};
   $each?: Partial<T> | {[key: string]: any[]};

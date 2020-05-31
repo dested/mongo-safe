@@ -1,4 +1,4 @@
-import {FilterQuery2} from './typeSafeFilter';
+import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
 
 type RawTypes = number | boolean | string;
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
@@ -22,38 +22,101 @@ type AggregatorMap<T, TAsKey extends string, TAsValue, TArrayInput> = {
 
 type AggregatorMapResult<TAsValue> = {[key in keyof TAsValue]: ProjectExpression<TAsValue, TAsValue[key]>}[];
 
+type Arrayish<T> = {[key: number]: T};
+
 type FlattenArray<T> = {
-  [key in keyof T]: T[key] extends Array<infer J> ? Array<FlattenArray<J>> & FlattenArray<J> : FlattenArray<T[key]>;
+  [key in keyof T]: T[key] extends Array<infer J> ? Arrayish<FlattenArray<J>> & FlattenArray<J> : FlattenArray<T[key]>;
 };
 
 export type ProjectExpression<T, TValue> = TValue extends AggregatorSum<T>
   ? AggregatorSumResult<T>
   : TValue extends AggregatorMap<T, infer TAsKey, infer TAsValue, infer TArrayInput>
   ? AggregatorMapResult<TAsValue>
-  : TValue extends ExpressionStringKey<T, infer TKeyResult>
+  : TValue extends ExpressionStringReferenceKey<T, infer TKeyResult>
   ? TKeyResult
   : TValue extends RawTypes
   ? TValue
   : never;
 
 export class ExpressionStringKey<T, TKey> {
+  reference: false = false;
+  constructor(public value: TKey) {}
+}
+export class ExpressionStringReferenceKey<T, TKey> {
+  reference: true = true;
   constructor(public value: TKey) {}
 }
 
-export class Aggregator<T> {
-  constructor() {}
+export class AggregatorLookup<T> {
+  protected constructor(protected variableLookupLevel: number) {}
+
+  key<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringKey<T, TKey> {
+    const keyList: PropertyKey[] = [];
+    const handler: any = {
+      get(target: any, key: PropertyKey, receiver: any): any {
+        keyList.push(key);
+        return new Proxy({[key]: {}}, handler);
+      },
+    };
+    const proxy = new Proxy({} as FlattenArray<T>, handler);
+    query(proxy);
+    return keyList.join('.') as any;
+  }
+
+  referenceKey<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringReferenceKey<T, TKey> {
+    const keyList: PropertyKey[] = [];
+    const handler: any = {
+      get(target: any, key: PropertyKey, receiver: any): any {
+        keyList.push(key);
+        return new Proxy({[key]: {}}, handler);
+      },
+    };
+    const proxy = new Proxy({} as FlattenArray<T>, handler);
+    query(proxy);
+
+    return (this.lookupLevel() + keyList.join('.')) as any;
+  }
+
+  private lookupLevel() {
+    let lookup = '';
+    for (let i = 0; i < this.variableLookupLevel; i++) {
+      lookup += '$';
+    }
+    return lookup;
+  }
+
+  keyFilter<T2>(
+    query: (t: FlattenArray<T>) => T2,
+    value: MongoAltQuery<T2> | QuerySelector<MongoAltQuery<T2>>
+  ): SafeFilterQuery<T> {
+    const key = (this.key(query) as unknown) as string;
+    return {[key]: value} as any;
+  }
+
+  keyLookup<TKey>(query: (t: FlattenArray<T>) => TKey): keyof T {
+    return (this.key(query) as unknown) as keyof T;
+  }
+}
+
+export class Aggregator<T> extends AggregatorLookup<T> {
+  currentPipeline?: {};
+
+  private constructor(private parent?: Aggregator<any>) {
+    super(parent?.variableLookupLevel ?? 1);
+    this.variableLookupLevel = parent?.variableLookupLevel ?? 1;
+  }
 
   $addFields<T2>(
     fields: {[field in keyof T2]: ProjectExpression<T, T2[field]> extends never ? never : T2[field]}
   ): Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}> {
-    return null;
+    return null!;
   }
   $addFieldsCallback<T2>(
     callback: (
       aggregator: this
     ) => {[field in keyof T2]: ProjectExpression<T, T2[field]> extends never ? never : T2[field]}
   ): Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}> {
-    return null;
+    return null!;
   }
 
   $bucket(): Aggregator<T> {
@@ -85,7 +148,7 @@ export class Aggregator<T> {
     as: string
   ): Aggregator<T> {
     // todo not done
-    return null;
+    return null!;
     /*{
       from: 'partner',
         startWith: '$parentPartnerId',
@@ -101,7 +164,7 @@ export class Aggregator<T> {
     throw new Error('Not Implemented');
   }
   $limit(skip: number): this {
-    return null;
+    return null!;
   }
   $listLocalSessions(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -112,7 +175,7 @@ export class Aggregator<T> {
   $lookupCallback<TLookupTable, TLocalType, TForeignType extends TLocalType, TAs extends string>(
     callback: (
       aggregator: this,
-      aggregatorLookup: Aggregator<TLookupTable>
+      aggregatorLookup: AggregatorLookup<TLookupTable>
     ) => {
       from: string;
       localField: ExpressionStringKey<T, TLocalType>;
@@ -120,15 +183,28 @@ export class Aggregator<T> {
       as: TAs;
     }
   ): Aggregator<T & {[key in TAs]: TLookupTable[]}> {
-    return null;
-  }
-  $match(options: FilterQuery2<T>): Aggregator<T> {
-    return null;
+    const result = callback(this, new AggregatorLookup<TLookupTable>(this.variableLookupLevel));
+    this.currentPipeline = {
+      $lookup: {
+        from: result.from,
+        localField: result.localField,
+        foreignField: result.foreignField,
+        as: result.as,
+      },
+    };
+    return new Aggregator<T & {[key in TAs]: TLookupTable[]}>(this);
   }
 
-  $matchCallback(callback: (aggregator: this) => FilterQuery2<T>): Aggregator<T> {
-    return null;
+  $match(query: SafeFilterQuery<T>): Aggregator<T> {
+    this.currentPipeline = {$match: query};
+    return new Aggregator<T>(this);
   }
+
+  $matchCallback(callback: (aggregator: this) => SafeFilterQuery<T>): Aggregator<T> {
+    this.currentPipeline = {$match: callback(this)};
+    return new Aggregator<T>(this);
+  }
+
   $merge(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
@@ -143,7 +219,8 @@ export class Aggregator<T> {
       [field in keyof TProject]: ProjectExpression<TProject, TProject[field]> extends never ? never : TProject[field];
     }
   ): Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}> {
-    return null;
+    this.currentPipeline = {$project: query};
+    return new Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}>(this);
   }
   $projectCallback<TProject>(
     callback: (
@@ -152,7 +229,8 @@ export class Aggregator<T> {
       [field in keyof TProject]: ProjectExpression<TProject, TProject[field]> extends never ? never : TProject[field];
     }
   ): Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}> {
-    return null;
+    this.currentPipeline = {$project: callback(this)};
+    return new Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}>(this);
   }
   $redact(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -170,10 +248,10 @@ export class Aggregator<T> {
     throw new Error('Not Implemented');
   }
   $skip(skip: number): this {
-    return null;
+    return null!;
   }
   $sort(sorts: Distribute<T, keyof T, 1 | -1>): this {
-    return null;
+    return null!;
   }
   $sortByCount(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -187,30 +265,15 @@ export class Aggregator<T> {
     key2: TKey2
   ): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, UnArray<T[TKey][TKey2]>>>>;
 
-  $unwind<TKey extends OnlyArrayFields<T>, TKey2 extends OnlyArrayFields<T> = null>(
+  $unwind<TKey extends OnlyArrayFields<T>, TKey2 extends OnlyArrayFields<T> | undefined = undefined>(
     key: TKey,
     key2?: OnlyArrayFields<TKey>
   ): any {
-    return null;
+    return null!;
   }
 
   result(): Promise<T> {
-    return null;
-  }
-  key<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringKey<T, TKey> {
-    // proxy
-    return null;
-  }
-
-  referenceKey<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringKey<T, TKey> {
-    // proxy
-    // prefix with $ * agg.deep
-    // return new ExpressionStringKey<T, TKey>()
-    return null;
-  }
-
-  keyLookup<TKey>(query: (t: FlattenArray<T>) => TKey): keyof T {
-    return null;
+    return null!;
   }
 
   static start<T>(): Aggregator<T> {
@@ -218,11 +281,11 @@ export class Aggregator<T> {
   }
 
   operators = {
-    $map<TAsKey extends string, TAsValue, TArrayInput>(
+    $map: <TAsKey extends string, TAsValue, TArrayInput>(
       input: ExpressionStringKey<T, TArrayInput>,
       as: TAsKey,
       inArg: (
-        agg: Aggregator<{[key in TAsKey]: TArrayInput} & T>
+        agg: AggregatorLookup<{[key in TAsKey]: TArrayInput}>
       ) => {
         [field in keyof TAsValue]: ProjectExpression<TAsValue, TAsValue[field]> extends never ? never : TAsValue[field];
       }
@@ -232,14 +295,28 @@ export class Aggregator<T> {
         as: typeof as;
         in: ReturnType<typeof inArg>;
       };
-    } {
-      // inArg(new Aggregator<{[key in TAsKey(extends string)]: TArrayInput}&T>()) deep level = 2
-      return null;
+    } => {
+      return {
+        $map: {
+          input,
+          as,
+          in: inArg(new AggregatorLookup<{[key in TAsKey]: TArrayInput}>(this.variableLookupLevel + 1)),
+        },
+      };
     },
   };
 
   query() {
-    return {};
+    const pipelines = [];
+    if (this.currentPipeline) {
+      pipelines.push(this.currentPipeline);
+    }
+    let parent = this.parent;
+    while (parent) {
+      pipelines.push(parent.currentPipeline);
+      parent = parent.parent;
+    }
+    return pipelines.reverse();
   }
 }
 

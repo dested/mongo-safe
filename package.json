@@ -12,10 +12,11 @@
     "mongodb": "^3.5.8"
   },
   "devDependencies": {
-    "@types/mongodb": "^3.5.20",
     "@types/jest": "^22.2.3",
-    "prettier": "^2.0.5",
+    "@types/mongodb": "^3.5.20",
+    "conditional-type-checks": "^1.0.5",
     "jest": "^24.9.0",
+    "prettier": "^2.0.5",
     "ts-jest": "^24.3.0",
     "ts-loader": "^7.0.5",
     "tslint": "^6.1.2",
