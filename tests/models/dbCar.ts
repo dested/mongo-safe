@@ -7,8 +7,13 @@ export interface DBCar {
     length: number;
     count: number;
   };
-  doors: {side: 'left' | 'right'; childLocks: boolean; bolts: Bolt[]}[];
+  doors: Door[];
   carburetor: {bolts: Bolt[]};
+}
+export interface Door {
+  side: 'left' | 'right';
+  childLocks: boolean;
+  bolts: Bolt[];
 }
 export interface Bolt {
   type: 'phillips' | 'flat';

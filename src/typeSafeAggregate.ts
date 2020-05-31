@@ -2,7 +2,9 @@ import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
 import {ObjectID} from 'mongodb';
 
 type RawTypes = number | boolean | string;
-type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
+type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
+type OnlyArrayFields<T> = {[key in OnlyArrayFieldsKeys<T>]: T[key]};
+
 type UnArray<T> = T extends Array<infer U> ? U : T;
 type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 
@@ -36,7 +38,7 @@ export type FlattenArray<T> = {
 };
 
 export type UnwarpArrayish<T> = {
-  [key in keyof T]: T[key] extends Arrayish<infer J> ? J[] : /*T[key] extends FlattenArray<infer J> ? J[] :*/ T[key];
+  [key in keyof T]: T[key] extends Arrayish<infer J> ? J[] : T[key];
 };
 
 export type ProjectExpression<T, TValue> = TValue extends AggregatorSum<T>
@@ -280,16 +282,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $unset(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $unwind<TKey extends OnlyArrayFields<T>>(key: TKey): Aggregator<ReplaceKey<T, TKey, UnArray<T[TKey]>>>;
-  $unwind<TKey extends keyof T, TKey2 extends OnlyArrayFields<T[TKey]>>(
-    key: TKey,
-    key2: TKey2
-  ): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, UnArray<T[TKey][TKey2]>>>>;
-
-  $unwind<TKey extends OnlyArrayFields<T>, TKey2 extends OnlyArrayFields<T> | undefined = undefined>(
-    key: TKey,
-    key2?: OnlyArrayFields<TKey>
-  ): any {
+  $unwind<TArrayFields extends OnlyArrayFields<T>>(
+    callback: (aggregator: AggregatorLookup<TArrayFields>) => ExpressionStringReferenceKey<TArrayFields, Arrayish<any>>
+  ): Aggregator<ReplaceKey<T, keyof TArrayFields, UnArray<TArrayFields>>> {
     return null!;
   }
 

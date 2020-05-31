@@ -1,5 +1,5 @@
 import {Aggregator, AggregatorLookup} from '../src/typeSafeAggregate';
-import {Bolt, DBCar} from './models/dbCar';
+import {Bolt, DBCar, Door} from './models/dbCar';
 import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
@@ -138,4 +138,23 @@ test('$addField.complex', async () => {
   const result = await aggregator.result();
   assert<IsExact<typeof result.shoes[0]['type'], Bolt['type']>>(true);
   assert<IsExact<typeof result, DBCar & {shoes: Bolt[]}>>(true);
+});
+
+test('$unwind.simple', async () => {
+  const aggregator = Aggregator.start<DBCar>().$unwind((a) => a.referenceKey((a) => a.doors));
+
+  expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, Omit<DBCar, 'doors'> & {doors: Door}>>(true);
+});
+test('$unwind.double', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$unwind((a) => a.referenceKey((a) => a.doors))
+    .$unwind((a) => a.referenceKey((a) => a.doors));
+
+  expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, Omit<DBCar, 'doors'> & {doors: Door}>>(true);
 });
