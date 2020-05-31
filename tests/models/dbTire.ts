@@ -1,7 +1,7 @@
 import {ObjectID} from 'mongodb';
 
-export interface DBWindow {
+export interface DBTire {
   _id: ObjectID;
   carId: ObjectID;
-  tint: 'dark' | 'light';
+  size: number;
 }

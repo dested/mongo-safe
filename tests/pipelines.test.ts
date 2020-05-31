@@ -2,6 +2,7 @@ import {Aggregator, AggregatorLookup} from '../src/typeSafeAggregate';
 import {DBCar} from './models/dbCar';
 import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
+import {ObjectID} from 'mongodb';
 
 test('$match', async () => {
   const aggregator = Aggregator.start<DBCar>().$match({color: 'black'});
@@ -54,6 +55,35 @@ test('$project.map', async () => {
 
   const result = await aggregator.result();
   assert<IsExact<typeof result, {mappedDoors: {good: string; side: 'left' | 'right'}[]}>>(true);
+});
+
+test('$project.id', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    id: agg.referenceKey((a) => a._id),
+  }));
+  expect(aggregator.query()).toEqual([{$project: {id: '$_id'}}]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, {id: ObjectID}>>(true);
+});
+
+test('$project.array', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    doorHeads: agg.referenceKey((a) => a.doors.bolts.type),
+    carbHeads: agg.referenceKey((a) => a.carburetor.bolts.type),
+  }));
+
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doorHeads: '$doors.bolts.type',
+        carbHeads: '$carburetor.bolts.type',
+      },
+    },
+  ]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, {doorHeads: 'phillips' | 'flat'; carbHeads: 'phillips' | 'flat'}>>(true);
 });
 
 test('$lookup', async () => {

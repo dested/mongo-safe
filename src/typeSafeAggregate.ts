@@ -1,4 +1,5 @@
 import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
+import {ObjectID} from 'mongodb';
 
 type RawTypes = number | boolean | string;
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
@@ -24,8 +25,14 @@ type AggregatorMapResult<TAsValue> = {[key in keyof TAsValue]: ProjectExpression
 
 type Arrayish<T> = {[key: number]: T};
 
-type FlattenArray<T> = {
-  [key in keyof T]: T[key] extends Array<infer J> ? Arrayish<FlattenArray<J>> & FlattenArray<J> : FlattenArray<T[key]>;
+export type FlattenArray<T> = {
+  [key in keyof T]: T[key] extends Array<infer J>
+    ? Arrayish<FlattenArray<J>> & FlattenArray<J>
+    : T[key] extends ObjectID
+    ? T[key]
+    : T[key] extends {}
+    ? FlattenArray<T[key]>
+    : T[key];
 };
 
 export type ProjectExpression<T, TValue> = TValue extends AggregatorSum<T>
@@ -163,8 +170,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $indexStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $limit(skip: number): this {
-    return null!;
+  $limit(limit: number): Aggregator<T> {
+    this.currentPipeline = {$limit: limit};
+    return new Aggregator<T>(this);
   }
   $listLocalSessions(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -247,11 +255,17 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $set(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $skip(skip: number): this {
-    return null!;
+  $skip(skip: number): Aggregator<T> {
+    this.currentPipeline = {$skip: skip};
+    return new Aggregator<T>(this);
   }
-  $sort(sorts: Distribute<T, keyof T, 1 | -1>): this {
-    return null!;
+  $sort(sorts: Distribute<T, keyof T, 1 | -1>): Aggregator<T> {
+    this.currentPipeline = {$sort: sorts};
+    return new Aggregator<T>(this);
+  }
+  $sortCallback(callback: (aggregator: this) => Distribute<T, keyof T, 1 | -1>): Aggregator<T> {
+    this.currentPipeline = {$sort: callback(this)};
+    return new Aggregator<T>(this);
   }
   $sortByCount(): Aggregator<T> {
     throw new Error('Not Implemented');
