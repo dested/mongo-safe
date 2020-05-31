@@ -1,6 +1,6 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  collectCoverage: false,
+  collectCoverage: true,
   coveragePathIgnorePatterns: ['/node_modules/'],
 };

@@ -23,7 +23,7 @@ type AggregatorMap<T, TAsKey extends string, TAsValue, TArrayInput> = {
 
 type AggregatorMapResult<TAsValue> = {[key in keyof TAsValue]: ProjectExpression<TAsValue, TAsValue[key]>}[];
 
-type Arrayish<T> = {[key: number]: T};
+type Arrayish<T> = {[key: number]: T} & {arrayish: true};
 
 export type FlattenArray<T> = {
   [key in keyof T]: T[key] extends Array<infer J>
@@ -33,6 +33,10 @@ export type FlattenArray<T> = {
     : T[key] extends {}
     ? FlattenArray<T[key]>
     : T[key];
+};
+
+export type UnwarpArrayish<T> = {
+  [key in keyof T]: T[key] extends Arrayish<infer J> ? J[] : /*T[key] extends FlattenArray<infer J> ? J[] :*/ T[key];
 };
 
 export type ProjectExpression<T, TValue> = TValue extends AggregatorSum<T>
@@ -116,14 +120,17 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $addFields<T2>(
     fields: {[field in keyof T2]: ProjectExpression<T, T2[field]> extends never ? never : T2[field]}
   ): Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}> {
-    return null!;
+    this.currentPipeline = {$addFields: fields};
+    return new Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}>(this);
   }
+
   $addFieldsCallback<T2>(
     callback: (
       aggregator: this
     ) => {[field in keyof T2]: ProjectExpression<T, T2[field]> extends never ? never : T2[field]}
   ): Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}> {
-    return null!;
+    this.currentPipeline = {$addFields: callback(this)};
+    return new Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}>(this);
   }
 
   $bucket(): Aggregator<T> {
@@ -286,7 +293,7 @@ export class Aggregator<T> extends AggregatorLookup<T> {
     return null!;
   }
 
-  result(): Promise<T> {
+  result(): Promise<UnwarpArrayish<T>> {
     return null!;
   }
 

@@ -1,8 +1,16 @@
 import {Aggregator, AggregatorLookup} from '../src/typeSafeAggregate';
-import {DBCar} from './models/dbCar';
+import {Bolt, DBCar} from './models/dbCar';
 import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
+
+test('simple', async () => {
+  const aggregator = Aggregator.start<DBCar>();
+  expect(aggregator.query()).toEqual([]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, DBCar>>(true);
+});
 
 test('$match', async () => {
   const aggregator = Aggregator.start<DBCar>().$match({color: 'black'});
@@ -107,4 +115,27 @@ test('$lookup', async () => {
 
   const result = await aggregator.result();
   assert<IsExact<typeof result, DBCar & {windows: DBWindow[]}>>(true);
+});
+
+test('$addField.simple', async () => {
+  const aggregator = Aggregator.start<DBCar>().$addFields({
+    shoes: 'hi',
+  });
+
+  expect(aggregator.query()).toEqual([{$addFields: {shoes: 'hi'}}]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, DBCar & {shoes: string}>>(true);
+});
+
+test('$addField.complex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$addFieldsCallback((agg) => ({
+    shoes: agg.referenceKey((a) => a.doors.bolts),
+  }));
+
+  expect(aggregator.query()).toEqual([{$addFields: {shoes: '$doors.bolts'}}]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result.shoes[0]['type'], Bolt['type']>>(true);
+  assert<IsExact<typeof result, DBCar & {shoes: Bolt[]}>>(true);
 });

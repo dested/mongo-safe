@@ -10,6 +10,6 @@ export interface DBCar {
   doors: {side: 'left' | 'right'; childLocks: boolean; bolts: Bolt[]}[];
   carburetor: {bolts: Bolt[]};
 }
-interface Bolt {
+export interface Bolt {
   type: 'phillips' | 'flat';
 }
