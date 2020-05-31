@@ -3,7 +3,9 @@ import {ObjectID} from 'mongodb';
 
 type RawTypes = number | boolean | string;
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
-type OnlyArrayFields<T> = {[key in OnlyArrayFieldsKeys<T>]: T[key]};
+type OnlyArrayFieldItems<T> = {[key in OnlyArrayFieldsKeys<T>]: T[key]};
+
+type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
 type UnArray<T> = T extends Array<infer U> ? U : T;
 type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
@@ -282,10 +284,33 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $unset(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $unwind<TArrayFields extends OnlyArrayFields<T>>(
-    callback: (aggregator: AggregatorLookup<TArrayFields>) => ExpressionStringReferenceKey<TArrayFields, Arrayish<any>>
-  ): Aggregator<ReplaceKey<T, keyof TArrayFields, UnArray<TArrayFields>>> {
-    return null!;
+
+  $unwind<TKey extends OnlyArrayFields<T>>(key: TKey): Aggregator<ReplaceKey<T, TKey, UnArray<T[TKey]>>>;
+
+  $unwind<TKey extends keyof T, TKey2 extends OnlyArrayFields<T[TKey]>>(
+    key: TKey,
+    key2: TKey2
+  ): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, UnArray<T[TKey][TKey2]>>>>;
+
+  $unwind<TKey extends keyof T, TKey2 extends keyof T[TKey], TKey3 extends OnlyArrayFields<T[TKey][TKey2]>>(
+    key: TKey,
+    key2: TKey2,
+    key3: TKey3
+  ): Aggregator<
+    ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, ReplaceKey<T[TKey][TKey2], TKey3, UnArray<T[TKey][TKey2][TKey3]>>>>
+  >;
+
+  $unwind<TKey, TKey2 = undefined, TKey3 = undefined>(key: TKey, key2?: TKey2, key3?: TKey3): any {
+    let result = '$';
+    result += key;
+    if (key2) {
+      result += `.${key2}`;
+    }
+    if (key3) {
+      result += `.${key3}`;
+    }
+    this.currentPipeline = {$unwind: result};
+    return new Aggregator<T>(this);
   }
 
   result(): Promise<UnwarpArrayish<T>> {

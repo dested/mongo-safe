@@ -8,8 +8,18 @@ export interface DBCar {
     count: number;
   };
   doors: Door[];
-  carburetor: {bolts: Bolt[]};
+  carburetor: Carburetor;
 }
+
+export interface Carburetor {
+  bolts: Bolt[];
+  base: CarburetorBase;
+}
+
+export interface CarburetorBase {
+  bolts: Bolt[];
+}
+
 export interface Door {
   side: 'left' | 'right';
   childLocks: boolean;

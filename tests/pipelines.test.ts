@@ -1,5 +1,5 @@
 import {Aggregator, AggregatorLookup} from '../src/typeSafeAggregate';
-import {Bolt, DBCar, Door} from './models/dbCar';
+import {Bolt, Carburetor, CarburetorBase, DBCar, Door} from './models/dbCar';
 import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
@@ -141,20 +141,34 @@ test('$addField.complex', async () => {
 });
 
 test('$unwind.simple', async () => {
-  const aggregator = Aggregator.start<DBCar>().$unwind((a) => a.referenceKey((a) => a.doors));
+  const aggregator = Aggregator.start<DBCar>().$unwind('doors');
 
   expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
 
   const result = await aggregator.result();
-  assert<IsExact<typeof result, Omit<DBCar, 'doors'> & {doors: Door}>>(true);
+  assert<IsExact<typeof result, ReplaceKey<DBCar, 'doors', Door>>>(true);
 });
-test('$unwind.double', async () => {
-  const aggregator = Aggregator.start<DBCar>()
-    .$unwind((a) => a.referenceKey((a) => a.doors))
-    .$unwind((a) => a.referenceKey((a) => a.doors));
+test('$unwind.2', async () => {
+  const aggregator = Aggregator.start<DBCar>().$unwind('carburetor', 'bolts');
 
-  expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
+  expect(aggregator.query()).toEqual([{$unwind: '$carburetor.bolts'}]);
 
   const result = await aggregator.result();
-  assert<IsExact<typeof result, Omit<DBCar, 'doors'> & {doors: Door}>>(true);
+  assert<IsExact<typeof result, ReplaceKey<DBCar, 'carburetor', ReplaceKey<Carburetor, 'bolts', Bolt>>>>(true);
 });
+
+test('$unwind.3', async () => {
+  const aggregator = Aggregator.start<DBCar>().$unwind('carburetor', 'base', 'bolts');
+
+  expect(aggregator.query()).toEqual([{$unwind: '$carburetor.base.bolts'}]);
+
+  const result = await aggregator.result();
+  assert<
+    IsExact<
+      typeof result,
+      ReplaceKey<DBCar, 'carburetor', ReplaceKey<Carburetor, 'base', ReplaceKey<CarburetorBase, 'bolts', Bolt>>>
+    >
+  >(true);
+});
+
+export type ReplaceKey<T, TKey extends keyof T, TReplace> = Omit<T, TKey> & {[key in TKey]: TReplace};
