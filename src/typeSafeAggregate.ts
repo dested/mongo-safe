@@ -11,7 +11,7 @@ export type UnArray<T> = T extends Array<infer U> ? U : T;
 export type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 
 type AggregatorSum = {
-  $sum: ExpressionStringKey<number> | number;
+  $sum: ExpressionStringReferenceKey<number> | number;
 };
 type AggregatorSumResult = number;
 
@@ -210,11 +210,15 @@ export class Aggregator<T> extends AggregatorLookup<T> {
     return new Aggregator<T & {[key in TAs]: (TOther & {[key in TDepthField]: number})[]}>(this);
   }
 
-  $group<TGroup extends {_id: InterpretProjectExpression<any, ProjectObject<any>>}, TAccumulator>(
-    callback: (aggregator: this) => ProjectObject/*JustId*/<TGroup>/* & AccumulateObject<TAccumulator>*/
-  ): Aggregator<ProjectObjectResult<TGroup>/* & AccumulateObjectResult<TAccumulator>*/> {
-    this.currentPipeline = {$group: callback(this)};
-    return new Aggregator<ProjectObjectResult<TGroup>/* & AccumulateObjectResult<TAccumulator>*/>(this);
+  $group<
+    TGroupId extends InterpretProjectExpression<any, ProjectObject<any>>,
+    TAccumulator extends {}
+  >(
+    callback: (aggregator: this) => [TGroupId] | [TGroupId, AccumulateObject<TAccumulator>]
+  ): Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>> {
+    let result = callback(this);
+    this.currentPipeline = {$group: {_id: result[0], ...result[1]}};
+    return new Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>>(this);
   }
   /*;
   $group<TIdObject extends ExpressionStringReferenceKey<T, keyof T>>(

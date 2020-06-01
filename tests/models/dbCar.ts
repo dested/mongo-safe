@@ -2,7 +2,7 @@ import {ObjectID} from 'mongodb';
 
 export interface DBCar {
   _id: ObjectID;
-  color: 'black' | 'red';
+  color: Color;
   tailPipe: {
     length: number;
     count: number;
@@ -10,6 +10,7 @@ export interface DBCar {
   doors: Door[];
   carburetor: Carburetor;
 }
+export type Color = 'black' | 'red';
 
 export interface Carburetor {
   bolts: Bolt[];
@@ -21,6 +22,7 @@ export interface CarburetorBase {
 }
 
 export interface Door {
+  someNumber: number;
   side: 'left' | 'right';
   childLocks: boolean;
   bolts: Bolt[];

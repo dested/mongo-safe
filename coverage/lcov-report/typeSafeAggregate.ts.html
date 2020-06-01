@@ -22,9 +22,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75.25% </span>
+                <span class="strong">75.49% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>76/101</span>
+                <span class='fraction'>77/102</span>
             </div>
         
             
@@ -43,9 +43,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">75.25% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>75/100</span>
+                <span class='fraction'>76/101</span>
             </div>
         
             
@@ -432,7 +432,59 @@
 <a name='L374'></a><a href='#L374'>374</a>
 <a name='L375'></a><a href='#L375'>375</a>
 <a name='L376'></a><a href='#L376'>376</a>
-<a name='L377'></a><a href='#L377'>377</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L377'></a><a href='#L377'>377</a>
+<a name='L378'></a><a href='#L378'>378</a>
+<a name='L379'></a><a href='#L379'>379</a>
+<a name='L380'></a><a href='#L380'>380</a>
+<a name='L381'></a><a href='#L381'>381</a>
+<a name='L382'></a><a href='#L382'>382</a>
+<a name='L383'></a><a href='#L383'>383</a>
+<a name='L384'></a><a href='#L384'>384</a>
+<a name='L385'></a><a href='#L385'>385</a>
+<a name='L386'></a><a href='#L386'>386</a>
+<a name='L387'></a><a href='#L387'>387</a>
+<a name='L388'></a><a href='#L388'>388</a>
+<a name='L389'></a><a href='#L389'>389</a>
+<a name='L390'></a><a href='#L390'>390</a>
+<a name='L391'></a><a href='#L391'>391</a>
+<a name='L392'></a><a href='#L392'>392</a>
+<a name='L393'></a><a href='#L393'>393</a>
+<a name='L394'></a><a href='#L394'>394</a>
+<a name='L395'></a><a href='#L395'>395</a>
+<a name='L396'></a><a href='#L396'>396</a>
+<a name='L397'></a><a href='#L397'>397</a>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a>
+<a name='L400'></a><a href='#L400'>400</a>
+<a name='L401'></a><a href='#L401'>401</a>
+<a name='L402'></a><a href='#L402'>402</a>
+<a name='L403'></a><a href='#L403'>403</a>
+<a name='L404'></a><a href='#L404'>404</a>
+<a name='L405'></a><a href='#L405'>405</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -623,6 +675,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -821,7 +877,7 @@ export type UnArray&lt;T&gt; = T extends Array&lt;infer U&gt; ? U : T;
 export type ReplaceKey&lt;T, TKey, TValue&gt; = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 &nbsp;
 type AggregatorSum = {
-  $sum: ExpressionStringKey&lt;number&gt; | number;
+  $sum: ExpressionStringReferenceKey&lt;number&gt; | number;
 };
 type AggregatorSumResult = number;
 &nbsp;
@@ -868,8 +924,32 @@ export type ProjectObject&lt;TProject&gt; = {
     ? never
     : TProject[key];
 };
+export type ProjectObjectJustId&lt;TProject extends {_id: any}&gt; = {
+  [key in '_id']: InterpretProjectExpression&lt;TProject[key], ProjectObject&lt;TProject&gt;&gt; extends never
+    ? never
+    : TProject[key];
+};
 export type ProjectObjectResult&lt;TProject&gt; = {
   [key in keyof TProject]: InterpretProjectExpression&lt;TProject[key], ProjectObjectResult&lt;TProject[key]&gt;&gt;;
+};
+&nbsp;
+export type InterpretAccumulateObjectExpression&lt;TValue, TProjectObject&gt; = TValue extends AggregatorSum
+  ? AggregatorSumResult
+  : never;
+&nbsp;
+export type AccumulateObject&lt;TAccumulateObject&gt; = {
+  [key in keyof TAccumulateObject]: InterpretAccumulateObjectExpression&lt;
+    TAccumulateObject[key],
+    AccumulateObject&lt;TAccumulateObject&gt;
+  &gt; extends never
+    ? never
+    : TAccumulateObject[key];
+};
+export type AccumulateObjectResult&lt;TAccumulateObject&gt; = {
+  [key in keyof TAccumulateObject]: InterpretAccumulateObjectExpression&lt;
+    TAccumulateObject[key],
+    AccumulateObjectResult&lt;TAccumulateObject[key]&gt;
+  &gt;;
 };
 &nbsp;
 export class ExpressionStringKey&lt;TKey&gt; {
@@ -996,11 +1076,15 @@ export class Aggregator&lt;T&gt; extends AggregatorLookup&lt;T&gt; {
     return new Aggregator&lt;T &amp; {[key in TAs]: (TOther &amp; {[key in TDepthField]: number})[]}&gt;(this);
   }
 &nbsp;
-  $group&lt;TGroup extends {_id: any}&gt;(
-    callback: (aggregator: this) =&gt; ProjectObject&lt;TGroup&gt;
-  ): Aggregator&lt;ProjectObjectResult&lt;TGroup&gt;&gt; {
-    this.currentPipeline = {$group: callback(this)};
-    return new Aggregator&lt;ProjectObjectResult&lt;TGroup&gt;&gt;(this);
+  $group&lt;
+    TGroupId extends InterpretProjectExpression&lt;any, ProjectObject&lt;any&gt;&gt;,
+    TAccumulator extends {}
+  &gt;(
+    callback: (aggregator: this) =&gt; [TGroupId] | [TGroupId, AccumulateObject&lt;TAccumulator&gt;]
+  ): Aggregator&lt;ProjectObjectResult&lt;{_id: TGroupId}&gt; &amp; AccumulateObjectResult&lt;TAccumulator&gt;&gt; {
+    let result = callback(this);
+    this.currentPipeline = {$group: {_id: result[0], ...result[1]}};
+    return new Aggregator&lt;ProjectObjectResult&lt;{_id: TGroupId}&gt; &amp; AccumulateObjectResult&lt;TAccumulator&gt;&gt;(this);
   }
   /*;
   $group&lt;TIdObject extends ExpressionStringReferenceKey&lt;T, keyof T&gt;&gt;(
@@ -1191,7 +1275,7 @@ type Distribute&lt;T, TKey extends keyof T = keyof T, TOverwrite = T[TKey]&gt; =
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Sun May 31 2020 21:09:27 GMT-0700 (Pacific Daylight Time)
+                at Mon Jun 01 2020 12:40:46 GMT-0700 (Pacific Daylight Time)
             </div>
         </div>
         <script src="prettify.js"></script>
