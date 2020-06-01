@@ -7,25 +7,23 @@ type OnlyArrayFieldItems<T> = {[key in OnlyArrayFieldsKeys<T>]: T[key]};
 
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
-type UnArray<T> = T extends Array<infer U> ? U : T;
-type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
+export type UnArray<T> = T extends Array<infer U> ? U : T;
+export type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 
-type AggregatorSum<T> = {
-  $sum: ExpressionStringKey<T, number> | number;
+type AggregatorSum = {
+  $sum: ExpressionStringKey<number> | number;
 };
-type AggregatorSumResult<T> = number;
+type AggregatorSumResult = number;
 
-type AggregatorMap<T, TAsKey extends string, TAsValue, TArrayInput> = {
+type AggregatorMap<TAsKey extends string, TAsValue, TArrayInput> = {
   $map: {
-    input: ExpressionStringKey<T, TArrayInput>;
+    input: ExpressionStringKey<TArrayInput>;
     as: TAsKey;
-    in: {
-      [field in keyof TAsValue]: ProjectExpression<TAsValue, TAsValue[field]> extends never ? never : TAsValue[field];
-    };
+    in: ProjectObject<TAsValue>;
   };
 };
 
-type AggregatorMapResult<TAsValue> = {[key in keyof TAsValue]: ProjectExpression<TAsValue, TAsValue[key]>}[];
+type AggregatorMapResult<TAsValue> = ProjectObject<TAsValue>[];
 
 type Arrayish<T> = {[key: number]: T} & {arrayish: true};
 
@@ -43,21 +41,56 @@ export type UnwarpArrayish<T> = {
   [key in keyof T]: T[key] extends Arrayish<infer J> ? J[] : T[key];
 };
 
-export type ProjectExpression<T, TValue> = TValue extends AggregatorSum<T>
-  ? AggregatorSumResult<T>
-  : TValue extends AggregatorMap<T, infer TAsKey, infer TAsValue, infer TArrayInput>
+export type InterpretProjectExpression<TValue, TProjectObject> = TValue extends AggregatorSum
+  ? AggregatorSumResult
+  : TValue extends AggregatorMap<infer TAsKey, infer TAsValue, infer TArrayInput>
   ? AggregatorMapResult<TAsValue>
-  : TValue extends ExpressionStringReferenceKey<T, infer TKeyResult>
+  : TValue extends ExpressionStringReferenceKey<infer TKeyResult>
   ? TKeyResult
   : TValue extends RawTypes
   ? TValue
+  : TValue extends {}
+  ? TProjectObject
   : never;
 
-export class ExpressionStringKey<T, TKey> {
+export type ProjectObject<TProject> = {
+  [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObject<TProject>> extends never
+    ? never
+    : TProject[key];
+};
+export type ProjectObjectJustId<TProject extends {_id: any}> = {
+  [key in '_id']: InterpretProjectExpression<TProject[key], ProjectObject<TProject>> extends never
+    ? never
+    : TProject[key];
+};
+export type ProjectObjectResult<TProject> = {
+  [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObjectResult<TProject[key]>>;
+};
+
+export type InterpretAccumulateObjectExpression<TValue, TProjectObject> = TValue extends AggregatorSum
+  ? AggregatorSumResult
+  : never;
+
+export type AccumulateObject<TAccumulateObject> = {
+  [key in keyof TAccumulateObject]: InterpretAccumulateObjectExpression<
+    TAccumulateObject[key],
+    AccumulateObject<TAccumulateObject>
+  > extends never
+    ? never
+    : TAccumulateObject[key];
+};
+export type AccumulateObjectResult<TAccumulateObject> = {
+  [key in keyof TAccumulateObject]: InterpretAccumulateObjectExpression<
+    TAccumulateObject[key],
+    AccumulateObjectResult<TAccumulateObject[key]>
+  >;
+};
+
+export class ExpressionStringKey<TKey> {
   reference: false = false;
   constructor(public value: TKey) {}
 }
-export class ExpressionStringReferenceKey<T, TKey> {
+export class ExpressionStringReferenceKey<TKey> {
   reference: true = true;
   constructor(public value: TKey) {}
 }
@@ -65,10 +98,10 @@ export class ExpressionStringReferenceKey<T, TKey> {
 export class AggregatorLookup<T> {
   protected constructor(protected variableLookupLevel: number) {}
 
-  key<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringKey<T, TKey> {
+  key<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringKey<TKey> {
     const keyList: PropertyKey[] = [];
     const handler: any = {
-      get(target: any, key: PropertyKey, receiver: any): any {
+      get(target: any, key: PropertyKey): any {
         keyList.push(key);
         return new Proxy({[key]: {}}, handler);
       },
@@ -78,7 +111,7 @@ export class AggregatorLookup<T> {
     return keyList.join('.') as any;
   }
 
-  referenceKey<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringReferenceKey<T, TKey> {
+  referenceKey<TKey>(query: (t: FlattenArray<T>) => TKey): ExpressionStringReferenceKey<TKey> {
     const keyList: PropertyKey[] = [];
     const handler: any = {
       get(target: any, key: PropertyKey, receiver: any): any {
@@ -121,20 +154,14 @@ export class Aggregator<T> extends AggregatorLookup<T> {
     this.variableLookupLevel = parent?.variableLookupLevel ?? 1;
   }
 
-  $addFields<T2>(
-    fields: {[field in keyof T2]: ProjectExpression<T, T2[field]> extends never ? never : T2[field]}
-  ): Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}> {
+  $addFields<T2>(fields: ProjectObject<T2>): Aggregator<T & ProjectObjectResult<T2>> {
     this.currentPipeline = {$addFields: fields};
-    return new Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}>(this);
+    return new Aggregator<T & ProjectObjectResult<T2>>(this);
   }
 
-  $addFieldsCallback<T2>(
-    callback: (
-      aggregator: this
-    ) => {[field in keyof T2]: ProjectExpression<T, T2[field]> extends never ? never : T2[field]}
-  ): Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}> {
+  $addFieldsCallback<T2>(callback: (aggregator: this) => ProjectObject<T2>): Aggregator<T & ProjectObjectResult<T2>> {
     this.currentPipeline = {$addFields: callback(this)};
-    return new Aggregator<T & {[field in keyof T2]: ProjectExpression<T, T2[field]>}>(this);
+    return new Aggregator<T & ProjectObjectResult<T2>>(this);
   }
 
   $bucket(): Aggregator<T> {
@@ -171,9 +198,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
       aggregatorLookup: AggregatorLookup<TOther>
     ) => {
       collectionName: string;
-      startWith: ExpressionStringReferenceKey<TOther, TStartsWith>;
-      connectFromField: ExpressionStringKey<T, TConnectFromField>;
-      connectToField: ExpressionStringKey<T, TConnectToField>;
+      startWith: ExpressionStringReferenceKey<TStartsWith>;
+      connectFromField: ExpressionStringKey<TConnectFromField>;
+      connectToField: ExpressionStringKey<TConnectToField>;
       as: TAs;
       maxDepth?: number;
       depthField?: TDepthField;
@@ -181,17 +208,20 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   ): Aggregator<T & {[key in TAs]: (TOther & {[key in TDepthField]: number})[]}> {
     this.currentPipeline = {$graphLookup: callback(this, new AggregatorLookup<TOther>(this.variableLookupLevel))};
     return new Aggregator<T & {[key in TAs]: (TOther & {[key in TDepthField]: number})[]}>(this);
-    /*{
-      from: 'partner',
-        startWith: '$parentPartnerId',
-      connectFromField: 'parentPartnerId',
-      connectToField: '_id',
-      as: 'parents',
-    }*/
   }
-  $group(): Aggregator<T> {
-    throw new Error('Not Implemented');
+
+  $group<TGroup extends {_id: InterpretProjectExpression<any, ProjectObject<any>>}, TAccumulator>(
+    callback: (aggregator: this) => ProjectObject/*JustId*/<TGroup>/* & AccumulateObject<TAccumulator>*/
+  ): Aggregator<ProjectObjectResult<TGroup>/* & AccumulateObjectResult<TAccumulator>*/> {
+    this.currentPipeline = {$group: callback(this)};
+    return new Aggregator<ProjectObjectResult<TGroup>/* & AccumulateObjectResult<TAccumulator>*/>(this);
   }
+  /*;
+  $group<TIdObject extends ExpressionStringReferenceKey<T, keyof T>>(
+    callback: (aggregator: this) => {_id: TIdObject}
+  ): Aggregator<{_id: TIdObject}>;
+  $group<TIdObject>(callback: (aggregator: this) => any): Aggregator<TIdObject>*/
+
   $indexStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
@@ -211,8 +241,8 @@ export class Aggregator<T> extends AggregatorLookup<T> {
       aggregatorLookup: AggregatorLookup<TLookupTable>
     ) => {
       from: string;
-      localField: ExpressionStringKey<T, TLocalType>;
-      foreignField: ExpressionStringKey<TLookupTable, TForeignType>;
+      localField: ExpressionStringKey<TLocalType>;
+      foreignField: ExpressionStringKey<TForeignType>;
       as: TAs;
     }
   ): Aggregator<T & {[key in TAs]: TLookupTable[]}> {
@@ -247,23 +277,15 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $planCacheStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $project<TProject>(
-    query: {
-      [field in keyof TProject]: ProjectExpression<TProject, TProject[field]> extends never ? never : TProject[field];
-    }
-  ): Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}> {
+  $project<TProject>(query: ProjectObject<TProject>): Aggregator<ProjectObjectResult<TProject>> {
     this.currentPipeline = {$project: query};
-    return new Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}>(this);
+    return new Aggregator<ProjectObjectResult<TProject>>(this);
   }
   $projectCallback<TProject>(
-    callback: (
-      aggregator: this
-    ) => {
-      [field in keyof TProject]: ProjectExpression<TProject, TProject[field]> extends never ? never : TProject[field];
-    }
-  ): Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}> {
+    callback: (aggregator: this) => ProjectObject<TProject>
+  ): Aggregator<ProjectObjectResult<TProject>> {
     this.currentPipeline = {$project: callback(this)};
-    return new Aggregator<{[field in keyof TProject]: ProjectExpression<TProject, TProject[field]>}>(this);
+    return new Aggregator<ProjectObjectResult<TProject>>(this);
   }
   $redact(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -337,25 +359,23 @@ export class Aggregator<T> extends AggregatorLookup<T> {
 
   operators = {
     $map: <TAsKey extends string, TAsValue, TArrayInput>(
-      input: ExpressionStringKey<T, TArrayInput>,
+      input: ExpressionStringKey<TArrayInput>,
       as: TAsKey,
-      inArg: (
-        agg: AggregatorLookup<{[key in TAsKey]: TArrayInput}>
-      ) => {
-        [field in keyof TAsValue]: ProjectExpression<TAsValue, TAsValue[field]> extends never ? never : TAsValue[field];
-      }
+      inArg: (agg: AggregatorLookup<{[key in TAsKey]: TArrayInput}>) => ProjectObject<TAsValue>
     ): {
       $map: {
         input: typeof input;
         as: typeof as;
-        in: ReturnType<typeof inArg>;
+        in: ProjectObjectResult<TAsValue>;
       };
     } => {
       return {
         $map: {
           input,
           as,
-          in: inArg(new AggregatorLookup<{[key in TAsKey]: TArrayInput}>(this.variableLookupLevel + 1)),
+          in: inArg(
+            new AggregatorLookup<{[key in TAsKey]: TArrayInput}>(this.variableLookupLevel + 1)
+          ) as ProjectObjectResult<TAsValue>,
         },
       };
     },
