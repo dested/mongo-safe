@@ -332,3 +332,19 @@ test('$group.ref-and-keys', async () => {
   const result = await aggregator.result();
   assert<IsExact<typeof result, {_id: Color; side: number}>>(true);
 });
+
+test('$group.ref-and-keyes', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    side: {
+      $dateToString: {
+        date: agg.referenceKey(a=>a.doors.someDate),
+        format: 'shoes',
+      },
+    },
+  }));
+
+  expect(aggregator.query()).toEqual([{$group: {_id: '$color', side: {$sum: '$doors.someNumber'}}}]);
+
+  const result = await aggregator.result();
+  assert<IsExact<typeof result, {side: string}>>(true);
+});
