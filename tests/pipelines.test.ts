@@ -1,4 +1,11 @@
-import {Aggregator, AggregatorLookup, UnArray} from '../src/typeSafeAggregate';
+import {
+  Aggregator,
+  AggregatorLookup,
+  ExpressionStringReferenceKey,
+  LookupKey,
+  ProjectObjectResult,
+  UnArray,
+} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
@@ -9,7 +16,7 @@ test('simple', async () => {
   const aggregator = Aggregator.start<DBCar>();
   expect(aggregator.query()).toEqual([]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, DBCar>>(true);
 });
 
@@ -17,7 +24,7 @@ test('$match', async () => {
   const aggregator = Aggregator.start<DBCar>().$match({color: 'black'});
   expect(aggregator.query()).toEqual([{$match: {color: 'black'}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, DBCar>>(true);
 });
 
@@ -27,7 +34,7 @@ test('$match.deep', async () => {
   }));
   expect(aggregator.query()).toEqual([{$match: {'tailPipe.count': 4}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, DBCar>>(true);
 });
 
@@ -35,24 +42,33 @@ test('$project.simple', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({color: 'black'});
   expect(aggregator.query()).toEqual([{$project: {color: 'black'}}]);
 
-  const result = await aggregator.result();
-  assert<IsExact<typeof result, {color: string}>>(true);
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, {color: 'black'}>>(true);
 });
 
 test('$project.callback', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: 'black'}));
   expect(aggregator.query()).toEqual([{$project: {color: 'black'}}]);
 
-  const result = await aggregator.result();
-  assert<IsExact<typeof result, {color: string}>>(true);
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, {color: 'black'}>>(true);
 });
 
 test('$project.nested', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: {foo: 12}}));
   expect(aggregator.query()).toEqual([{$project: {color: {foo: 12}}}]);
 
-  const result = await aggregator.result();
-  assert<IsExact<typeof result, {color: {foo: number}}>>(true);
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, {color: {foo: 12}}>>(true);
+});
+
+test('$project.reference', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: agg.referenceKey((a) => a.color)}));
+  expect(aggregator.query()).toEqual([{$project: {color: '$color'}}]);
+
+  const [result] = await aggregator.result();
+
+  assert<IsExact<typeof result, {color: Color}>>(true);
 });
 
 test('$project.nested-reference', async () => {
@@ -61,35 +77,31 @@ test('$project.nested-reference', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {color: {foo: '$color'}}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
+
   assert<IsExact<typeof result, {color: {foo: Color}}>>(true);
 });
 
-test('$project.reference', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: agg.referenceKey((a) => a.color)}));
-  expect(aggregator.query()).toEqual([{$project: {color: '$color'}}]);
-
-  const result = await aggregator.result();
-  assert<IsExact<typeof result, {color: Color}>>(true);
-});
-
 test('$project.map', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    mappedDoors: agg.operators.$map(
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => {
+    let mappedDoors1 = agg.operators.$map(
       agg.key((a) => a.doors),
       'door',
       (innerAgg) => ({
         good: 'foo',
         side: innerAgg.referenceKey((a) => a.door.side),
       })
-    ),
-  }));
+    );
+    return {
+      mappedDoors: mappedDoors1,
+    };
+  });
   expect(aggregator.query()).toEqual([
     {$project: {mappedDoors: {$map: {input: 'doors', as: 'door', in: {good: 'foo', side: '$$door.side'}}}}},
   ]);
 
-  const result = await aggregator.result();
-  assert<IsExact<typeof result, {mappedDoors: {good: string; side: 'left' | 'right'}[]}>>(true);
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, {mappedDoors: {good: 'foo'; side: 'left' | 'right'}[]}>>(true);
 });
 
 test('$project.id', async () => {
@@ -98,7 +110,7 @@ test('$project.id', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {id: '$_id'}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {id: ObjectID}>>(true);
 });
 
@@ -117,7 +129,7 @@ test('$project.array', async () => {
     },
   ]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {doorHeads: 'phillips' | 'flat'; carbHeads: 'phillips' | 'flat'}>>(true);
 });
 
@@ -140,7 +152,7 @@ test('$lookup', async () => {
     },
   ]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, DBCar & {windows: DBWindow[]}>>(true);
 });
 
@@ -151,8 +163,8 @@ test('$addField.simple', async () => {
 
   expect(aggregator.query()).toEqual([{$addFields: {shoes: 'hi'}}]);
 
-  const result = await aggregator.result();
-  assert<IsExact<typeof result, DBCar & {shoes: string}>>(true);
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, DBCar & {shoes: 'hi'}>>(true);
 });
 
 test('$addField.complex', async () => {
@@ -162,7 +174,7 @@ test('$addField.complex', async () => {
 
   expect(aggregator.query()).toEqual([{$addFields: {shoes: '$doors.bolts'}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result.shoes[0]['type'], Bolt['type']>>(true);
   assert<IsExact<typeof result, DBCar & {shoes: Bolt[]}>>(true);
 });
@@ -172,7 +184,7 @@ test('$unwind.simple', async () => {
 
   expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, ReplaceKey<DBCar, 'doors', Door>>>(true);
 });
 test('$unwind.2', async () => {
@@ -180,7 +192,7 @@ test('$unwind.2', async () => {
 
   expect(aggregator.query()).toEqual([{$unwind: '$carburetor.bolts'}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, ReplaceKey<DBCar, 'carburetor', ReplaceKey<Carburetor, 'bolts', Bolt>>>>(true);
 });
 
@@ -189,7 +201,7 @@ test('$unwind.3', async () => {
 
   expect(aggregator.query()).toEqual([{$unwind: '$carburetor.base.bolts'}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<
     IsExact<
       typeof result,
@@ -223,7 +235,7 @@ test('$graphLookup.otherTable', async () => {
     },
   ]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, Combine<DBCar, 'shoes', DBWindow[]>>>(true);
 });
 
@@ -250,7 +262,7 @@ test('$graphLookup.sameTable', async () => {
     },
   ]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, Combine<DBCar, 'shoes', DBCar[]>>>(true);
 });
 
@@ -281,7 +293,7 @@ test('$graphLookup.depthField', async () => {
     },
   ]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, Combine<DBCar, 'shoes', Combine<DBWindow, 'numConnections', number>[]>>>(true);
 });
 
@@ -290,7 +302,7 @@ test('$group.simple', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: {simple: true}}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {_id: {simple: boolean}}>>(true);
 });
 
@@ -299,7 +311,7 @@ test('$group.simple-key', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color'}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {_id: Color}>>(true);
 });
 
@@ -308,7 +320,7 @@ test('$group.simple-ref', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color'}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {_id: Color}>>(true);
 });
 
@@ -317,7 +329,7 @@ test('$group.simple-nested-ref', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: {color: '$color'}}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {_id: {color: Color}}>>(true);
 });
 
@@ -329,22 +341,35 @@ test('$group.ref-and-keys', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color', side: {$sum: '$doors.someNumber'}}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {_id: Color; side: number}>>(true);
 });
 
-test('$group.ref-and-keyes', async () => {
+test('$project.ref-and-keyes', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
     side: {
       $dateToString: {
-        date: agg.referenceKey(a=>a.doors.someDate),
+        date: agg.referenceKey((a) => a.doors.someDate),
         format: 'shoes',
       },
     },
   }));
 
-  expect(aggregator.query()).toEqual([{$group: {_id: '$color', side: {$sum: '$doors.someNumber'}}}]);
+  expect(aggregator.query()).toEqual([{$project: {side: {$dateToString: {date: '$doors.someDate', format: 'shoes'}}}}]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<IsExact<typeof result, {side: string}>>(true);
+});
+
+test('$project.ref-and-keyes', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    side: {
+      $sum: agg.referenceKey((a) => a.doors.someNumber),
+    },
+  }));
+
+  expect(aggregator.query()).toEqual([{$project: {side: {$sum: '$doors.someNumber'}}}]);
+
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, {side: number}>>(true);
 });

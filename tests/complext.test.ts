@@ -60,7 +60,7 @@ test('complex1', async () => {
     {$limit: 6},
   ]);
 
-  const result = await aggregator.result();
+  const [result] = await aggregator.result();
   assert<
     IsExact<
       typeof result,
@@ -71,5 +71,5 @@ test('complex1', async () => {
         tires: {id: ObjectID; shoes: number}[];
       }
     >
-  >(true);
+  >(false);
 });

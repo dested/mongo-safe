@@ -1,53 +1,13 @@
 import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
 import {ObjectID} from 'mongodb';
 
-type RawTypes = number | boolean | string;
+type RawTypes = number | boolean | string | ObjectID;
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
 
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
 export type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
-
-type AggregatorSum = {
-  $sum: ExpressionStringReferenceKey<number> | ExpressionStringReferenceKey<FlattenArray<number>> | number;
-};
-type AggregatorSumResult = number;
-
-type AggregatorCond<TProject, TValue, TResult> = {
-  $cond: {
-    if: InterpretProjectExpression<TValue, ProjectObject<TProject>>;
-    then: InterpretProjectExpression<TValue, ProjectObject<TProject>>;
-    else: InterpretProjectExpression<TValue, ProjectObject<TProject>>;
-  };
-};
-type AggregatorCondResult<TResult> = TResult;
-
-type AggregatorEq<TProject, TValue> = {
-  $eq: [
-    InterpretProjectExpression<TValue, ProjectObject<TProject>>,
-    InterpretProjectExpression<TValue, ProjectObject<TProject>>
-  ];
-};
-type AggregatorEqResult = boolean;
-
-type AggregatorDateToString = {
-  $dateToString: {
-    date: ExpressionStringReferenceKey<Date> | ExpressionStringReferenceKey<FlattenArray<Date>> | Date;
-    format?: string;
-  };
-};
-type AggregatorDateToStringResult = string;
-
-type AggregatorMap<TAsKey extends string, TAsValue, TArrayInput> = {
-  $map: {
-    input: ExpressionStringKey<TArrayInput>;
-    as: TAsKey;
-    in: ProjectObject<TAsValue>;
-  };
-};
-
-type AggregatorMapResult<TAsValue> = ProjectObject<TAsValue>[];
 
 type Arrayish<T> = {[key: number]: T} & {arrayish: true};
 
@@ -66,35 +26,66 @@ export type UnwarpArrayish<T> = {
 };
 
 export type InterpretProjectExpression<TValue, TProjectObject> = /*
- */ TValue extends AggregatorSum
-  ? AggregatorSumResult
-  : TValue extends AggregatorEq<TProjectObject, TValue>
-  ? AggregatorEqResult
-  : TValue extends AggregatorCond<TProjectObject, TValue, infer TResult>
-  ? AggregatorCondResult<TResult>
-  : TValue extends AggregatorDateToString
-  ? AggregatorDateToStringResult
-  : TValue extends AggregatorMap<infer TAsKey, infer TAsValue, infer TArrayInput>
-  ? AggregatorMapResult<TAsValue>
-  : TValue extends ExpressionStringReferenceKey<infer TKeyResult>
-  ? TKeyResult
+ */ TValue extends ExpressionStringReferenceKey<infer J>
+  ? ExpressionStringReferenceKey<J>
   : TValue extends RawTypes
   ? TValue
+  : keyof TValue extends AllOperators
+  ? {
+      $sum?: ExpressionStringReferenceKey<number> | ExpressionStringReferenceKey<FlattenArray<number>> | number;
+      $dateToString?: {
+        date: ExpressionStringReferenceKey<Date> | ExpressionStringReferenceKey<FlattenArray<Date>> | Date;
+        format?: string;
+      };
+      $cond?: {
+        if: InterpretProjectExpression<TValue, TProjectObject>;
+        then: InterpretProjectExpression<TValue, TProjectObject>;
+        else: InterpretProjectExpression<TValue, TProjectObject>;
+      };
+      $eq?: [InterpretProjectExpression<TValue, TProjectObject>, InterpretProjectExpression<TValue, TProjectObject>];
+      $map?: LookupKey<TValue, '$map'> extends {
+        input: ExpressionStringKey<infer Tinput>;
+        as: infer Tas;
+        in: ProjectObject<infer Tin>;
+      }
+        ? {input: ExpressionStringKey<Tinput>; as: Tas; in: ProjectObject<Tin>}
+        : never;
+    }
   : TValue extends {}
   ? TProjectObject
   : never;
 
 export type ProjectObject<TProject> = {
-  [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObject<TProject>> extends never
-    ? never
-    : TProject[key];
-};
-export type ProjectObjectResult<TProject> = {
-  [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObjectResult<TProject[key]>>;
+  [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObject<TProject[key]>>;
 };
 
-export type InterpretAccumulateObjectExpression<TValue, TProjectObject> = TValue extends AggregatorSum
-  ? AggregatorSumResult
+type AllOperators = '$dateToString' | '$cond' | '$eq' | '$map' | '$sum';
+type AllAccumulateOperators = '$sum';
+
+export type ProjectObjectResult<TProject> = {
+  [key in keyof TProject]: TProject[key] extends ExpressionStringReferenceKey<infer J>
+    ? J
+    : TProject[key] extends RawTypes
+    ? TProject[key]
+    : keyof TProject[key] extends AllOperators
+    ? {
+        $dateToString: string;
+        $cond: boolean;
+        $eq: boolean;
+        $map: LookupKey<LookupKey<TProject[key], '$map'>, 'in'>[];
+        $sum: number;
+      }[keyof TProject[key]]
+    : TProject[key] extends {}
+    ? ProjectObjectResult<TProject[key]>
+    : never;
+};
+
+export type LookupKey<T, TKey> = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
+
+export type InterpretAccumulateObjectExpression<TValue, TProjectObject> = keyof TValue extends AllAccumulateOperators
+  ? {
+      $sum: number;
+    }[keyof TValue]
   : never;
 
 export type AccumulateObject<TAccumulateObject> = {
@@ -186,9 +177,9 @@ export class AggregatorLookup<T> {
         $map: {
           input,
           as,
-          in: inArg(
+          in: (inArg(
             new AggregatorLookup<{[key in TAsKey]: TArrayInput}>(this.variableLookupLevel + 1)
-          ) as ProjectObjectResult<TAsValue>,
+          ) as unknown) as ProjectObjectResult<TAsValue>,
         },
       };
     },
@@ -224,8 +215,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $collStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $count(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $count<TKey extends string>(key: TKey): Aggregator<{[key in TKey]: number}> {
+    this.currentPipeline = {$count: key};
+    return new Aggregator<{[key in TKey]: number}>(this);
   }
   $currentOp(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -266,7 +258,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   ): Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>> {
     const result = callback(this);
     this.currentPipeline = {$group: {_id: result[0], ...result[1]}};
-    return new Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>>(this);
+    return new Aggregator<any /* todo ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>*/>(
+      this
+    );
   }
 
   $indexStats(): Aggregator<T> {
@@ -396,9 +390,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
     return new Aggregator<T>(this);
   }
 
-  async result(/*db: DocumentManager<any>*/): Promise<UnwarpArrayish<T> /*[]*/> {
+  async result(/*db: DocumentManager<any>*/): Promise<UnwarpArrayish<T>[]> {
     // return db.aggregate<UnwarpArrayish<T>>(this.query());
-    return null!;
+    return [];
   }
 
   static start<T>(): Aggregator<T> {
