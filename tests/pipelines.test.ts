@@ -373,3 +373,12 @@ test('$project.ref-and-keyes', async () => {
   const [result] = await aggregator.result();
   assert<IsExact<typeof result, {side: number}>>(true);
 });
+
+test('$count', async () => {
+  const aggregator = Aggregator.start<DBCar>().$count('amount');
+
+  expect(aggregator.query()).toEqual([{$count: 'amount'}]);
+
+  const [result] = await aggregator.result();
+  assert<IsExact<typeof result, {amount: number}>>(true);
+});
