@@ -13,15 +13,16 @@ test('project.none', async () => {
 });
 
 test('project.$dateToString', async () => {
+  let date = new Date();
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
     shoes: {
       $dateToString: {
-        date: new Date(),
+        date: date,
         format: '',
       },
     },
   }));
-  expect(aggregator.query()).toEqual([{$project: {shoes: {$dateToString: {date: new Date(), format: ''}}}}]);
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$dateToString: {date: date, format: ''}}}}]);
 
   const [result] = await aggregator.result();
   assert<Has<{shoes: string}, typeof result>>(true);
@@ -98,4 +99,127 @@ test('project.$cond.ref', async () => {
 
   const [result] = await aggregator.result();
   assert<Has<{shoes: ('left' | 'right') | Bolt[]}, typeof result>>(true);
+});
+
+test('project.$eq', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: {
+      $eq: [true, true],
+    },
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$eq: [true, true]}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: boolean}, typeof result>>(true);
+});
+
+test('project.$eq.ref', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: {
+      $eq: [agg.referenceKey((a) => a.doors.side), agg.referenceKey((a) => a.doors.childLocks)],
+    },
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$eq: ['$doors.side', '$doors.childLocks']}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: boolean}, typeof result>>(true);
+});
+
+test('project.$map', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: agg.operators.$map(
+      agg.key((a) => a.doors),
+      'thing',
+      (innerAgg) => ({
+        a: true,
+        b: 1,
+      })
+    ),
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: 1}}}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: {a: true; b: number}[]}, typeof result>>(true);
+});
+
+test('project.$map.ref', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: agg.operators.$map(
+      agg.key((a) => a.doors),
+      'thing',
+      (innerAgg) => ({
+        a: true,
+        b: innerAgg.referenceKey((a) => a.thing.someNumber),
+      })
+    ),
+  }));
+  expect(aggregator.query()).toEqual([
+    {$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: '$$thing.someNumber'}}}}},
+  ]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: {a: true; b: number}[]}, typeof result>>(true);
+});
+
+test('project.$map.nested.ref', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: agg.operators.$map(
+      agg.key((a) => a.doors),
+      'thing',
+      (innerAgg) => ({
+        a: true,
+        b: {bar: innerAgg.referenceKey((a) => a.thing.someNumber)},
+      })
+    ),
+  }));
+  expect(aggregator.query()).toEqual([
+    {$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: {bar: '$$thing.someNumber'}}}}}},
+  ]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: {a: true; b: {bar: number}}[]}, typeof result>>(true);
+});
+
+test('project.$sum', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: {$sum: 7},
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: number}, typeof result>>(true);
+});
+
+test('project.$sum.ref', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: {
+      $sum: agg.referenceKey((a) => a.doors.someNumber),
+    },
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: '$doors.someNumber'}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: number}, typeof result>>(true);
+});
+
+test('project.$abs', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: {$sum: 7},
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: number}, typeof result>>(true);
+});
+
+test('project.$abs.ref', async () => {
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    shoes: {
+      $sum: agg.referenceKey((a) => a.doors.someNumber),
+    },
+  }));
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: '$doors.someNumber'}}}]);
+
+  const [result] = await aggregator.result();
+  assert<Has<{shoes: number}, typeof result>>(true);
 });

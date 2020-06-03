@@ -160,6 +160,8 @@ type AllOperators =
   | '$year'
   | '$zip';
 
+type VariableOfType<T> = ExpressionStringReferenceKey<T> | ExpressionStringReferenceKey<FlattenArray<T>> | T;
+
 export type InterpretProjectExpression<TValue, TProjectObject> = /*
  */ TValue extends ExpressionStringReferenceKey<infer J>
   ? ExpressionStringReferenceKey<J>
@@ -167,11 +169,11 @@ export type InterpretProjectExpression<TValue, TProjectObject> = /*
   ? TValue
   : keyof TValue extends AllOperators
   ? {
-      $sum?: ExpressionStringReferenceKey<number> | ExpressionStringReferenceKey<FlattenArray<number>> | number;
       $dateToString?: {
-        date: ExpressionStringReferenceKey<Date> | ExpressionStringReferenceKey<FlattenArray<Date>> | Date;
+        date: VariableOfType<Date>;
         format?: string;
       };
+      $sum?: VariableOfType<number>;
       $cond?: LookupKey<TValue, '$cond'> extends {
         if: InterpretProjectExpression<infer TIf, TProjectObject>;
         then: InterpretProjectExpression<infer TThen, TProjectObject>;
@@ -184,7 +186,12 @@ export type InterpretProjectExpression<TValue, TProjectObject> = /*
           }
         : never;
 
-      $eq?: [InterpretProjectExpression<TValue, TProjectObject>, InterpretProjectExpression<TValue, TProjectObject>];
+      $eq?: LookupKey<TValue, '$eq'> extends [
+        InterpretProjectExpression<infer TLeft, TProjectObject>,
+        InterpretProjectExpression<infer TRight, TProjectObject>
+      ]
+        ? [InterpretProjectExpression<TLeft, TProjectObject>, InterpretProjectExpression<TRight, TProjectObject>]
+        : never;
       $map?: LookupKey<TValue, '$map'> extends {
         input: ExpressionStringKey<infer Tinput>;
         as: infer Tas;
@@ -193,7 +200,7 @@ export type InterpretProjectExpression<TValue, TProjectObject> = /*
         ? {input: ExpressionStringKey<Tinput>; as: Tas; in: ProjectObject<Tin>}
         : never;
 
-      $abs?: number;
+      $abs?: VariableOfType<number>;
       $acos?: number;
       $acosh?: number;
       $add?: number;
@@ -544,7 +551,7 @@ export class AggregatorLookup<T> {
     $map: <TAsKey extends string, TAsValue, TArrayInput>(
       input: ExpressionStringKey<TArrayInput>,
       as: TAsKey,
-      inArg: (agg: AggregatorLookup<{[key in TAsKey]: TArrayInput}>) => ProjectObject<TAsValue>
+      inArg: (agg: AggregatorLookup<{[key in TAsKey]: TArrayInput} & T>) => ProjectObject<TAsValue>
     ): {
       $map: {
         input: typeof input;
@@ -557,7 +564,7 @@ export class AggregatorLookup<T> {
           input,
           as,
           in: (inArg(
-            new AggregatorLookup<{[key in TAsKey]: TArrayInput}>(this.variableLookupLevel + 1)
+            new AggregatorLookup<{[key in TAsKey]: TArrayInput} & T>(this.variableLookupLevel + 1)
           ) as unknown) as ProjectObject<TAsValue>,
         },
       };

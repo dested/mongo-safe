@@ -83,19 +83,16 @@ test('$project.nested-reference', async () => {
 });
 
 test('$project.map', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => {
-    let mappedDoors1 = agg.operators.$map(
+  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+    mappedDoors: agg.operators.$map(
       agg.key((a) => a.doors),
       'door',
       (innerAgg) => ({
         good: 'foo',
         side: innerAgg.referenceKey((a) => a.door.side),
       })
-    );
-    return {
-      mappedDoors: mappedDoors1,
-    };
-  });
+    ),
+  }));
   expect(aggregator.query()).toEqual([
     {$project: {mappedDoors: {$map: {input: 'doors', as: 'door', in: {good: 'foo', side: '$$door.side'}}}}},
   ]);
