@@ -8,6 +8,11 @@ type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
 export type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
+type DeReferenceExpression<TRef> = TRef extends ExpressionStringReferenceKey<infer TValue>
+  ? TValue
+  : TRef extends {}
+  ? {[key in keyof TRef]: DeReferenceExpression<TRef[key]>}
+  : TRef;
 
 type Arrayish<T> = {[key: number]: T} & {arrayish: true};
 
@@ -21,9 +26,139 @@ export type FlattenArray<T> = {
     : T[key];
 };
 
-export type UnwarpArrayish<T> = {
-  [key in keyof T]: T[key] extends Arrayish<infer J> ? J[] : T[key];
+export type UnwarpArrayish<T> = T extends Arrayish<infer J> ? J[] : T;
+
+export type UnwarpArrayishObject<T> = {
+  [key in keyof T]: T[key] extends Arrayish<infer J>
+    ? UnwarpArrayishObject<J>[]
+    : T[key] extends {}
+    ? UnwarpArrayishObject<T[key]>
+    : T[key];
 };
+
+type AllOperators =
+  | '$dateToString'
+  | '$cond'
+  | '$eq'
+  | '$map'
+  | '$sum'
+  | '$abs'
+  | '$acos'
+  | '$acosh'
+  | '$add'
+  | '$addToSet'
+  | '$allElementsTrue'
+  | '$and'
+  | '$anyElementTrue'
+  | '$arrayElemAt'
+  | '$arrayToObject'
+  | '$asin'
+  | '$asinh'
+  | '$atan'
+  | '$atan2'
+  | '$atanh'
+  | '$avg'
+  | '$ceil'
+  | '$cmp'
+  | '$concat'
+  | '$concatArrays'
+  | '$convert'
+  | '$cos'
+  | '$dateFromParts'
+  | '$dateToParts'
+  | '$dateFromString'
+  | '$dayOfMonth'
+  | '$dayOfWeek'
+  | '$dayOfYear'
+  | '$degreesToRadians'
+  | '$divide'
+  | '$exp'
+  | '$filter'
+  | '$first'
+  | '$floor'
+  | '$gt'
+  | '$gte'
+  | '$hour'
+  | '$ifNull'
+  | '$in'
+  | '$indexOfArray'
+  | '$indexOfBytes'
+  | '$indexOfCP'
+  | '$isArray'
+  | '$isoDayOfWeek'
+  | '$isoWeek'
+  | '$isoWeekYear'
+  | '$last'
+  | '$let'
+  | '$literal'
+  | '$ln'
+  | '$log'
+  | '$log10'
+  | '$lt'
+  | '$lte'
+  | '$ltrim'
+  | '$max'
+  | '$mergeObjects'
+  | '$meta'
+  | '$min'
+  | '$millisecond'
+  | '$minute'
+  | '$mod'
+  | '$month'
+  | '$multiply'
+  | '$ne'
+  | '$not'
+  | '$objectToArray'
+  | '$or'
+  | '$pow'
+  | '$push'
+  | '$radiansToDegrees'
+  | '$range'
+  | '$reduce'
+  | '$regexFind'
+  | '$regexFindAll'
+  | '$regexMatch'
+  | '$reverseArray'
+  | '$round'
+  | '$rtrim'
+  | '$second'
+  | '$setDifference'
+  | '$setEquals'
+  | '$setIntersection'
+  | '$setIsSubset'
+  | '$setUnion'
+  | '$size'
+  | '$sin'
+  | '$slice'
+  | '$split'
+  | '$sqrt'
+  | '$stdDevPop'
+  | '$stdDevSamp'
+  | '$strcasecmp'
+  | '$strLenBytes'
+  | '$strLenCP'
+  | '$substr'
+  | '$substrBytes'
+  | '$substrCP'
+  | '$subtract'
+  | '$switch'
+  | '$tan'
+  | '$toBool'
+  | '$toDate'
+  | '$toDecimal'
+  | '$toDouble'
+  | '$toInt'
+  | '$toLong'
+  | '$toObjectId'
+  | '$toString'
+  | '$toLower'
+  | '$toUpper'
+  | '$trim'
+  | '$trunc'
+  | '$type'
+  | '$week'
+  | '$year'
+  | '$zip';
 
 export type InterpretProjectExpression<TValue, TProjectObject> = /*
  */ TValue extends ExpressionStringReferenceKey<infer J>
@@ -37,11 +172,18 @@ export type InterpretProjectExpression<TValue, TProjectObject> = /*
         date: ExpressionStringReferenceKey<Date> | ExpressionStringReferenceKey<FlattenArray<Date>> | Date;
         format?: string;
       };
-      $cond?: {
-        if: InterpretProjectExpression<TValue, TProjectObject>;
-        then: InterpretProjectExpression<TValue, TProjectObject>;
-        else: InterpretProjectExpression<TValue, TProjectObject>;
-      };
+      $cond?: LookupKey<TValue, '$cond'> extends {
+        if: InterpretProjectExpression<infer TIf, TProjectObject>;
+        then: InterpretProjectExpression<infer TThen, TProjectObject>;
+        else: InterpretProjectExpression<infer TElse, TProjectObject>;
+      }
+        ? {
+            if: InterpretProjectExpression<TIf, TProjectObject>;
+            then: InterpretProjectExpression<TThen, TProjectObject>;
+            else: InterpretProjectExpression<TElse, TProjectObject>;
+          }
+        : never;
+
       $eq?: [InterpretProjectExpression<TValue, TProjectObject>, InterpretProjectExpression<TValue, TProjectObject>];
       $map?: LookupKey<TValue, '$map'> extends {
         input: ExpressionStringKey<infer Tinput>;
@@ -177,130 +319,6 @@ export type ProjectObject<TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObject<TProject[key]>>;
 };
 
-type AllOperators =
-  | '$dateToString'
-  | '$cond'
-  | '$eq'
-  | '$map'
-  | '$sum'
-
-  | '$abs'
-  | '$acos'
-  | '$acosh'
-  | '$add'
-  | '$addToSet'
-  | '$allElementsTrue'
-  | '$and'
-  | '$anyElementTrue'
-  | '$arrayElemAt'
-  | '$arrayToObject'
-  | '$asin'
-  | '$asinh'
-  | '$atan'
-  | '$atan2'
-  | '$atanh'
-  | '$avg'
-  | '$ceil'
-  | '$cmp'
-  | '$concat'
-  | '$concatArrays'
-  | '$convert'
-  | '$cos'
-  | '$dateFromParts'
-  | '$dateToParts'
-  | '$dateFromString'
-  | '$dayOfMonth'
-  | '$dayOfWeek'
-  | '$dayOfYear'
-  | '$degreesToRadians'
-  | '$divide'
-  | '$exp'
-  | '$filter'
-  | '$first'
-  | '$floor'
-  | '$gt'
-  | '$gte'
-  | '$hour'
-  | '$ifNull'
-  | '$in'
-  | '$indexOfArray'
-  | '$indexOfBytes'
-  | '$indexOfCP'
-  | '$isArray'
-  | '$isoDayOfWeek'
-  | '$isoWeek'
-  | '$isoWeekYear'
-  | '$last'
-  | '$let'
-  | '$literal'
-  | '$ln'
-  | '$log'
-  | '$log10'
-  | '$lt'
-  | '$lte'
-  | '$ltrim'
-  | '$max'
-  | '$mergeObjects'
-  | '$meta'
-  | '$min'
-  | '$millisecond'
-  | '$minute'
-  | '$mod'
-  | '$month'
-  | '$multiply'
-  | '$ne'
-  | '$not'
-  | '$objectToArray'
-  | '$or'
-  | '$pow'
-  | '$push'
-  | '$radiansToDegrees'
-  | '$range'
-  | '$reduce'
-  | '$regexFind'
-  | '$regexFindAll'
-  | '$regexMatch'
-  | '$reverseArray'
-  | '$round'
-  | '$rtrim'
-  | '$second'
-  | '$setDifference'
-  | '$setEquals'
-  | '$setIntersection'
-  | '$setIsSubset'
-  | '$setUnion'
-  | '$size'
-  | '$sin'
-  | '$slice'
-  | '$split'
-  | '$sqrt'
-  | '$stdDevPop'
-  | '$stdDevSamp'
-  | '$strcasecmp'
-  | '$strLenBytes'
-  | '$strLenCP'
-  | '$substr'
-  | '$substrBytes'
-  | '$substrCP'
-  | '$subtract'
-  | '$switch'
-  | '$tan'
-  | '$toBool'
-  | '$toDate'
-  | '$toDecimal'
-  | '$toDouble'
-  | '$toInt'
-  | '$toLong'
-  | '$toObjectId'
-  | '$toString'
-  | '$toLower'
-  | '$toUpper'
-  | '$trim'
-  | '$trunc'
-  | '$type'
-  | '$week'
-  | '$year'
-  | '$zip';
 type AllAccumulateOperators = '$sum';
 
 export type ProjectObjectResult<TProject> = {
@@ -311,9 +329,11 @@ export type ProjectObjectResult<TProject> = {
     : keyof TProject[key] extends AllOperators
     ? {
         $dateToString: string;
-        $cond: boolean;
+        $cond:
+          | UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TProject[key], '$cond'>, 'then'>>>
+          | UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TProject[key], '$cond'>, 'else'>>>;
         $eq: boolean;
-        $map: LookupKey<LookupKey<TProject[key], '$map'>, 'in'>[];
+        $map: UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TProject[key], '$map'>, 'in'>>>[];
         $sum: number;
 
         $abs: number;
@@ -529,7 +549,7 @@ export class AggregatorLookup<T> {
       $map: {
         input: typeof input;
         as: typeof as;
-        in: ProjectObjectResult<TAsValue>;
+        in: ProjectObject<TAsValue>;
       };
     } => {
       return {
@@ -538,7 +558,7 @@ export class AggregatorLookup<T> {
           as,
           in: (inArg(
             new AggregatorLookup<{[key in TAsKey]: TArrayInput}>(this.variableLookupLevel + 1)
-          ) as unknown) as ProjectObjectResult<TAsValue>,
+          ) as unknown) as ProjectObject<TAsValue>,
         },
       };
     },
@@ -749,7 +769,7 @@ export class Aggregator<T> extends AggregatorLookup<T> {
     return new Aggregator<T>(this);
   }
 
-  async result(/*db: DocumentManager<any>*/): Promise<UnwarpArrayish<T>[]> {
+  async result(/*db: DocumentManager<any>*/): Promise<UnwarpArrayishObject<T>[]> {
     // return db.aggregate<UnwarpArrayish<T>>(this.query());
     return [];
   }

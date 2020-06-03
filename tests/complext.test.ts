@@ -62,14 +62,14 @@ test('complex1', async () => {
 
   const [result] = await aggregator.result();
   assert<
-    IsExact<
-      typeof result,
+    Has<
       {
         id: ObjectID;
         something: number;
         color: 'black' | 'red';
         tires: {id: ObjectID; shoes: number}[];
-      }
+      },
+      typeof result
     >
   >(false);
 });
