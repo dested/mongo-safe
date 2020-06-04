@@ -24,6 +24,7 @@ export interface CarburetorBase {
 export interface Door {
   someNumber: number;
   someDate: Date;
+  someString: string;
   side: 'left' | 'right';
   childLocks: boolean;
   bolts: Bolt[];
