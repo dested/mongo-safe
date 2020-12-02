@@ -5,6 +5,12 @@ import {DBWindow} from './models/dbWindow';
 import {DBTire} from './models/dbTire';
 import {ObjectID} from 'mongodb';
 
+const mockCollection: any = {
+  aggregate: () => ({
+    toArray: () => [],
+  }),
+};
+
 test('complex1', async () => {
   const aggregator = Aggregator.start<DBCar>()
     .$lookupCallback((agg, aggLookup: AggregatorLookup<DBWindow>) => ({
@@ -60,7 +66,7 @@ test('complex1', async () => {
     {$limit: 6},
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<
     Has<
       {

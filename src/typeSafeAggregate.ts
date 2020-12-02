@@ -1,5 +1,5 @@
 import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
-import {ObjectID} from 'mongodb';
+import {Collection, ObjectID, ObjectId} from 'mongodb';
 
 type RawTypes = number | boolean | string | ObjectID;
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
@@ -182,170 +182,176 @@ type InterpretExpressionForceTypeOneDeep<
     : never
   : never;
 
+type InterpretOperator<TValue, TProjectObject> = {
+  $dateToString?: {
+    date: InterpretExpressionForceTypeOneDeep<
+      TValue,
+      TProjectObject,
+      '$dateToString',
+      'date',
+      Date | FlattenArray<Date>
+    >;
+    format?: string;
+  };
+  $sum?: InterpretExpressionForceType<TValue, TProjectObject, '$sum', number>;
+  $cond?: LookupKey<TValue, '$cond'> extends {
+    if: InterpretProjectExpression<infer TIf, TProjectObject>;
+    then: InterpretProjectExpression<infer TThen, TProjectObject>;
+    else: InterpretProjectExpression<infer TElse, TProjectObject>;
+  }
+    ? {
+        if: InterpretProjectExpression<TIf, TProjectObject>;
+        then: InterpretProjectExpression<TThen, TProjectObject>;
+        else: InterpretProjectExpression<TElse, TProjectObject>;
+      }
+    : never;
+
+  $eq?: LookupKey<TValue, '$eq'> extends [
+    InterpretProjectExpression<infer TLeft, TProjectObject>,
+    InterpretProjectExpression<infer TRight, TProjectObject>
+  ]
+    ? [InterpretProjectExpression<TLeft, TProjectObject>, InterpretProjectExpression<TRight, TProjectObject>]
+    : never;
+  $map?: LookupKey<TValue, '$map'> extends {
+    input: ExpressionStringKey<infer TInput>;
+    as: infer TAs;
+    in: ProjectObject<infer TIn>;
+  }
+    ? {input: ExpressionStringKey<TInput>; as: TAs; in: ProjectObject<TIn>}
+    : never;
+
+  $abs?: InterpretExpressionForceType<TValue, TProjectObject, '$abs', number>;
+  $acos?: NotImplementedYet;
+  $acosh?: NotImplementedYet;
+  $add?: NotImplementedYet;
+  $addToSet?: LookupKey<TValue, '$addToSet'> extends InterpretProjectExpression<infer TAddToSet, TProjectObject>
+    ? InterpretProjectExpression<TAddToSet, TProjectObject>
+    : never;
+  $allElementsTrue?: NotImplementedYet;
+  $and?: NotImplementedYet;
+  $anyElementTrue?: NotImplementedYet;
+  $arrayElemAt?: NotImplementedYet;
+  $arrayToObject?: NotImplementedYet;
+  $asin?: NotImplementedYet;
+  $asinh?: NotImplementedYet;
+  $atan?: NotImplementedYet;
+  $atan2?: NotImplementedYet;
+  $atanh?: NotImplementedYet;
+  $avg?: NotImplementedYet;
+  $ceil?: NotImplementedYet;
+  $cmp?: NotImplementedYet;
+  $concat?: LookupKey<TValue, '$concat'> extends InterpretProjectExpression<infer TConcat, TProjectObject>[]
+    ? InterpretProjectExpression<TConcat, TProjectObject>[]
+    : never;
+  $concatArrays?: NotImplementedYet;
+  $convert?: NotImplementedYet;
+  $cos?: NotImplementedYet;
+  $dateFromParts?: NotImplementedYet;
+  $dateToParts?: NotImplementedYet;
+  $dateFromString?: NotImplementedYet;
+  $dayOfMonth?: NotImplementedYet;
+  $dayOfWeek?: NotImplementedYet;
+  $dayOfYear?: NotImplementedYet;
+  $degreesToRadians?: NotImplementedYet;
+  $divide?: NotImplementedYet;
+  $exp?: NotImplementedYet;
+  $filter?: NotImplementedYet;
+  $first?: NotImplementedYet;
+  $floor?: NotImplementedYet;
+  $gt?: NotImplementedYet;
+  $gte?: NotImplementedYet;
+  $hour?: NotImplementedYet;
+  $ifNull?: NotImplementedYet;
+  $in?: NotImplementedYet;
+  $indexOfArray?: NotImplementedYet;
+  $indexOfBytes?: NotImplementedYet;
+  $indexOfCP?: NotImplementedYet;
+  $isArray?: NotImplementedYet;
+  $isoDayOfWeek?: NotImplementedYet;
+  $isoWeek?: NotImplementedYet;
+  $isoWeekYear?: NotImplementedYet;
+  $last?: NotImplementedYet;
+  $let?: NotImplementedYet;
+  $literal?: NotImplementedYet;
+  $ln?: NotImplementedYet;
+  $log?: NotImplementedYet;
+  $log10?: NotImplementedYet;
+  $lt?: NotImplementedYet;
+  $lte?: NotImplementedYet;
+  $ltrim?: NotImplementedYet;
+  $max?: NotImplementedYet;
+  $mergeObjects?: NotImplementedYet;
+  $meta?: NotImplementedYet;
+  $min?: NotImplementedYet;
+  $millisecond?: NotImplementedYet;
+  $minute?: NotImplementedYet;
+  $mod?: NotImplementedYet;
+  $month?: NotImplementedYet;
+  $multiply?: NotImplementedYet;
+  $ne?: NotImplementedYet;
+  $not?: NotImplementedYet;
+  $objectToArray?: NotImplementedYet;
+  $or?: NotImplementedYet;
+  $pow?: NotImplementedYet;
+  $push?: NotImplementedYet;
+  $radiansToDegrees?: NotImplementedYet;
+  $range?: NotImplementedYet;
+  $reduce?: NotImplementedYet;
+  $regexFind?: NotImplementedYet;
+  $regexFindAll?: NotImplementedYet;
+  $regexMatch?: NotImplementedYet;
+  $reverseArray?: NotImplementedYet;
+  $round?: NotImplementedYet;
+  $rtrim?: NotImplementedYet;
+  $second?: NotImplementedYet;
+  $setDifference?: NotImplementedYet;
+  $setEquals?: NotImplementedYet;
+  $setIntersection?: NotImplementedYet;
+  $setIsSubset?: NotImplementedYet;
+  $setUnion?: NotImplementedYet;
+  $size?: NotImplementedYet;
+  $sin?: NotImplementedYet;
+  $slice?: NotImplementedYet;
+  $split?: NotImplementedYet;
+  $sqrt?: NotImplementedYet;
+  $stdDevPop?: NotImplementedYet;
+  $stdDevSamp?: NotImplementedYet;
+  $strcasecmp?: NotImplementedYet;
+  $strLenBytes?: NotImplementedYet;
+  $strLenCP?: NotImplementedYet;
+  $substr?: NotImplementedYet;
+  $substrBytes?: NotImplementedYet;
+  $substrCP?: NotImplementedYet;
+  $subtract?: NotImplementedYet;
+  $switch?: NotImplementedYet;
+  $tan?: NotImplementedYet;
+  $toBool?: NotImplementedYet;
+  $toDate?: NotImplementedYet;
+  $toDecimal?: NotImplementedYet;
+  $toDouble?: NotImplementedYet;
+  $toInt?: NotImplementedYet;
+  $toLong?: NotImplementedYet;
+  $toObjectId?: NotImplementedYet;
+  $toString?: NotImplementedYet;
+  $toLower?: NotImplementedYet;
+  $toUpper?: NotImplementedYet;
+  $trim?: NotImplementedYet;
+  $trunc?: NotImplementedYet;
+  $type?: NotImplementedYet;
+  $week?: NotImplementedYet;
+  $year?: NotImplementedYet;
+  $zip?: NotImplementedYet;
+};
+
 export type InterpretProjectExpression<TValue, TProjectObject> = /*
- */ TValue extends ExpressionStringReferenceKey<FlattenArray<infer J>>
-  ? ExpressionStringReferenceKey<J>
+ */ TValue extends ExpressionStringReferenceKey<FlattenArray<infer JA>>
+  ? ExpressionStringReferenceKey<JA>
   : TValue extends ExpressionStringReferenceKey<infer J>
   ? ExpressionStringReferenceKey<J>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
-  ? {
-      $dateToString?: {
-        date: InterpretExpressionForceTypeOneDeep<
-          TValue,
-          TProjectObject,
-          '$dateToString',
-          'date',
-          Date | FlattenArray<Date>
-        >;
-        format?: string;
-      };
-      $sum?: InterpretExpressionForceType<TValue, TProjectObject, '$sum', number>;
-      $cond?: LookupKey<TValue, '$cond'> extends {
-        if: InterpretProjectExpression<infer TIf, TProjectObject>;
-        then: InterpretProjectExpression<infer TThen, TProjectObject>;
-        else: InterpretProjectExpression<infer TElse, TProjectObject>;
-      }
-        ? {
-            if: InterpretProjectExpression<TIf, TProjectObject>;
-            then: InterpretProjectExpression<TThen, TProjectObject>;
-            else: InterpretProjectExpression<TElse, TProjectObject>;
-          }
-        : never;
-
-      $eq?: LookupKey<TValue, '$eq'> extends [
-        InterpretProjectExpression<infer TLeft, TProjectObject>,
-        InterpretProjectExpression<infer TRight, TProjectObject>
-      ]
-        ? [InterpretProjectExpression<TLeft, TProjectObject>, InterpretProjectExpression<TRight, TProjectObject>]
-        : never;
-      $map?: LookupKey<TValue, '$map'> extends {
-        input: ExpressionStringKey<infer TInput>;
-        as: infer TAs;
-        in: ProjectObject<infer TIn>;
-      }
-        ? {input: ExpressionStringKey<TInput>; as: TAs; in: ProjectObject<TIn>}
-        : never;
-
-      $abs?: InterpretExpressionForceType<TValue, TProjectObject, '$abs', number>;
-      $acos?: NotImplementedYet;
-      $acosh?: NotImplementedYet;
-      $add?: NotImplementedYet;
-      $addToSet?: NotImplementedYet;
-      $allElementsTrue?: NotImplementedYet;
-      $and?: NotImplementedYet;
-      $anyElementTrue?: NotImplementedYet;
-      $arrayElemAt?: NotImplementedYet;
-      $arrayToObject?: NotImplementedYet;
-      $asin?: NotImplementedYet;
-      $asinh?: NotImplementedYet;
-      $atan?: NotImplementedYet;
-      $atan2?: NotImplementedYet;
-      $atanh?: NotImplementedYet;
-      $avg?: NotImplementedYet;
-      $ceil?: NotImplementedYet;
-      $cmp?: NotImplementedYet;
-      $concat?: NotImplementedYet;
-      $concatArrays?: NotImplementedYet;
-      $convert?: NotImplementedYet;
-      $cos?: NotImplementedYet;
-      $dateFromParts?: NotImplementedYet;
-      $dateToParts?: NotImplementedYet;
-      $dateFromString?: NotImplementedYet;
-      $dayOfMonth?: NotImplementedYet;
-      $dayOfWeek?: NotImplementedYet;
-      $dayOfYear?: NotImplementedYet;
-      $degreesToRadians?: NotImplementedYet;
-      $divide?: NotImplementedYet;
-      $exp?: NotImplementedYet;
-      $filter?: NotImplementedYet;
-      $first?: NotImplementedYet;
-      $floor?: NotImplementedYet;
-      $gt?: NotImplementedYet;
-      $gte?: NotImplementedYet;
-      $hour?: NotImplementedYet;
-      $ifNull?: NotImplementedYet;
-      $in?: NotImplementedYet;
-      $indexOfArray?: NotImplementedYet;
-      $indexOfBytes?: NotImplementedYet;
-      $indexOfCP?: NotImplementedYet;
-      $isArray?: NotImplementedYet;
-      $isoDayOfWeek?: NotImplementedYet;
-      $isoWeek?: NotImplementedYet;
-      $isoWeekYear?: NotImplementedYet;
-      $last?: NotImplementedYet;
-      $let?: NotImplementedYet;
-      $literal?: NotImplementedYet;
-      $ln?: NotImplementedYet;
-      $log?: NotImplementedYet;
-      $log10?: NotImplementedYet;
-      $lt?: NotImplementedYet;
-      $lte?: NotImplementedYet;
-      $ltrim?: NotImplementedYet;
-      $max?: NotImplementedYet;
-      $mergeObjects?: NotImplementedYet;
-      $meta?: NotImplementedYet;
-      $min?: NotImplementedYet;
-      $millisecond?: NotImplementedYet;
-      $minute?: NotImplementedYet;
-      $mod?: NotImplementedYet;
-      $month?: NotImplementedYet;
-      $multiply?: NotImplementedYet;
-      $ne?: NotImplementedYet;
-      $not?: NotImplementedYet;
-      $objectToArray?: NotImplementedYet;
-      $or?: NotImplementedYet;
-      $pow?: NotImplementedYet;
-      $push?: NotImplementedYet;
-      $radiansToDegrees?: NotImplementedYet;
-      $range?: NotImplementedYet;
-      $reduce?: NotImplementedYet;
-      $regexFind?: NotImplementedYet;
-      $regexFindAll?: NotImplementedYet;
-      $regexMatch?: NotImplementedYet;
-      $reverseArray?: NotImplementedYet;
-      $round?: NotImplementedYet;
-      $rtrim?: NotImplementedYet;
-      $second?: NotImplementedYet;
-      $setDifference?: NotImplementedYet;
-      $setEquals?: NotImplementedYet;
-      $setIntersection?: NotImplementedYet;
-      $setIsSubset?: NotImplementedYet;
-      $setUnion?: NotImplementedYet;
-      $size?: NotImplementedYet;
-      $sin?: NotImplementedYet;
-      $slice?: NotImplementedYet;
-      $split?: NotImplementedYet;
-      $sqrt?: NotImplementedYet;
-      $stdDevPop?: NotImplementedYet;
-      $stdDevSamp?: NotImplementedYet;
-      $strcasecmp?: NotImplementedYet;
-      $strLenBytes?: NotImplementedYet;
-      $strLenCP?: NotImplementedYet;
-      $substr?: NotImplementedYet;
-      $substrBytes?: NotImplementedYet;
-      $substrCP?: NotImplementedYet;
-      $subtract?: NotImplementedYet;
-      $switch?: NotImplementedYet;
-      $tan?: NotImplementedYet;
-      $toBool?: NotImplementedYet;
-      $toDate?: NotImplementedYet;
-      $toDecimal?: NotImplementedYet;
-      $toDouble?: NotImplementedYet;
-      $toInt?: NotImplementedYet;
-      $toLong?: NotImplementedYet;
-      $toObjectId?: NotImplementedYet;
-      $toString?: NotImplementedYet;
-      $toLower?: NotImplementedYet;
-      $toUpper?: NotImplementedYet;
-      $trim?: NotImplementedYet;
-      $trunc?: NotImplementedYet;
-      $type?: NotImplementedYet;
-      $week?: NotImplementedYet;
-      $year?: NotImplementedYet;
-      $zip?: NotImplementedYet;
-    }
+  ? InterpretOperator<TValue, TProjectObject>
   : TValue extends {}
   ? TProjectObject
   : never;
@@ -354,169 +360,190 @@ export type ProjectObject<TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TProject[key], ProjectObject<TProject[key]>>;
 };
 
-type AllAccumulateOperators = '$sum';
+type AllAccumulateOperators = '$sum' | '$addToSet';
 
-type OperatorResult<TValue> = {
-  $dateToString: string;
-  $cond:
-    | UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TValue, '$cond'>, 'then'>>>
-    | UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TValue, '$cond'>, 'else'>>>;
-  $eq: boolean;
-  $map: UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TValue, '$map'>, 'in'>>>[];
-  $sum: number;
-
-  $abs: number;
-  $acos: NotImplementedYet;
-  $acosh: NotImplementedYet;
-  $add: NotImplementedYet;
-  $addToSet: NotImplementedYet;
-  $allElementsTrue: NotImplementedYet;
-  $and: NotImplementedYet;
-  $anyElementTrue: NotImplementedYet;
-  $arrayElemAt: NotImplementedYet;
-  $arrayToObject: NotImplementedYet;
-  $asin: NotImplementedYet;
-  $asinh: NotImplementedYet;
-  $atan: NotImplementedYet;
-  $atan2: NotImplementedYet;
-  $atanh: NotImplementedYet;
-  $avg: NotImplementedYet;
-  $ceil: NotImplementedYet;
-  $cmp: NotImplementedYet;
-  $concat: NotImplementedYet;
-  $concatArrays: NotImplementedYet;
-  $convert: NotImplementedYet;
-  $cos: NotImplementedYet;
-  $dateFromParts: NotImplementedYet;
-  $dateToParts: NotImplementedYet;
-  $dateFromString: NotImplementedYet;
-  $dayOfMonth: NotImplementedYet;
-  $dayOfWeek: NotImplementedYet;
-  $dayOfYear: NotImplementedYet;
-  $degreesToRadians: NotImplementedYet;
-  $divide: NotImplementedYet;
-  $exp: NotImplementedYet;
-  $filter: NotImplementedYet;
-  $first: NotImplementedYet;
-  $floor: NotImplementedYet;
-  $gt: NotImplementedYet;
-  $gte: NotImplementedYet;
-  $hour: NotImplementedYet;
-  $ifNull: NotImplementedYet;
-  $in: NotImplementedYet;
-  $indexOfArray: NotImplementedYet;
-  $indexOfBytes: NotImplementedYet;
-  $indexOfCP: NotImplementedYet;
-  $isArray: NotImplementedYet;
-  $isoDayOfWeek: NotImplementedYet;
-  $isoWeek: NotImplementedYet;
-  $isoWeekYear: NotImplementedYet;
-  $last: NotImplementedYet;
-  $let: NotImplementedYet;
-  $literal: NotImplementedYet;
-  $ln: NotImplementedYet;
-  $log: NotImplementedYet;
-  $log10: NotImplementedYet;
-  $lt: NotImplementedYet;
-  $lte: NotImplementedYet;
-  $ltrim: NotImplementedYet;
-  $max: NotImplementedYet;
-  $mergeObjects: NotImplementedYet;
-  $meta: NotImplementedYet;
-  $min: NotImplementedYet;
-  $millisecond: NotImplementedYet;
-  $minute: NotImplementedYet;
-  $mod: NotImplementedYet;
-  $month: NotImplementedYet;
-  $multiply: NotImplementedYet;
-  $ne: NotImplementedYet;
-  $not: NotImplementedYet;
-  $objectToArray: NotImplementedYet;
-  $or: NotImplementedYet;
-  $pow: NotImplementedYet;
-  $push: NotImplementedYet;
-  $radiansToDegrees: NotImplementedYet;
-  $range: NotImplementedYet;
-  $reduce: NotImplementedYet;
-  $regexFind: NotImplementedYet;
-  $regexFindAll: NotImplementedYet;
-  $regexMatch: NotImplementedYet;
-  $reverseArray: NotImplementedYet;
-  $round: NotImplementedYet;
-  $rtrim: NotImplementedYet;
-  $second: NotImplementedYet;
-  $setDifference: NotImplementedYet;
-  $setEquals: NotImplementedYet;
-  $setIntersection: NotImplementedYet;
-  $setIsSubset: NotImplementedYet;
-  $setUnion: NotImplementedYet;
-  $size: NotImplementedYet;
-  $sin: NotImplementedYet;
-  $slice: NotImplementedYet;
-  $split: NotImplementedYet;
-  $sqrt: NotImplementedYet;
-  $stdDevPop: NotImplementedYet;
-  $stdDevSamp: NotImplementedYet;
-  $strcasecmp: NotImplementedYet;
-  $strLenBytes: NotImplementedYet;
-  $strLenCP: NotImplementedYet;
-  $substr: NotImplementedYet;
-  $substrBytes: NotImplementedYet;
-  $substrCP: NotImplementedYet;
-  $subtract: NotImplementedYet;
-  $switch: NotImplementedYet;
-  $tan: NotImplementedYet;
-  $toBool: NotImplementedYet;
-  $toDate: NotImplementedYet;
-  $toDecimal: NotImplementedYet;
-  $toDouble: NotImplementedYet;
-  $toInt: NotImplementedYet;
-  $toLong: NotImplementedYet;
-  $toObjectId: NotImplementedYet;
-  $toString: NotImplementedYet;
-  $toLower: NotImplementedYet;
-  $toUpper: NotImplementedYet;
-  $trim: NotImplementedYet;
-  $trunc: NotImplementedYet;
-  $type: NotImplementedYet;
-  $week: NotImplementedYet;
-  $year: NotImplementedYet;
-  $zip: NotImplementedYet;
-};
 type ProjectResult<TValue> = TValue extends ExpressionStringReferenceKey<infer J>
   ? J
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
-  ? OperatorResult<TValue>[keyof TValue]
+  ? LookupKey<
+      {
+        $dateToString: string;
+        $cond:
+          | UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TValue, '$cond'>, 'then'>>>
+          | UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TValue, '$cond'>, 'else'>>>;
+        $eq: boolean;
+        $map: UnwarpArrayish<DeReferenceExpression<LookupKey<LookupKey<TValue, '$map'>, 'in'>>>[];
+        $sum: number;
+
+        $abs: number;
+        $acos: NotImplementedYet;
+        $acosh: NotImplementedYet;
+        $add: NotImplementedYet;
+        $addToSet: UnwarpArrayish<DeReferenceExpression<LookupKey<TValue, '$addToSet'>>>[];
+        $allElementsTrue: NotImplementedYet;
+        $and: NotImplementedYet;
+        $anyElementTrue: NotImplementedYet;
+        $arrayElemAt: NotImplementedYet;
+        $arrayToObject: NotImplementedYet;
+        $asin: NotImplementedYet;
+        $asinh: NotImplementedYet;
+        $atan: NotImplementedYet;
+        $atan2: NotImplementedYet;
+        $atanh: NotImplementedYet;
+        $avg: NotImplementedYet;
+        $ceil: NotImplementedYet;
+        $cmp: NotImplementedYet;
+        $concat: string;
+        $concatArrays: NotImplementedYet;
+        $convert: NotImplementedYet;
+        $cos: NotImplementedYet;
+        $dateFromParts: NotImplementedYet;
+        $dateToParts: NotImplementedYet;
+        $dateFromString: NotImplementedYet;
+        $dayOfMonth: NotImplementedYet;
+        $dayOfWeek: NotImplementedYet;
+        $dayOfYear: NotImplementedYet;
+        $degreesToRadians: NotImplementedYet;
+        $divide: NotImplementedYet;
+        $exp: NotImplementedYet;
+        $filter: NotImplementedYet;
+        $first: NotImplementedYet;
+        $floor: NotImplementedYet;
+        $gt: NotImplementedYet;
+        $gte: NotImplementedYet;
+        $hour: NotImplementedYet;
+        $ifNull: NotImplementedYet;
+        $in: NotImplementedYet;
+        $indexOfArray: NotImplementedYet;
+        $indexOfBytes: NotImplementedYet;
+        $indexOfCP: NotImplementedYet;
+        $isArray: NotImplementedYet;
+        $isoDayOfWeek: NotImplementedYet;
+        $isoWeek: NotImplementedYet;
+        $isoWeekYear: NotImplementedYet;
+        $last: NotImplementedYet;
+        $let: NotImplementedYet;
+        $literal: NotImplementedYet;
+        $ln: NotImplementedYet;
+        $log: NotImplementedYet;
+        $log10: NotImplementedYet;
+        $lt: NotImplementedYet;
+        $lte: NotImplementedYet;
+        $ltrim: NotImplementedYet;
+        $max: NotImplementedYet;
+        $mergeObjects: NotImplementedYet;
+        $meta: NotImplementedYet;
+        $min: NotImplementedYet;
+        $millisecond: NotImplementedYet;
+        $minute: NotImplementedYet;
+        $mod: NotImplementedYet;
+        $month: NotImplementedYet;
+        $multiply: NotImplementedYet;
+        $ne: NotImplementedYet;
+        $not: NotImplementedYet;
+        $objectToArray: NotImplementedYet;
+        $or: NotImplementedYet;
+        $pow: NotImplementedYet;
+        $push: NotImplementedYet;
+        $radiansToDegrees: NotImplementedYet;
+        $range: NotImplementedYet;
+        $reduce: NotImplementedYet;
+        $regexFind: NotImplementedYet;
+        $regexFindAll: NotImplementedYet;
+        $regexMatch: NotImplementedYet;
+        $reverseArray: NotImplementedYet;
+        $round: NotImplementedYet;
+        $rtrim: NotImplementedYet;
+        $second: NotImplementedYet;
+        $setDifference: NotImplementedYet;
+        $setEquals: NotImplementedYet;
+        $setIntersection: NotImplementedYet;
+        $setIsSubset: NotImplementedYet;
+        $setUnion: NotImplementedYet;
+        $size: NotImplementedYet;
+        $sin: NotImplementedYet;
+        $slice: NotImplementedYet;
+        $split: NotImplementedYet;
+        $sqrt: NotImplementedYet;
+        $stdDevPop: NotImplementedYet;
+        $stdDevSamp: NotImplementedYet;
+        $strcasecmp: NotImplementedYet;
+        $strLenBytes: NotImplementedYet;
+        $strLenCP: NotImplementedYet;
+        $substr: NotImplementedYet;
+        $substrBytes: NotImplementedYet;
+        $substrCP: NotImplementedYet;
+        $subtract: NotImplementedYet;
+        $switch: NotImplementedYet;
+        $tan: NotImplementedYet;
+        $toBool: NotImplementedYet;
+        $toDate: NotImplementedYet;
+        $toDecimal: NotImplementedYet;
+        $toDouble: NotImplementedYet;
+        $toInt: NotImplementedYet;
+        $toLong: NotImplementedYet;
+        $toObjectId: NotImplementedYet;
+        $toString: NotImplementedYet;
+        $toLower: NotImplementedYet;
+        $toUpper: NotImplementedYet;
+        $trim: NotImplementedYet;
+        $trunc: NotImplementedYet;
+        $type: NotImplementedYet;
+        $week: NotImplementedYet;
+        $year: NotImplementedYet;
+        $zip: NotImplementedYet;
+      },
+      keyof TValue
+    >
   : TValue extends {}
   ? ProjectObjectResult<TValue>
   : never;
+
+type AccumulateResult<TValue> = TValue extends ExpressionStringReferenceKey<infer J>
+  ? J
+  : TValue extends RawTypes
+  ? TValue
+  : keyof TValue extends AllAccumulateOperators
+  ? LookupKey<
+      {
+        $sum: number;
+        $addToSet: UnwarpArrayish<DeReferenceExpression<LookupKey<TValue, '$addToSet'>>>[];
+      },
+      keyof TValue
+    >
+  : TValue extends {}
+  ? AccumulateObjectResult<TValue>
+  : never;
+
 export type ProjectObjectResult<TObj> = {
   [key in keyof TObj]: ProjectResult<TObj[key]>;
 };
 
 export type LookupKey<T, TKey> = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
 
-export type InterpretAccumulateObjectExpression<TValue, TProjectObject> = keyof TValue extends AllAccumulateOperators
-  ? {
-      $sum: number;
-    }[keyof TValue]
+export type InterpretAccumulateExpression<TValue, TProjectObject> = /*
+ */ TValue extends ExpressionStringReferenceKey<FlattenArray<infer JA>>
+  ? ExpressionStringReferenceKey<JA>
+  : TValue extends ExpressionStringReferenceKey<infer J>
+  ? ExpressionStringReferenceKey<J>
+  : TValue extends RawTypes
+  ? TValue
+  : keyof TValue extends AllAccumulateOperators
+  ? InterpretOperator<TValue, TProjectObject>
+  : TValue extends {}
+  ? TProjectObject
   : never;
 
 export type AccumulateObject<TAccumulateObject> = {
-  [key in keyof TAccumulateObject]: InterpretAccumulateObjectExpression<
+  [key in keyof TAccumulateObject]: InterpretAccumulateExpression<
     TAccumulateObject[key],
-    AccumulateObject<TAccumulateObject>
-  > extends never
-    ? never
-    : TAccumulateObject[key];
-};
-export type AccumulateObjectResult<TAccumulateObject> = {
-  [key in keyof TAccumulateObject]: InterpretAccumulateObjectExpression<
-    TAccumulateObject[key],
-    AccumulateObjectResult<TAccumulateObject[key]>
+    AccumulateObject<TAccumulateObject[key]>
   >;
+};
+export type AccumulateObjectResult<TObj> = {
+  [key in keyof TObj]: AccumulateResult<TObj[key]>;
 };
 
 export class ExpressionStringKey<TKey> {
@@ -603,7 +630,7 @@ export class AggregatorLookup<T> {
 }
 
 export class Aggregator<T> extends AggregatorLookup<T> {
-  currentPipeline?: {};
+  private currentPipeline?: {};
 
   private constructor(private parent?: Aggregator<any>) {
     super(parent?.variableLookupLevel ?? 1);
@@ -631,9 +658,9 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   $collStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $count<TKey extends string>(key: TKey): Aggregator<{[key in TKey]: number}> {
+  $count<TKey extends string>(key: TKey): Aggregator<{[cKey in TKey]: number}> {
     this.currentPipeline = {$count: key};
-    return new Aggregator<{[key in TKey]: number}>(this);
+    return new Aggregator<{[cKey in TKey]: number}>(this);
   }
   $currentOp(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -674,9 +701,7 @@ export class Aggregator<T> extends AggregatorLookup<T> {
   ): Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>> {
     const result = callback(this);
     this.currentPipeline = {$group: {_id: result[0], ...result[1]}};
-    return new Aggregator<any /* todo ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>*/>(
-      this
-    );
+    return new Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>>(this);
   }
 
   $indexStats(): Aggregator<T> {
@@ -806,23 +831,22 @@ export class Aggregator<T> extends AggregatorLookup<T> {
     return new Aggregator<T>(this);
   }
 
-  async result(/*db: DocumentManager<any>*/): Promise<UnwarpArrayishObject<T>[]> {
-    // return db.aggregate<UnwarpArrayish<T>>(this.query());
-    return [];
+  async result<TDoc extends {_id: ObjectId}>(collection: Collection<TDoc>): Promise<UnwarpArrayishObject<T>[]> {
+    return collection.aggregate<UnwarpArrayishObject<T>>(this.query()).toArray();
   }
 
   static start<T>(): Aggregator<T> {
     return new Aggregator<T>();
   }
 
-  query() {
+  query(): Object[] {
     const pipelines = [];
     if (this.currentPipeline) {
-      pipelines.push(this.currentPipeline);
+      pipelines.push(this.currentPipeline!);
     }
     let parent = this.parent;
     while (parent) {
-      pipelines.push(parent.currentPipeline);
+      pipelines.push(parent.currentPipeline!);
       parent = parent.parent;
     }
     return pipelines.reverse();

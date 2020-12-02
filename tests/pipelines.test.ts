@@ -12,11 +12,17 @@ import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
 import {Combine, ReplaceKey} from './typeUtils';
 
+const mockCollection: any = {
+  aggregate: () => ({
+    toArray: () => [],
+  }),
+};
+
 test('simple', async () => {
   const aggregator = Aggregator.start<DBCar>();
   expect(aggregator.query()).toEqual([]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar, typeof result>>(true);
 });
 
@@ -24,7 +30,7 @@ test('$match', async () => {
   const aggregator = Aggregator.start<DBCar>().$match({color: 'black'});
   expect(aggregator.query()).toEqual([{$match: {color: 'black'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar, typeof result>>(true);
 });
 
@@ -34,7 +40,7 @@ test('$match.deep', async () => {
   }));
   expect(aggregator.query()).toEqual([{$match: {'tailPipe.count': 4}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar, typeof result>>(true);
 });
 
@@ -42,7 +48,7 @@ test('$project.simple', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({color: 'black'});
   expect(aggregator.query()).toEqual([{$project: {color: 'black'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{color: 'black'}, typeof result>>(true);
 });
 
@@ -50,7 +56,7 @@ test('$project.callback', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: 'black'}));
   expect(aggregator.query()).toEqual([{$project: {color: 'black'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{color: 'black'}, typeof result>>(true);
 });
 
@@ -58,7 +64,7 @@ test('$project.nested', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: {foo: 12}}));
   expect(aggregator.query()).toEqual([{$project: {color: {foo: 12}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{color: {foo: 12}}, typeof result>>(true);
 });
 
@@ -66,7 +72,7 @@ test('$project.reference', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: agg.referenceKey((a) => a.color)}));
   expect(aggregator.query()).toEqual([{$project: {color: '$color'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
 
   assert<Has<{color: Color}, typeof result>>(true);
 });
@@ -77,7 +83,7 @@ test('$project.nested-reference', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {color: {foo: '$color'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
 
   assert<Has<{color: {foo: Color}}, typeof result>>(true);
 });
@@ -97,7 +103,7 @@ test('$project.map', async () => {
     {$project: {mappedDoors: {$map: {input: 'doors', as: 'door', in: {good: 'foo', side: '$$door.side'}}}}},
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{mappedDoors: {good: 'foo'; side: 'left' | 'right'}[]}, typeof result>>(true);
 });
 
@@ -107,7 +113,7 @@ test('$project.id', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {id: '$_id'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{id: ObjectID}, typeof result>>(true);
 });
 
@@ -126,7 +132,7 @@ test('$project.array', async () => {
     },
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{doorHeads: 'phillips' | 'flat'; carbHeads: 'phillips' | 'flat'}, typeof result>>(true);
 });
 
@@ -149,7 +155,7 @@ test('$lookup', async () => {
     },
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar & {windows: DBWindow[]}, typeof result>>(true);
 });
 
@@ -160,7 +166,7 @@ test('$addField.simple', async () => {
 
   expect(aggregator.query()).toEqual([{$addFields: {shoes: 'hi'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar & {shoes: 'hi'}, typeof result>>(true);
 });
 
@@ -171,7 +177,7 @@ test('$addField.complex', async () => {
 
   expect(aggregator.query()).toEqual([{$addFields: {shoes: '$doors.bolts'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<Bolt['type'], typeof result.shoes[0]['type']>>(true);
   assert<Has<DBCar & {shoes: Bolt[]}, typeof result>>(true);
 });
@@ -181,7 +187,7 @@ test('$unwind.simple', async () => {
 
   expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<ReplaceKey<DBCar, 'doors', Door>, typeof result>>(true);
 });
 test('$unwind.2', async () => {
@@ -189,7 +195,7 @@ test('$unwind.2', async () => {
 
   expect(aggregator.query()).toEqual([{$unwind: '$carburetor.bolts'}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<ReplaceKey<DBCar, 'carburetor', ReplaceKey<Carburetor, 'bolts', Bolt>>, typeof result>>(true);
 });
 
@@ -198,7 +204,7 @@ test('$unwind.3', async () => {
 
   expect(aggregator.query()).toEqual([{$unwind: '$carburetor.base.bolts'}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<
     Has<
       ReplaceKey<DBCar, 'carburetor', ReplaceKey<Carburetor, 'base', ReplaceKey<CarburetorBase, 'bolts', Bolt>>>,
@@ -232,7 +238,7 @@ test('$graphLookup.otherTable', async () => {
     },
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<Combine<DBCar, 'shoes', DBWindow[]>, typeof result>>(true);
 });
 
@@ -259,7 +265,7 @@ test('$graphLookup.sameTable', async () => {
     },
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<Combine<DBCar, 'shoes', DBCar[]>, typeof result>>(true);
 });
 
@@ -290,7 +296,7 @@ test('$graphLookup.depthField', async () => {
     },
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<Combine<DBCar, 'shoes', Combine<DBWindow, 'numConnections', number>[]>, typeof result>>(true);
 });
 
@@ -299,7 +305,7 @@ test('$group.simple', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: {simple: true}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: {simple: boolean}}, typeof result>>(true);
 });
 
@@ -308,7 +314,7 @@ test('$group.simple-key', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: Color}, typeof result>>(true);
 });
 
@@ -317,7 +323,7 @@ test('$group.simple-ref', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color'}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: Color}, typeof result>>(true);
 });
 
@@ -326,7 +332,7 @@ test('$group.simple-nested-ref', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: {color: '$color'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: {color: Color}}, typeof result>>(true);
 });
 
@@ -338,7 +344,7 @@ test('$group.ref-and-keys', async () => {
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color', side: {$sum: '$doors.someNumber'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: Color; side: number}, typeof result>>(true);
 });
 
@@ -354,7 +360,7 @@ test('$project.ref-and-keyes', async () => {
 
   expect(aggregator.query()).toEqual([{$project: {side: {$dateToString: {date: '$doors.someDate', format: 'shoes'}}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{side: string}, typeof result>>(true);
 });
 
@@ -367,7 +373,7 @@ test('$project.$sum', async () => {
 
   expect(aggregator.query()).toEqual([{$project: {side: {$sum: '$doors.someNumber'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{side: number}, typeof result>>(true);
 });
 
@@ -376,6 +382,6 @@ test('$count', async () => {
 
   expect(aggregator.query()).toEqual([{$count: 'amount'}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{amount: number}, typeof result>>(true);
 });

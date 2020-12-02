@@ -2,13 +2,19 @@ import {Aggregator} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has} from 'conditional-type-checks';
 
+const mockCollection: any = {
+  aggregate: () => ({
+    toArray: () => [],
+  }),
+};
+
 test('project.none', async () => {
   const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
     shoes: true,
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: true}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: true}, typeof result>>(true);
 });
 
@@ -24,7 +30,7 @@ test('project.$dateToString', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$dateToString: {date: date, format: ''}}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: string}, typeof result>>(true);
 });
 
@@ -39,7 +45,7 @@ test('project.$dateToString.ref', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$dateToString: {date: '$doors.someDate', format: ''}}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: string}, typeof result>>(true);
 });
 
@@ -51,7 +57,7 @@ test('project.$sum', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
 
@@ -63,7 +69,7 @@ test('project.$sum.ref', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: '$doors.someNumber'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
 
@@ -79,7 +85,7 @@ test('project.$cond', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$cond: {if: true, then: 1, else: 2}}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: 1 | 2}, typeof result>>(true);
 });
 
@@ -97,7 +103,7 @@ test('project.$cond.ref', async () => {
     {$project: {shoes: {$cond: {if: '$doors.side', then: '$doors.side', else: '$doors.bolts'}}}},
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: ('left' | 'right') | Bolt[]}, typeof result>>(true);
 });
 
@@ -109,7 +115,7 @@ test('project.$eq', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$eq: [true, true]}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: boolean}, typeof result>>(true);
 });
 
@@ -121,7 +127,7 @@ test('project.$eq.ref', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$eq: ['$doors.side', '$doors.childLocks']}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: boolean}, typeof result>>(true);
 });
 
@@ -138,7 +144,7 @@ test('project.$map', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: 1}}}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: {a: true; b: number}[]}, typeof result>>(true);
 });
 
@@ -157,7 +163,7 @@ test('project.$map.ref', async () => {
     {$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: '$$thing.someNumber'}}}}},
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: {a: true; b: number}[]}, typeof result>>(true);
 });
 
@@ -176,7 +182,7 @@ test('project.$map.nested.ref', async () => {
     {$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: {bar: '$$thing.someNumber'}}}}}},
   ]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: {a: true; b: {bar: number}}[]}, typeof result>>(true);
 });
 
@@ -186,7 +192,7 @@ test('project.$sum', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
 
@@ -198,7 +204,7 @@ test('project.$sum.ref', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: '$doors.someNumber'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
 
@@ -210,7 +216,7 @@ test('project.$sum.ref.nested', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: {$sum: {$sum: '$doors.someNumber'}}}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
 
@@ -220,7 +226,7 @@ test('project.$abs', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$abs: 7}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
 
@@ -232,6 +238,6 @@ test('project.$abs.ref', async () => {
   }));
   expect(aggregator.query()).toEqual([{$project: {shoes: {$abs: '$doors.someNumber'}}}]);
 
-  const [result] = await aggregator.result();
+  const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
