@@ -1,3 +1,5 @@
+import {DeepKeys, DeepKeysType, DeepQuery} from './deepQuery';
+
 type BSONTypeAlias =
   | 'number'
   | 'double'
@@ -87,12 +89,10 @@ export type RootQuerySelector<T> = {
   };
   /** https://docs.mongodb.com/manual/reference/operator/query/comment/#op._S_comment */
   $comment?: string;
-  // we could not find a proper TypeScript generic to support nested queries e.g. 'user.friends.name'
-  // this will mark all unrecognized properties as any (including nested queries)
 };
 
 export type SafeFilterQuery<T> = {
-  [P in keyof T]?: MongoAltQuery<T[P]> | QuerySelector<MongoAltQuery<T[P]>>;
+  [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysType<T, key>> | QuerySelector<DeepKeysType<T, key>>;
 } &
   RootQuerySelector<T>;
 

@@ -9,9 +9,7 @@ const mockCollection: any = {
 };
 
 test('project.none', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    shoes: true,
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({shoes: true});
   expect(aggregator.query()).toEqual([{$project: {shoes: true}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -20,14 +18,14 @@ test('project.none', async () => {
 
 test('project.$dateToString', async () => {
   let date = new Date();
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
       $dateToString: {
         date: date,
         format: '',
       },
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$dateToString: {date: date, format: ''}}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -35,14 +33,14 @@ test('project.$dateToString', async () => {
 });
 
 test('project.$dateToString.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
       $dateToString: {
-        date: agg.referenceKey((a) => a.doors.someDate),
+        date: '$doors.someDate',
         format: '',
       },
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$dateToString: {date: '$doors.someDate', format: ''}}}}]);
 
   const [result] = await aggregator.result(mockCollection);
