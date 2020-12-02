@@ -21,10 +21,8 @@ export type UnwrapMongoPseudoArrayDeep<T> = {
     ? UnwrapMongoPseudoArrayDeep<T[key]>
     : T[key];
 };*/
-type DeReferenceExpression<TRootValue, TRef> = TRef extends ExpressionStringReferenceKey<TRootValue>
-  ? TRef extends `$${infer TRawKey}`
-    ? DeepKeysResult<TRootValue, TRawKey>
-    : never
+export type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${infer TRawKey}`
+  ? DeepKeysResult<TRootValue, TRawKey>
   : TRef extends {}
   ? {[key in keyof TRef]: DeReferenceExpression<TRootValue, TRef[key]>}
   : TRef;
@@ -184,7 +182,7 @@ type ExpressionOrAny<TTest, TRootValue, TForceValue = any> = TTest extends `$${i
   ? ExpressionStringReferenceKey<TRootValue>
   : any;
 
-type InterpretOperator<TRootValue, TValue, TProjectObject> = {
+type InterpretOperator<TRootValue, TValue> = {
   $dateToString?: {
     date: ExpressionType<TRootValue, Date>;
     format?: string;
@@ -197,32 +195,38 @@ type InterpretOperator<TRootValue, TValue, TProjectObject> = {
   };
 
   $eq?: LookupKey<TValue, '$eq'> extends [
-    InterpretProjectExpression<TRootValue, infer TLeft, TProjectObject>,
-    InterpretProjectExpression<TRootValue, infer TRight, TProjectObject>
+    InterpretProjectExpression<TRootValue, infer TLeft>,
+    InterpretProjectExpression<TRootValue, infer TRight>
   ]
-    ? [
-        InterpretProjectExpression<TRootValue, TLeft, TProjectObject>,
-        InterpretProjectExpression<TRootValue, TRight, TProjectObject>
-      ]
+    ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
     : never;
-  /*$map?: LookupKey<TValue, '$map'> extends {
-    input: ExpressionStringKey<infer TInput>;
-    as: infer TAs;
-    in: ProjectObject<infer TIn>;
+  $map?: LookupKey<TValue, '$map'> extends {
+    input: ExpressionStringReferenceKey<TRootValue>;
+    as: string;
+    in: infer TIn;
   }
-    ? {input: ExpressionStringKey<TInput>; as: TAs; in: ProjectObject<TIn>}
+    ? {
+        input: ExpressionStringReferenceKey<TRootValue>;
+        as: LookupKey<LookupKey<TValue, '$map'>, 'as'>;
+        in: ProjectObject<
+          TRootValue &
+            {
+              [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<
+                TRootValue,
+                LookupKey<LookupKey<TValue, '$map'>, 'input'>
+              >;
+            },
+          TIn
+        > /*| ExpressionStringReferenceKey<TRootValue & {dicks: true}>*/;
+      }
     : never;
 
-  $abs?: InterpretExpressionForceType<TValue, TProjectObject, '$abs', number>;*/
+  $abs?: ExpressionType<TRootValue, number>;
   $acos?: NotImplementedYet;
   $acosh?: NotImplementedYet;
   $add?: NotImplementedYet;
-  $addToSet?: LookupKey<TValue, '$addToSet'> extends InterpretProjectExpression<
-    TRootValue,
-    infer TAddToSet,
-    TProjectObject
-  >
-    ? InterpretProjectExpression<TRootValue, TAddToSet, TProjectObject>
+  $addToSet?: LookupKey<TValue, '$addToSet'> extends InterpretProjectExpression<TRootValue, infer TAddToSet>
+    ? InterpretProjectExpression<TRootValue, TAddToSet>
     : never;
   $allElementsTrue?: NotImplementedYet;
   $and?: NotImplementedYet;
@@ -237,8 +241,8 @@ type InterpretOperator<TRootValue, TValue, TProjectObject> = {
   $avg?: NotImplementedYet;
   $ceil?: NotImplementedYet;
   $cmp?: NotImplementedYet;
-  $concat?: LookupKey<TValue, '$concat'> extends InterpretProjectExpression<TRootValue, infer TConcat, TProjectObject>[]
-    ? InterpretProjectExpression<TRootValue, TConcat, TProjectObject>[]
+  $concat?: LookupKey<TValue, '$concat'> extends InterpretProjectExpression<TRootValue, infer TConcat>[]
+    ? InterpretProjectExpression<TRootValue, TConcat>[]
     : never;
   $concatArrays?: NotImplementedYet;
   $convert?: NotImplementedYet;
@@ -350,27 +354,17 @@ export type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
     : never]: 1;
 };
 
-export type InterpretProjectExpression<TRootValue, TValue, TProjectObject> = /*
- */ /*TValue extends ExpressionStringReferenceKey<FlattenArray<infer JA>>
-  ? ExpressionStringReferenceKey<JA>
-  : */ TValue extends ExpressionStringReferenceKey<
-  infer J
->
-  ? ExpressionStringReferenceKey<J>
+export type InterpretProjectExpression<TRootValue, TValue> = /*
+ */ TValue extends `$${infer TRawKey}`
+  ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
-  ? InterpretOperator<TRootValue, TValue, TProjectObject>
-  : TValue extends {}
-  ? TProjectObject
+  ? InterpretOperator<TRootValue, TValue>
   : never;
 
 export type ProjectObject<TRootValue, TProject> = {
-  [key in keyof TProject]: InterpretProjectExpression<
-    TRootValue,
-    TProject[key],
-    ProjectObject<TRootValue, TProject[key]>
-  >;
+  [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 
 type AllAccumulateOperators = '$sum' | '$addToSet';
@@ -387,7 +381,18 @@ type ProjectResult<TRootValue, TValue> = TValue extends ExpressionStringReferenc
           | DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
           | DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
         $eq: boolean;
-        $map: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'in'>>[];
+        $map: LookupKey<LookupKey<TValue, '$map'>, 'as'> extends string
+          ? DeReferenceExpression<
+              TRootValue &
+                {
+                  [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<
+                    TRootValue,
+                    LookupKey<LookupKey<TValue, '$map'>, 'input'>
+                  >;
+                },
+              LookupKey<LookupKey<TValue, '$map'>, 'in'>
+            >[]
+          : never;
         $sum: number;
 
         $abs: number;
@@ -536,7 +541,7 @@ export type ProjectObjectResult<TRootValue, TObj> = {
 
 export type LookupKey<T, TKey> = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
 
-export type InterpretAccumulateExpression<TRootValue, TValue, TProjectObject> = /*
+export type InterpretAccumulateExpression<TRootValue, TValue> = /*
  */ /* TValue extends ExpressionStringReferenceKey<FlattenArray<infer JA>>
   ? ExpressionStringReferenceKey<JA>
   :*/ TValue extends ExpressionStringReferenceKey<
@@ -546,9 +551,7 @@ export type InterpretAccumulateExpression<TRootValue, TValue, TProjectObject> = 
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllAccumulateOperators
-  ? InterpretOperator<TRootValue, TValue, TProjectObject>
-  : TValue extends {}
-  ? TProjectObject
+  ? InterpretOperator<TRootValue, TValue>
   : never;
 
 export type AccumulateObject<TRootValue, TAccumulateObject> = {

@@ -1,4 +1,4 @@
-import {Aggregator, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
+import {Aggregator, DeReferenceExpression, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, NotHas} from 'conditional-type-checks';
 import {DeepKeysValue} from '../src/deepQuery';
@@ -111,11 +111,11 @@ test('project.$cond.ref', async () => {
 });
 
 test('project.$eq', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
       $eq: [true, true],
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$eq: [true, true]}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -123,47 +123,59 @@ test('project.$eq', async () => {
 });
 
 test('project.$eq.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
-      $eq: [agg.referenceKey((a) => a.doors.side), agg.referenceKey((a) => a.doors.childLocks)],
+      $eq: ['$doors.side', '$doors.childLocks'],
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$eq: ['$doors.side', '$doors.childLocks']}}}]);
 
   const [result] = await aggregator.result(mockCollection);
+
   assert<Has<{shoes: boolean}, typeof result>>(true);
 });
 
+/*
+    $map: <TAsKey extends string, TAsValue, TArrayInput>(
+      input: ExpressionStringKey<TArrayInput>,
+      as: TAsKey,
+      inArg: (agg: AggregatorLookup<{[key in TAsKey]: TArrayInput} & T>) => ProjectObject<TAsValue>
+    ): {
+      $map: {
+        input: typeof input;
+        as: typeof as;
+        in: ProjectObject<TAsValue>;
+      };
+    } => {
+      return {
+        $map: {
+          input,
+          as,
+          in: (inArg(
+            new AggregatorLookup<{[key in TAsKey]: TArrayInput} & T>(this.variableLookupLevel + 1)
+          ) as unknown) as ProjectObject<TAsValue>,
+        },
+      };
+    },*/
+//agg.operators.$map( agg.key((a) => a.doors), 'thing', (innerAgg) => ({ a: true, b: 1, }) )
 test('project.$map', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    shoes: agg.operators.$map(
-      agg.key((a) => a.doors),
-      'thing',
-      (innerAgg) => ({
-        a: true,
-        b: 1,
-      })
-    ),
-  }));
-  expect(aggregator.query()).toEqual([{$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: 1}}}}}]);
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: 1}}},
+  });
+  expect(aggregator.query()).toEqual([
+    {$project: {shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: 1}}}}},
+  ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{shoes: {a: true; b: number}[]}, typeof result>>(true);
+  assert<Has<{shoes: {a: true; b: 1}[]}, typeof result>>(true);
 });
 
 test('project.$map.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    shoes: agg.operators.$map(
-      agg.key((a) => a.doors),
-      'thing',
-      (innerAgg) => ({
-        a: true,
-        b: innerAgg.referenceKey((a) => a.thing.someNumber),
-      })
-    ),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: '$$thing.someNumber'}}},
+  } as const);
   expect(aggregator.query()).toEqual([
-    {$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: '$$thing.someNumber'}}}}},
+    {$project: {shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: '$$thing.someNumber'}}}}},
   ]);
 
   const [result] = await aggregator.result(mockCollection);
