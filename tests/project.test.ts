@@ -1,6 +1,7 @@
-import {Aggregator} from '../src/typeSafeAggregate';
+import {Aggregator, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
-import {assert, Has} from 'conditional-type-checks';
+import {assert, Has, NotHas} from 'conditional-type-checks';
+import {DeepKeysValue} from '../src/deepQuery';
 
 const mockCollection: any = {
   aggregate: () => ({
@@ -32,6 +33,7 @@ test('project.$dateToString', async () => {
   assert<Has<{shoes: string}, typeof result>>(true);
 });
 
+const j: ExpressionStringReferenceKey<DBCar, Date> = '$someDate';
 test('project.$dateToString.ref', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
@@ -48,11 +50,11 @@ test('project.$dateToString.ref', async () => {
 });
 
 test('project.$sum', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
       $sum: 7,
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -60,11 +62,11 @@ test('project.$sum', async () => {
 });
 
 test('project.$sum.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
-      $sum: agg.referenceKey((a) => a.doors.someNumber),
+      $sum: '$doors.someNumber',
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: '$doors.someNumber'}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -72,7 +74,7 @@ test('project.$sum.ref', async () => {
 });
 
 test('project.$cond', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
       $cond: {
         if: true,
@@ -80,7 +82,7 @@ test('project.$cond', async () => {
         else: 2,
       },
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$cond: {if: true, then: 1, else: 2}}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -88,21 +90,24 @@ test('project.$cond', async () => {
 });
 
 test('project.$cond.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
       $cond: {
-        if: agg.referenceKey((a) => a.doors.side),
-        then: agg.referenceKey((a) => a.doors.side),
-        else: agg.referenceKey((a) => a.doors.bolts),
+        if: '$doors.side',
+        then: '$doors.side',
+        else: '$doors.bolts',
       },
     },
-  }));
+  });
   expect(aggregator.query()).toEqual([
     {$project: {shoes: {$cond: {if: '$doors.side', then: '$doors.side', else: '$doors.bolts'}}}},
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{shoes: ('left' | 'right') | Bolt[]}, typeof result>>(true);
+  const m = typeof result.shoes === 'string' ? result.shoes === 'left' : result.shoes[0].type;
+
+  assert<Has<{shoes: 'left' | 'right' | Bolt[]}, typeof result>>(true);
+  assert<NotHas<{shoes: Bolt}, typeof result>>(true);
 });
 
 test('project.$eq', async () => {

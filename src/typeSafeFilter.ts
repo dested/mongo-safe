@@ -1,4 +1,4 @@
-import {DeepKeys, DeepKeysType, DeepQuery} from './deepQuery';
+import {DeepKeys, DeepKeysValue, DeepQuery} from './deepQuery';
 
 type BSONTypeAlias =
   | 'number'
@@ -92,7 +92,7 @@ export type RootQuerySelector<T> = {
 };
 
 export type SafeFilterQuery<T> = {
-  [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysType<T, key>> | QuerySelector<DeepKeysType<T, key>>;
+  [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
 } &
   RootQuerySelector<T>;
 

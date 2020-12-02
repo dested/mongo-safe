@@ -1,4 +1,4 @@
-import {DeepKeys, DeepKeysType, DeepQuery} from '../src/deepQuery';
+import {DeepKeys, DeepKeysValue, DeepQuery} from '../src/deepQuery';
 
 const a = {
   a: 1,
@@ -42,8 +42,8 @@ const testQuery = {aa: 1, n: 1};
 filter<typeof a>(testQuery);
 filter<typeof a>({a: 1, n: 7});
 filter<typeof a>({a: 1, 'n.0': 7});
-const d: DeepKeysType<typeof a, 'n.0'> = 7;
-const de: DeepKeysType<typeof a, 'a'> = 7;
+const d: DeepKeysValue<typeof a, 'n.0'> = 7;
+const de: DeepKeysValue<typeof a, 'a'> = 7;
 
 function filter<T>(query: DeepQuery<T>): T {
   return undefined!;
