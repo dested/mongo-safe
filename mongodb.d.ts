@@ -1644,7 +1644,8 @@ declare module 'mongodb' {
     DeepQuery<TSchema, any[]>;
 
   /** https://docs.mongodb.com/manual/reference/operator/update */
-  export type UpdateQuery<TSchema> = {
+  export type UpdateQuery<TSchema> = UpdateQueryImpl<DeepRequired<T>>;
+  type UpdateQueryImpl<TSchema> = {
     /** https://docs.mongodb.com/manual/reference/operator/update-field/ */
     $currentDate?: OnlyFieldsOfType<TSchema, Date, true | {$type: 'date' | 'timestamp'}>;
     $inc?: OnlyFieldsOfType<TSchema, NumericTypes | undefined>;
@@ -1800,7 +1801,14 @@ declare module 'mongodb' {
 
   export type Condition<T> = MongoAltQuery<T> | QuerySelector<MongoAltQuery<T>>;
 
-  export type FilterQuery<T> = {
+  type DontDeepRequire = ObjectID | Decimal128 | Double | Int32 | Long;
+
+  export type DeepRequired<T> = {
+    [P in keyof T]-?: T[P] extends DontDeepRequire ? T[P] : T[P] extends {} ? DeepRequired<T[P]> : T[P];
+  };
+
+  export type FilterQuery<T> = FilterQueryImpl<DeepRequired<T>>;
+  type FilterQueryImpl<T> = {
     [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
   } &
     RootQuerySelector<T>;

@@ -1,8 +1,9 @@
-import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId } from 'mongodb';
-declare type RawTypes = number | boolean | string | ObjectID;
+import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired } from 'mongodb';
+declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 declare type OnlyArrayFields<T> = {
     [key in keyof T]: T[key] extends Array<infer J> ? key : never;
 }[keyof T];
+declare type FirstTupleElement<T> = T extends [infer Item, ...infer rest] ? Item : never;
 export declare type UnArray<T> = T extends Array<infer U> ? U : T;
 declare type ReplaceKey<T, TKey, TValue> = {
     [key in keyof T]: key extends TKey ? TValue : T[key];
@@ -12,36 +13,8 @@ export declare type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${i
 } : TRef;
 declare type NotImplementedYet = never;
 declare type AllOperators = '$dateToString' | '$cond' | '$eq' | '$map' | '$sum' | '$abs' | '$acos' | '$acosh' | '$add' | '$addToSet' | '$allElementsTrue' | '$and' | '$anyElementTrue' | '$arrayElemAt' | '$arrayToObject' | '$asin' | '$asinh' | '$atan' | '$atan2' | '$atanh' | '$avg' | '$ceil' | '$cmp' | '$concat' | '$concatArrays' | '$convert' | '$cos' | '$dateFromParts' | '$dateToParts' | '$dateFromString' | '$dayOfMonth' | '$dayOfWeek' | '$dayOfYear' | '$degreesToRadians' | '$divide' | '$exp' | '$filter' | '$first' | '$floor' | '$gt' | '$gte' | '$hour' | '$ifNull' | '$in' | '$indexOfArray' | '$indexOfBytes' | '$indexOfCP' | '$isArray' | '$isoDayOfWeek' | '$isoWeek' | '$isoWeekYear' | '$last' | '$let' | '$literal' | '$ln' | '$log' | '$log10' | '$lt' | '$lte' | '$ltrim' | '$max' | '$mergeObjects' | '$meta' | '$min' | '$millisecond' | '$minute' | '$mod' | '$month' | '$multiply' | '$ne' | '$not' | '$objectToArray' | '$or' | '$pow' | '$push' | '$radiansToDegrees' | '$range' | '$reduce' | '$regexFind' | '$regexFindAll' | '$regexMatch' | '$reverseArray' | '$round' | '$rtrim' | '$second' | '$setDifference' | '$setEquals' | '$setIntersection' | '$setIsSubset' | '$setUnion' | '$size' | '$sin' | '$slice' | '$split' | '$sqrt' | '$stdDevPop' | '$stdDevSamp' | '$strcasecmp' | '$strLenBytes' | '$strLenCP' | '$substr' | '$substrBytes' | '$substrCP' | '$subtract' | '$switch' | '$tan' | '$toBool' | '$toDate' | '$toDecimal' | '$toDouble' | '$toInt' | '$toLong' | '$toObjectId' | '$toString' | '$toLower' | '$toUpper' | '$trim' | '$trunc' | '$type' | '$week' | '$year' | '$zip';
-declare type ExpressionType<TRootValue, TForceValue> = ExpressionStringReferenceKey<TRootValue, TForceValue> | TForceValue;
-declare type ExpressionOrAny<TTest, TRootValue, TForceValue = any> = TTest extends `$${infer J}` ? ExpressionStringReferenceKey<TRootValue> : any;
-declare type InterpretExpressionForceType<TRootValue, TValue, TForcedType = any> = DeReferenceExpression<TRootValue, TValue> extends TForcedType ? InterpretProjectExpression<TRootValue, TValue> : ProjectResult<TRootValue, TValue> extends TForcedType ? InterpretProjectExpression<TRootValue, TValue> : never;
-declare type InterpretOperator<TRootValue, TValue> = {
-    $dateToString?: {
-        date: ExpressionType<TRootValue, Date>;
-        format?: string;
-    };
-    $sum?: InterpretExpressionForceType<TRootValue, LookupKey<TValue, '$sum'>, NumericTypes>;
-    $cond?: {
-        if: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'if'>, TRootValue>;
-        then: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'then'>, TRootValue>;
-        else: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'else'>, TRootValue>;
-    };
-    $eq?: LookupKey<TValue, '$eq'> extends [
-        InterpretProjectExpression<TRootValue, infer TLeft>,
-        InterpretProjectExpression<TRootValue, infer TRight>
-    ] ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>] : never;
-    $map?: LookupKey<TValue, '$map'> extends {
-        input: ExpressionStringReferenceKey<TRootValue>;
-        as: string;
-        in: infer TIn;
-    } ? {
-        input: ExpressionStringReferenceKey<TRootValue>;
-        as: LookupKey<LookupKey<TValue, '$map'>, 'as'>;
-        in: ProjectObject<TRootValue & {
-            [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
-        }, TIn>;
-    } : never;
-    $abs?: InterpretExpressionForceType<TRootValue, LookupKey<TValue, '$abs'>, number>;
+declare type InterpretProjectOperator<TRootValue, TValue> = {
+    $abs?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$abs'>>;
     $acos?: NotImplementedYet;
     $acosh?: NotImplementedYet;
     $add?: NotImplementedYet;
@@ -49,7 +22,10 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $allElementsTrue?: NotImplementedYet;
     $and?: NotImplementedYet;
     $anyElementTrue?: NotImplementedYet;
-    $arrayElemAt?: NotImplementedYet;
+    $arrayElemAt?: LookupKey<TValue, '$arrayElemAt'> extends [
+        InterpretProjectExpression<TRootValue, infer TArray>,
+        InterpretProjectExpression<TRootValue, infer TIndex>
+    ] ? [InterpretProjectExpression<TRootValue, TArray>, InterpretProjectExpression<TRootValue, TIndex>] : never;
     $arrayToObject?: NotImplementedYet;
     $asin?: NotImplementedYet;
     $asinh?: NotImplementedYet;
@@ -61,16 +37,29 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $cmp?: NotImplementedYet;
     $concat?: LookupKey<TValue, '$concat'> extends InterpretProjectExpression<TRootValue, infer TConcat>[] ? InterpretProjectExpression<TRootValue, TConcat>[] : never;
     $concatArrays?: NotImplementedYet;
+    $cond?: {
+        else: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+        if: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'if'>>;
+        then: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>;
+    };
     $convert?: NotImplementedYet;
     $cos?: NotImplementedYet;
     $dateFromParts?: NotImplementedYet;
-    $dateToParts?: NotImplementedYet;
     $dateFromString?: NotImplementedYet;
+    $dateToParts?: NotImplementedYet;
+    $dateToString?: {
+        date: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$dateToString'>, 'date'>>;
+        format?: string;
+    };
     $dayOfMonth?: NotImplementedYet;
     $dayOfWeek?: NotImplementedYet;
     $dayOfYear?: NotImplementedYet;
     $degreesToRadians?: NotImplementedYet;
     $divide?: NotImplementedYet;
+    $eq?: LookupKey<TValue, '$eq'> extends [
+        InterpretProjectExpression<TRootValue, infer TLeft>,
+        InterpretProjectExpression<TRootValue, infer TRight>
+    ] ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>] : never;
     $exp?: NotImplementedYet;
     $filter?: NotImplementedYet;
     $first?: LookupKey<TValue, '$first'> extends InterpretProjectExpression<TRootValue, infer TFirst> ? InterpretProjectExpression<TRootValue, TFirst> : never;
@@ -79,7 +68,7 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $gte?: NotImplementedYet;
     $hour?: NotImplementedYet;
     $ifNull?: LookupKey<TValue, '$ifNull'> extends InterpretProjectExpression<TRootValue, infer TIfNull>[] ? InterpretProjectExpression<TRootValue, TIfNull>[] : never;
-    $in?: NotImplementedYet;
+    $in?: LookupKey<TValue, '$in'> extends InterpretProjectExpression<TRootValue, infer TIn> ? InterpretProjectExpression<TRootValue, TIn> : never;
     $indexOfArray?: NotImplementedYet;
     $indexOfBytes?: NotImplementedYet;
     $indexOfCP?: NotImplementedYet;
@@ -96,11 +85,22 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $lt?: NotImplementedYet;
     $lte?: NotImplementedYet;
     $ltrim?: NotImplementedYet;
-    $max?: NotImplementedYet;
+    $map?: LookupKey<TValue, '$map'> extends {
+        as: string;
+        in: infer TIn;
+        input: ExpressionStringReferenceKey<TRootValue>;
+    } ? {
+        as: LookupKey<LookupKey<TValue, '$map'>, 'as'>;
+        in: ProjectObject<TRootValue & {
+            [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
+        }, TIn>;
+        input: ExpressionStringReferenceKey<TRootValue>;
+    } : never;
+    $max?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$max'>>;
     $mergeObjects?: NotImplementedYet;
     $meta?: NotImplementedYet;
-    $min?: NotImplementedYet;
     $millisecond?: NotImplementedYet;
+    $min?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$min'>>;
     $minute?: NotImplementedYet;
     $mod?: NotImplementedYet;
     $month?: NotImplementedYet;
@@ -110,7 +110,7 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $objectToArray?: NotImplementedYet;
     $or?: NotImplementedYet;
     $pow?: NotImplementedYet;
-    $push?: NotImplementedYet;
+    $push?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$push'>>;
     $radiansToDegrees?: NotImplementedYet;
     $range?: NotImplementedYet;
     $reduce?: NotImplementedYet;
@@ -126,8 +126,8 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $setIntersection?: NotImplementedYet;
     $setIsSubset?: NotImplementedYet;
     $setUnion?: NotImplementedYet;
-    $size?: NotImplementedYet;
     $sin?: NotImplementedYet;
+    $size?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$size'>>;
     $slice?: NotImplementedYet;
     $split?: NotImplementedYet;
     $sqrt?: NotImplementedYet;
@@ -139,7 +139,8 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $substr?: NotImplementedYet;
     $substrBytes?: NotImplementedYet;
     $substrCP?: NotImplementedYet;
-    $subtract?: NotImplementedYet;
+    $subtract?: LookupKey<TValue, '$subtract'> extends InterpretProjectExpression<TRootValue, infer TSubtract>[] ? InterpretProjectExpression<TRootValue, TSubtract>[] : never;
+    $sum?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$sum'>>;
     $switch?: NotImplementedYet;
     $tan?: NotImplementedYet;
     $toBool?: NotImplementedYet;
@@ -148,9 +149,9 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $toDouble?: NotImplementedYet;
     $toInt?: NotImplementedYet;
     $toLong?: NotImplementedYet;
+    $toLower?: NotImplementedYet;
     $toObjectId?: NotImplementedYet;
     $toString?: NotImplementedYet;
-    $toLower?: NotImplementedYet;
     $toUpper?: NotImplementedYet;
     $trim?: NotImplementedYet;
     $trunc?: NotImplementedYet;
@@ -159,31 +160,36 @@ declare type InterpretOperator<TRootValue, TValue> = {
     $year?: NotImplementedYet;
     $zip?: NotImplementedYet;
 };
+declare type InterpretAccumulateOperator<TRootValue, TValue> = {
+    $addToSet?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$addToSet'>>;
+    $arrayElemAt?: LookupKey<TValue, '$arrayElemAt'> extends [
+        InterpretAccumulateExpression<TRootValue, infer TArray>,
+        InterpretAccumulateExpression<TRootValue, infer TIndex>
+    ] ? [InterpretAccumulateExpression<TRootValue, TArray>, InterpretAccumulateExpression<TRootValue, TIndex>] : never;
+    $first?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$first'>>;
+    $max?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$max'>>;
+    $min?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$min'>>;
+    $push?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$push'>>;
+    $sum?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$sum'>>;
+};
 export declare type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
     [key in DeepKeys<T> as DeepKeysValue<T, key> extends ForceValue ? DeepKeysValue<T, key> extends never ? never : `$${key}` : never]: 1;
 };
-export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretOperator<TRootValue, TValue> : TValue extends {} ? ProjectObject<TRootValue, TValue> : never;
+export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretProjectOperator<TRootValue, TValue> : TValue extends {} ? ProjectObject<TRootValue, TValue> : never;
 declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
-declare type AllAccumulateOperators = '$sum' | '$addToSet' | '$first';
+declare type AllAccumulateOperators = '$sum' | '$addToSet' | '$first' | '$min' | '$push' | '$arrayElemAt';
 declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? LookupKey<{
-    $dateToString: string;
-    $cond: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
-    $eq: boolean;
-    $map: LookupKey<LookupKey<TValue, '$map'>, 'as'> extends string ? DeReferenceExpression<TRootValue & {
-        [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
-    }, LookupKey<LookupKey<TValue, '$map'>, 'in'>>[] : never;
-    $sum: number;
     $abs: number;
     $acos: NotImplementedYet;
     $acosh: NotImplementedYet;
     $add: NotImplementedYet;
-    $addToSet: DeReferenceExpression<TRootValue, LookupKey<TValue, '$addToSet'>>[];
+    $addToSet: ProjectResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
     $allElementsTrue: NotImplementedYet;
     $and: NotImplementedYet;
     $anyElementTrue: NotImplementedYet;
-    $arrayElemAt: NotImplementedYet;
+    $arrayElemAt: UnArray<ProjectResult<TRootValue, FirstTupleElement<LookupKey<TValue, '$arrayElemAt'>>>>;
     $arrayToObject: NotImplementedYet;
     $asin: NotImplementedYet;
     $asinh: NotImplementedYet;
@@ -195,25 +201,28 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $cmp: NotImplementedYet;
     $concat: string;
     $concatArrays: NotImplementedYet;
+    $cond: ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
     $convert: NotImplementedYet;
     $cos: NotImplementedYet;
     $dateFromParts: NotImplementedYet;
-    $dateToParts: NotImplementedYet;
     $dateFromString: NotImplementedYet;
+    $dateToParts: NotImplementedYet;
+    $dateToString: string;
     $dayOfMonth: NotImplementedYet;
     $dayOfWeek: NotImplementedYet;
     $dayOfYear: NotImplementedYet;
     $degreesToRadians: NotImplementedYet;
     $divide: NotImplementedYet;
+    $eq: boolean;
     $exp: NotImplementedYet;
     $filter: NotImplementedYet;
-    $first: DeReferenceExpression<TRootValue, LookupKey<TValue, '$first'>>;
+    $first: ProjectResult<TRootValue, LookupKey<TValue, '$first'>>;
     $floor: NotImplementedYet;
     $gt: NotImplementedYet;
     $gte: NotImplementedYet;
     $hour: NotImplementedYet;
-    $ifNull: DeReferenceExpression<TRootValue, LookupKey<TValue, '$ifNull'>>;
-    $in: NotImplementedYet;
+    $ifNull: ProjectResult<TRootValue, LookupKey<TValue, '$ifNull'>>;
+    $in: ProjectResult<TRootValue, LookupKey<TValue, '$in'>>;
     $indexOfArray: NotImplementedYet;
     $indexOfBytes: NotImplementedYet;
     $indexOfCP: NotImplementedYet;
@@ -230,11 +239,14 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $lt: NotImplementedYet;
     $lte: NotImplementedYet;
     $ltrim: NotImplementedYet;
-    $max: NotImplementedYet;
+    $map: LookupKey<LookupKey<TValue, '$map'>, 'as'> extends string ? ProjectResult<TRootValue & {
+        [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
+    }, LookupKey<LookupKey<TValue, '$map'>, 'in'>>[] : never;
+    $max: number;
     $mergeObjects: NotImplementedYet;
     $meta: NotImplementedYet;
-    $min: NotImplementedYet;
     $millisecond: NotImplementedYet;
+    $min: number;
     $minute: NotImplementedYet;
     $mod: NotImplementedYet;
     $month: NotImplementedYet;
@@ -244,7 +256,7 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $objectToArray: NotImplementedYet;
     $or: NotImplementedYet;
     $pow: NotImplementedYet;
-    $push: NotImplementedYet;
+    $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
     $radiansToDegrees: NotImplementedYet;
     $range: NotImplementedYet;
     $reduce: NotImplementedYet;
@@ -260,8 +272,8 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $setIntersection: NotImplementedYet;
     $setIsSubset: NotImplementedYet;
     $setUnion: NotImplementedYet;
-    $size: NotImplementedYet;
     $sin: NotImplementedYet;
+    $size: number;
     $slice: NotImplementedYet;
     $split: NotImplementedYet;
     $sqrt: NotImplementedYet;
@@ -273,7 +285,8 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $substr: NotImplementedYet;
     $substrBytes: NotImplementedYet;
     $substrCP: NotImplementedYet;
-    $subtract: NotImplementedYet;
+    $subtract: number;
+    $sum: number;
     $switch: NotImplementedYet;
     $tan: NotImplementedYet;
     $toBool: NotImplementedYet;
@@ -282,9 +295,9 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $toDouble: NotImplementedYet;
     $toInt: NotImplementedYet;
     $toLong: NotImplementedYet;
+    $toLower: NotImplementedYet;
     $toObjectId: NotImplementedYet;
     $toString: NotImplementedYet;
-    $toLower: NotImplementedYet;
     $toUpper: NotImplementedYet;
     $trim: NotImplementedYet;
     $trunc: NotImplementedYet;
@@ -293,10 +306,13 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $year: NotImplementedYet;
     $zip: NotImplementedYet;
 }, keyof TValue> : TValue extends {} ? ProjectObjectResult<TRootValue, TValue> : never;
-declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? LookupKey<{
+declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? LookupKey<{
     $sum: number;
-    $addToSet: DeReferenceExpression<TRootValue, LookupKey<TValue, '$addToSet'>>[];
-    $first: DeReferenceExpression<TRootValue, LookupKey<TValue, '$first'>>;
+    $addToSet: AccumulateResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
+    $first: AccumulateResult<TRootValue, LookupKey<TValue, '$first'>>;
+    $min: number;
+    $arrayElemAt: UnArray<AccumulateResult<TRootValue, FirstTupleElement<LookupKey<TValue, '$arrayElemAt'>>>>;
+    $push: AccumulateResult<TRootValue, LookupKey<TValue, '$push'>>[];
 }, keyof TValue> : TValue extends {} ? AccumulateObjectResult<TRootValue, TValue> : never;
 export declare type ProjectObjectResult<TRootValue, TObj> = {
     [key in keyof TObj]: ProjectResult<TRootValue, TObj[key]>;
@@ -304,50 +320,62 @@ export declare type ProjectObjectResult<TRootValue, TObj> = {
 export declare type LookupKey<T, TKey> = {
     [key in keyof T]: key extends TKey ? T[key] : never;
 }[keyof T];
-declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretOperator<TRootValue, TValue> : never;
+declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : TValue extends {} ? AccumulateObject<TRootValue, TValue> : never;
 declare type AccumulateObject<TRootValue, TAccumulateObject> = {
     [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
 declare type AccumulateObjectResult<TRootValue, TObj> = {
     [key in keyof TObj]: AccumulateResult<TRootValue, TObj[key]>;
 };
-declare type $LookupType<T, TLookupTable, TAs extends string> = {
-    from: string;
-    localField: DeepKeys<T>;
-    foreignField: DeepKeys<TLookupTable>;
-    as: TAs;
-};
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
     private constructor();
-    $lookup<TLookupTable, TAs extends string>(props: $LookupType<T, TLookupTable, TAs>): Aggregator<T & {
-        [key in TAs]: TLookupTable[];
-    }>;
+    static start<T>(): Aggregator<DeepRequired<T>>;
     $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectObjectResult<T, TProject>>;
+    $bucket(): Aggregator<T>;
+    $bucketAuto(): Aggregator<T>;
+    $collStats(): Aggregator<T>;
     $count<TKey extends string>(key: TKey): Aggregator<{
         [cKey in TKey]: number;
     }>;
-    $limit(limit: number): Aggregator<T>;
-    $group<TId, TAccumulator extends {}>(props: {
-        _id: InterpretProjectExpression<T, TId>;
-    }, body?: AccumulateObject<T, TAccumulator>): Aggregator<{
-        _id: ProjectResult<T, TId>;
-    } & AccumulateObjectResult<T, TAccumulator>>;
+    $currentOp(): Aggregator<T>;
+    $facet(): Aggregator<T>;
+    $geoNear(): Aggregator<T>;
     $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
+        as: TAs;
         collectionName: string;
-        startWith: ExpressionStringReferenceKey<T>;
         connectFromField: DeepKeys<T>;
         connectToField: DeepKeys<TOther>;
-        as: TAs;
-        maxDepth?: number;
         depthField?: TDepthField;
+        maxDepth?: number;
+        startWith: ExpressionStringReferenceKey<T>;
     }): Aggregator<T & {
         [key in TAs]: (TOther & {
             [oKey in TDepthField]: number;
         })[];
     }>;
+    $group<TId, TAccumulator extends {}>(props: {
+        _id: InterpretProjectExpression<T, TId>;
+    }, body?: AccumulateObject<T, TAccumulator>): Aggregator<{
+        _id: ProjectResult<T, TId>;
+    } & AccumulateObjectResult<T, TAccumulator>>;
+    $indexStats(): Aggregator<T>;
+    $limit(limit: number): Aggregator<T>;
+    $listLocalSessions(): Aggregator<T>;
+    $listSessions(): Aggregator<T>;
+    $lookup<TLookupTable, TAs extends string>(props: {
+        from: string;
+        localField: DeepKeys<T>;
+        foreignField: DeepKeys<TLookupTable>;
+        as: TAs;
+    }): Aggregator<T & {
+        [key in TAs]: TLookupTable[];
+    }>;
     $match(query: FilterQuery<T>): Aggregator<T>;
+    $merge(): Aggregator<T>;
+    $out(): Aggregator<T>;
+    $planCacheStats(): Aggregator<T>;
     $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<ProjectObjectResult<T, TProject>>;
     $redact(): Aggregator<T>;
     $replaceRoot(): Aggregator<T>;
@@ -363,10 +391,9 @@ export declare class Aggregator<T> {
     $unwind<TKey extends OnlyArrayFields<T>>(key: TKey): Aggregator<ReplaceKey<T, TKey, UnArray<T[TKey]>>>;
     $unwind<TKey extends keyof T, TKey2 extends OnlyArrayFields<T[TKey]>>(key: TKey, key2: TKey2): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, UnArray<T[TKey][TKey2]>>>>;
     $unwind<TKey extends keyof T, TKey2 extends keyof T[TKey], TKey3 extends OnlyArrayFields<T[TKey][TKey2]>>(key: TKey, key2: TKey2, key3: TKey3): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, ReplaceKey<T[TKey][TKey2], TKey3, UnArray<T[TKey][TKey2][TKey3]>>>>>;
+    query(): {}[];
     result<TDoc extends {
         _id: ObjectId;
     }>(collection: Collection<TDoc>): Promise<T[]>;
-    static start<T>(): Aggregator<T>;
-    query(): {}[];
 }
 export {};

@@ -1,3 +1,4 @@
+/// <reference path="../mongodb.d.ts"/>
 import {
   Aggregator,
   ExpressionStringReferenceKey,
@@ -6,7 +7,7 @@ import {
   UnArray,
 } from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
-import {assert, Has, NotHas} from 'conditional-type-checks';
+import {assert, Has, NotHas, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
 import {Combine, ReplaceKey} from './typeUtils';
@@ -281,6 +282,65 @@ test('$group.simple1', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: 8}, typeof result>>(true);
+});
+
+test('$group.groupThenAddField', async () => {
+  const aggregator = Aggregator.start<DBCar>().$group({_id: 8}, {a: 1}).$addFields({
+    shoes: '$a',
+  });
+
+  expect(aggregator.query()).toEqual([{$group: {_id: 8, a: 1}}, {$addFields: {shoes: '$a'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: 8; a: 1; shoes: 1}, typeof result>>(true);
+});
+
+test('$group.groupThenAddFieldDeep', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$group(
+      {_id: 8},
+      {
+        numbersLeftArr: {
+          $push: {
+            boardId: '$_id',
+            count: {
+              $arrayElemAt: ['$doors', 0],
+            },
+          },
+        },
+      }
+    )
+    .$addFields({
+      shoes: {
+        $min: '$numbersLeftArr.count',
+      },
+    });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $group: {
+        _id: 8,
+        numbersLeftArr: {
+          $push: {
+            boardId: '$_id',
+            count: {
+              $arrayElemAt: ['$doors', 0],
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        shoes: {
+          $min: '$numbersLeftArr.count',
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: 8; numbersLeftArr: {boardId: ObjectID; count: Door}[]; shoes: number}, typeof result>>(true);
 });
 
 test('$group.simple2', async () => {

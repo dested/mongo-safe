@@ -1,4 +1,5 @@
-import {Aggregator} from '../src/typeSafeAggregate';
+/// <reference path="../mongodb.d.ts"/>
+import {Aggregator} from '../src';
 import {DBCar} from './models/dbCar';
 import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';

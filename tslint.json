@@ -1,12 +1,7 @@
 {
   "defaultSeverity": "error",
-  "extends": [
-    "tslint:recommended",
-    "tslint-eslint-rules",
-    "tslint-config-prettier"
-  ],
-  "jsRules": {
-  },
+  "extends": ["tslint:recommended", "tslint-eslint-rules", "tslint-config-prettier"],
+  "jsRules": {},
   "rules": {
     "radix": false,
     "member-ordering": false,
@@ -34,17 +29,9 @@
     "no-unused-expression": false,
     "arrow-parens": false,
     "interface-name": false,
-    "member-access": [
-      true,
-      "no-public"
-    ],
+    "member-access": [true, "no-public"],
     "prettier": true,
-    "ter-arrow-body-style": [
-      false,
-      "never"
-    ]
+    "ter-arrow-body-style": [false, "never"]
   },
-  "rulesDirectory": [
-    "tslint-plugin-prettier"
-  ]
+  "rulesDirectory": ["tslint-plugin-prettier"]
 }
