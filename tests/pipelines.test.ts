@@ -339,8 +339,9 @@ test('$group.groupThenAddFieldDeep', async () => {
     },
   ]);
 
-  const [result] = await aggregator.result(mockCollection);
-  assert<Has<{_id: 8; numbersLeftArr: {boardId: ObjectID; count: Door}[]; shoes: number}, typeof result>>(true);
+  const result = await aggregator.result(mockCollection);
+  const j = result.map((a) => a.numbersLeftArr.map((b) => b.count)); // should not be excesively deep
+  assert<Has<{_id: 8; numbersLeftArr: {boardId: ObjectID; count: Door}[]; shoes: number}, typeof result[0]>>(true);
 });
 
 test('$group.simple2', async () => {
