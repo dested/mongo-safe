@@ -1,6 +1,13 @@
-import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
-import {Collection, ObjectID, ObjectId} from 'mongodb';
-import {DeepKeys, DeepKeysResult, DeepKeysValue} from './deepQuery';
+import {
+  DeepKeys,
+  DeepKeysResult,
+  DeepKeysValue,
+  FilterQuery,
+  NumericTypes,
+  Collection,
+  ObjectID,
+  ObjectId,
+} from 'mongodb';
 
 type RawTypes = number | boolean | string | ObjectID;
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
@@ -8,7 +15,7 @@ type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
-export type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
+type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 
 export type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -160,7 +167,7 @@ type InterpretOperator<TRootValue, TValue> = {
     date: ExpressionType<TRootValue, Date>;
     format?: string;
   };
-  $sum?: InterpretExpressionForceType<TRootValue, LookupKey<TValue, '$sum'>, number>;
+  $sum?: InterpretExpressionForceType<TRootValue, LookupKey<TValue, '$sum'>, NumericTypes>;
   $cond?: {
     if: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'if'>, TRootValue>;
     then: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'then'>, TRootValue>;
@@ -230,12 +237,17 @@ type InterpretOperator<TRootValue, TValue> = {
   $divide?: NotImplementedYet;
   $exp?: NotImplementedYet;
   $filter?: NotImplementedYet;
-  $first?: NotImplementedYet;
+  $first?: LookupKey<TValue, '$first'> extends InterpretProjectExpression<TRootValue, infer TFirst>
+    ? InterpretProjectExpression<TRootValue, TFirst>
+    : never;
+
   $floor?: NotImplementedYet;
   $gt?: NotImplementedYet;
   $gte?: NotImplementedYet;
   $hour?: NotImplementedYet;
-  $ifNull?: NotImplementedYet;
+  $ifNull?: LookupKey<TValue, '$ifNull'> extends InterpretProjectExpression<TRootValue, infer TIfNull>[]
+    ? InterpretProjectExpression<TRootValue, TIfNull>[]
+    : never;
   $in?: NotImplementedYet;
   $indexOfArray?: NotImplementedYet;
   $indexOfBytes?: NotImplementedYet;
@@ -261,7 +273,9 @@ type InterpretOperator<TRootValue, TValue> = {
   $minute?: NotImplementedYet;
   $mod?: NotImplementedYet;
   $month?: NotImplementedYet;
-  $multiply?: NotImplementedYet;
+  $multiply?: LookupKey<TValue, '$multiply'> extends InterpretProjectExpression<TRootValue, infer TMultiply>[]
+    ? InterpretProjectExpression<TRootValue, TMultiply>[]
+    : never;
   $ne?: NotImplementedYet;
   $not?: NotImplementedYet;
   $objectToArray?: NotImplementedYet;
@@ -317,8 +331,6 @@ type InterpretOperator<TRootValue, TValue> = {
   $zip?: NotImplementedYet;
 };
 
-type Values<T> = T[keyof T];
-
 export type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
   [key in DeepKeys<T> as DeepKeysValue<T, key> extends ForceValue
     ? DeepKeysValue<T, key> extends never
@@ -338,11 +350,11 @@ export type InterpretProjectExpression<TRootValue, TValue> = /*
   ? ProjectObject<TRootValue, TValue>
   : never;
 
-export type ProjectObject<TRootValue, TProject> = {
+type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 
-type AllAccumulateOperators = '$sum' | '$addToSet';
+type AllAccumulateOperators = '$sum' | '$addToSet' | '$first';
 
 type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -369,7 +381,6 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
             >[]
           : never;
         $sum: number;
-
         $abs: number;
         $acos: NotImplementedYet;
         $acosh: NotImplementedYet;
@@ -402,12 +413,12 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
         $divide: NotImplementedYet;
         $exp: NotImplementedYet;
         $filter: NotImplementedYet;
-        $first: NotImplementedYet;
+        $first: DeReferenceExpression<TRootValue, LookupKey<TValue, '$first'>>;
         $floor: NotImplementedYet;
         $gt: NotImplementedYet;
         $gte: NotImplementedYet;
         $hour: NotImplementedYet;
-        $ifNull: NotImplementedYet;
+        $ifNull: DeReferenceExpression<TRootValue, LookupKey<TValue, '$ifNull'>>;
         $in: NotImplementedYet;
         $indexOfArray: NotImplementedYet;
         $indexOfBytes: NotImplementedYet;
@@ -433,7 +444,7 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
         $minute: NotImplementedYet;
         $mod: NotImplementedYet;
         $month: NotImplementedYet;
-        $multiply: NotImplementedYet;
+        $multiply: number;
         $ne: NotImplementedYet;
         $not: NotImplementedYet;
         $objectToArray: NotImplementedYet;
@@ -503,6 +514,7 @@ type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
       {
         $sum: number;
         $addToSet: DeReferenceExpression<TRootValue, LookupKey<TValue, '$addToSet'>>[];
+        $first: DeReferenceExpression<TRootValue, LookupKey<TValue, '$first'>>;
       },
       keyof TValue
     >
@@ -516,7 +528,7 @@ export type ProjectObjectResult<TRootValue, TObj> = {
 
 export type LookupKey<T, TKey> = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
 
-export type InterpretAccumulateExpression<TRootValue, TValue> = /*
+type InterpretAccumulateExpression<TRootValue, TValue> = /*
  */ TValue extends `$${infer TRawKey}`
   ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
@@ -525,10 +537,10 @@ export type InterpretAccumulateExpression<TRootValue, TValue> = /*
   ? InterpretOperator<TRootValue, TValue>
   : never;
 
-export type AccumulateObject<TRootValue, TAccumulateObject> = {
+type AccumulateObject<TRootValue, TAccumulateObject> = {
   [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
-export type AccumulateObjectResult<TRootValue, TObj> = {
+type AccumulateObjectResult<TRootValue, TObj> = {
   [key in keyof TObj]: AccumulateResult<TRootValue, TObj[key]>;
 };
 
@@ -539,13 +551,10 @@ type $LookupType<T, TLookupTable, TAs extends string> = {
   as: TAs;
 };
 
-export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
+export class Aggregator<T> {
   private currentPipeline?: {};
 
-  private constructor(private parent?: Aggregator<any>) {
-    // super(parent?.variableLookupLevel ?? 1);
-    // this.variableLookupLevel = parent?.variableLookupLevel ?? 1;
-  }
+  private constructor(private parent?: Aggregator<any>) {}
 
   $lookup<TLookupTable, TAs extends string>(
     props: $LookupType<T, TLookupTable, TAs>
@@ -630,11 +639,9 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
       _id: InterpretProjectExpression<T, TId>;
     },
     body?: AccumulateObject<T, TAccumulator>
-  ): Aggregator<ProjectObjectResult<T, {_id: typeof props['_id']}> & AccumulateObjectResult<T, TAccumulator>> {
+  ): Aggregator<{_id: ProjectResult<T, TId>} & AccumulateObjectResult<T, TAccumulator>> {
     this.currentPipeline = {$group: {...props, ...body}};
-    return new Aggregator<ProjectObjectResult<T, {_id: typeof props['_id']}> & AccumulateObjectResult<T, TAccumulator>>(
-      this
-    );
+    return new Aggregator<{_id: ProjectResult<T, TId>} & AccumulateObjectResult<T, TAccumulator>>(this);
   }
 
   $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
@@ -650,7 +657,7 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
     return new Aggregator<T & {[key in TAs]: (TOther & {[oKey in TDepthField]: number})[]}>(this);
   }
 
-  $match(query: SafeFilterQuery<T>): Aggregator<T> {
+  $match(query: FilterQuery<T>): Aggregator<T> {
     this.currentPipeline = {$match: query};
     return new Aggregator<T>(this);
   }
@@ -736,7 +743,7 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
     return new Aggregator<T>();
   }
 
-  query(): Object[] {
+  query(): {}[] {
     const pipelines = [];
     if (this.currentPipeline) {
       pipelines.push(this.currentPipeline!);

@@ -1,7 +1,6 @@
-import {Aggregator, DeReferenceExpression, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
+import {Aggregator, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, NotHas} from 'conditional-type-checks';
-import {DeepKeysValue} from '../src/deepQuery';
 
 const mockCollection: any = {
   aggregate: () => ({

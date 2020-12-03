@@ -1,5 +1,5 @@
-import {DeepKeys, DeepKeysValue, DeepQuery} from '../src/deepQuery';
 import {assert} from 'conditional-type-checks';
+import {DeepKeys, DeepKeysValue, DeepQuery} from 'mongodb';
 
 const a = {
   a: 1,

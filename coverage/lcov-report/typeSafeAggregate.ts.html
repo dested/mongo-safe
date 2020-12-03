@@ -812,7 +812,26 @@
 <a name='L753'></a><a href='#L753'>753</a>
 <a name='L754'></a><a href='#L754'>754</a>
 <a name='L755'></a><a href='#L755'>755</a>
-<a name='L756'></a><a href='#L756'>756</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L756'></a><a href='#L756'>756</a>
+<a name='L757'></a><a href='#L757'>757</a>
+<a name='L758'></a><a href='#L758'>758</a>
+<a name='L759'></a><a href='#L759'>759</a>
+<a name='L760'></a><a href='#L760'>760</a>
+<a name='L761'></a><a href='#L761'>761</a>
+<a name='L762'></a><a href='#L762'>762</a>
+<a name='L763'></a><a href='#L763'>763</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1361,9 +1380,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1447,8 +1463,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1567,9 +1581,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {SafeFilterQuery, MongoAltQuery, QuerySelector} from './typeSafeFilter';
-import {Collection, ObjectID, ObjectId} from 'mongodb';
-import {DeepKeys, DeepKeysResult, DeepKeysValue} from './deepQuery';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
+  DeepKeys,
+  DeepKeysResult,
+  DeepKeysValue,
+  FilterQuery,
+  NumericTypes,
+  Collection,
+  ObjectID,
+  ObjectId,
+} from 'mongodb';
 &nbsp;
 type RawTypes = number | boolean | string | ObjectID;
 type OnlyArrayFieldsKeys&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;any&gt; ? key : never}[keyof T];
@@ -1577,7 +1598,7 @@ type OnlyArrayFieldsKeys&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;a
 type OnlyArrayFields&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;infer J&gt; ? key : never}[keyof T];
 &nbsp;
 export type UnArray&lt;T&gt; = T extends Array&lt;infer U&gt; ? U : T;
-export type ReplaceKey&lt;T, TKey, TValue&gt; = {[key in keyof T]: key extends TKey ? TValue : T[key]};
+type ReplaceKey&lt;T, TKey, TValue&gt; = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 &nbsp;
 export type DeReferenceExpression&lt;TRootValue, TRef&gt; = TRef extends `$${infer TRawKey}`
   ? DeepKeysResult&lt;TRootValue, TRawKey&gt;
@@ -1729,7 +1750,7 @@ type InterpretOperator&lt;TRootValue, TValue&gt; = {
     date: ExpressionType&lt;TRootValue, Date&gt;;
     format?: string;
   };
-  $sum?: InterpretExpressionForceType&lt;TRootValue, LookupKey&lt;TValue, '$sum'&gt;, number&gt;;
+  $sum?: InterpretExpressionForceType&lt;TRootValue, LookupKey&lt;TValue, '$sum'&gt;, NumericTypes&gt;;
   $cond?: {
     if: ExpressionOrAny&lt;LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'if'&gt;, TRootValue&gt;;
     then: ExpressionOrAny&lt;LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;, TRootValue&gt;;
@@ -1799,12 +1820,17 @@ type InterpretOperator&lt;TRootValue, TValue&gt; = {
   $divide?: NotImplementedYet;
   $exp?: NotImplementedYet;
   $filter?: NotImplementedYet;
-  $first?: NotImplementedYet;
+  $first?: LookupKey&lt;TValue, '$first'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TFirst&gt;
+    ? InterpretProjectExpression&lt;TRootValue, TFirst&gt;
+    : never;
+&nbsp;
   $floor?: NotImplementedYet;
   $gt?: NotImplementedYet;
   $gte?: NotImplementedYet;
   $hour?: NotImplementedYet;
-  $ifNull?: NotImplementedYet;
+  $ifNull?: LookupKey&lt;TValue, '$ifNull'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TIfNull&gt;[]
+    ? InterpretProjectExpression&lt;TRootValue, TIfNull&gt;[]
+    : never;
   $in?: NotImplementedYet;
   $indexOfArray?: NotImplementedYet;
   $indexOfBytes?: NotImplementedYet;
@@ -1830,7 +1856,9 @@ type InterpretOperator&lt;TRootValue, TValue&gt; = {
   $minute?: NotImplementedYet;
   $mod?: NotImplementedYet;
   $month?: NotImplementedYet;
-  $multiply?: NotImplementedYet;
+  $multiply?: LookupKey&lt;TValue, '$multiply'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TMultiply&gt;[]
+    ? InterpretProjectExpression&lt;TRootValue, TMultiply&gt;[]
+    : never;
   $ne?: NotImplementedYet;
   $not?: NotImplementedYet;
   $objectToArray?: NotImplementedYet;
@@ -1886,8 +1914,6 @@ type InterpretOperator&lt;TRootValue, TValue&gt; = {
   $zip?: NotImplementedYet;
 };
 &nbsp;
-type Values&lt;T&gt; = T[keyof T];
-&nbsp;
 export type ExpressionStringReferenceKey&lt;T, ForceValue = any&gt; = keyof {
   [key in DeepKeys&lt;T&gt; as DeepKeysValue&lt;T, key&gt; extends ForceValue
     ? DeepKeysValue&lt;T, key&gt; extends never
@@ -1907,11 +1933,11 @@ export type InterpretProjectExpression&lt;TRootValue, TValue&gt; = /*
   ? ProjectObject&lt;TRootValue, TValue&gt;
   : never;
 &nbsp;
-export type ProjectObject&lt;TRootValue, TProject&gt; = {
+type ProjectObject&lt;TRootValue, TProject&gt; = {
   [key in keyof TProject]: InterpretProjectExpression&lt;TRootValue, TProject[key]&gt;;
 };
 &nbsp;
-type AllAccumulateOperators = '$sum' | '$addToSet';
+type AllAccumulateOperators = '$sum' | '$addToSet' | '$first';
 &nbsp;
 type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult&lt;TRootValue, TRawKey&gt;
@@ -1938,7 +1964,6 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
             &gt;[]
           : never;
         $sum: number;
-&nbsp;
         $abs: number;
         $acos: NotImplementedYet;
         $acosh: NotImplementedYet;
@@ -1971,12 +1996,12 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
         $divide: NotImplementedYet;
         $exp: NotImplementedYet;
         $filter: NotImplementedYet;
-        $first: NotImplementedYet;
+        $first: DeReferenceExpression&lt;TRootValue, LookupKey&lt;TValue, '$first'&gt;&gt;;
         $floor: NotImplementedYet;
         $gt: NotImplementedYet;
         $gte: NotImplementedYet;
         $hour: NotImplementedYet;
-        $ifNull: NotImplementedYet;
+        $ifNull: DeReferenceExpression&lt;TRootValue, LookupKey&lt;TValue, '$ifNull'&gt;&gt;;
         $in: NotImplementedYet;
         $indexOfArray: NotImplementedYet;
         $indexOfBytes: NotImplementedYet;
@@ -2002,7 +2027,7 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
         $minute: NotImplementedYet;
         $mod: NotImplementedYet;
         $month: NotImplementedYet;
-        $multiply: NotImplementedYet;
+        $multiply: number;
         $ne: NotImplementedYet;
         $not: NotImplementedYet;
         $objectToArray: NotImplementedYet;
@@ -2072,6 +2097,7 @@ type AccumulateResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawK
       {
         $sum: number;
         $addToSet: DeReferenceExpression&lt;TRootValue, LookupKey&lt;TValue, '$addToSet'&gt;&gt;[];
+        $first: DeReferenceExpression&lt;TRootValue, LookupKey&lt;TValue, '$first'&gt;&gt;;
       },
       keyof TValue
     &gt;
@@ -2085,7 +2111,7 @@ export type ProjectObjectResult&lt;TRootValue, TObj&gt; = {
 &nbsp;
 export type LookupKey&lt;T, TKey&gt; = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
 &nbsp;
-export type InterpretAccumulateExpression&lt;TRootValue, TValue&gt; = /*
+type InterpretAccumulateExpression&lt;TRootValue, TValue&gt; = /*
  */ TValue extends `$${infer TRawKey}`
   ? ExpressionStringReferenceKey&lt;TRootValue&gt;
   : TValue extends RawTypes
@@ -2094,10 +2120,10 @@ export type InterpretAccumulateExpression&lt;TRootValue, TValue&gt; = /*
   ? InterpretOperator&lt;TRootValue, TValue&gt;
   : never;
 &nbsp;
-export type AccumulateObject&lt;TRootValue, TAccumulateObject&gt; = {
+type AccumulateObject&lt;TRootValue, TAccumulateObject&gt; = {
   [key in keyof TAccumulateObject]: InterpretAccumulateExpression&lt;TRootValue, TAccumulateObject[key]&gt;;
 };
-export type AccumulateObjectResult&lt;TRootValue, TObj&gt; = {
+type AccumulateObjectResult&lt;TRootValue, TObj&gt; = {
   [key in keyof TObj]: AccumulateResult&lt;TRootValue, TObj[key]&gt;;
 };
 &nbsp;
@@ -2108,13 +2134,10 @@ type $LookupType&lt;T, TLookupTable, TAs extends string&gt; = {
   as: TAs;
 };
 &nbsp;
-export class Aggregator&lt;T&gt; /*extends AggregatorLookup&lt;T&gt;*/ {
+export class Aggregator&lt;T&gt; {
   private currentPipeline?: {};
 &nbsp;
-  private constructor(private parent?: Aggregator&lt;any&gt;) {
-    // super(parent?.variableLookupLevel ?? 1);
-    // this.variableLookupLevel = parent?.variableLookupLevel ?? 1;
-  }
+  private constructor(private parent?: Aggregator&lt;any&gt;) {}
 &nbsp;
   $lookup&lt;TLookupTable, TAs extends string&gt;(
     props: $LookupType&lt;T, TLookupTable, TAs&gt;
@@ -2199,11 +2222,9 @@ export class Aggregator&lt;T&gt; /*extends AggregatorLookup&lt;T&gt;*/ {
       _id: InterpretProjectExpression&lt;T, TId&gt;;
     },
     body?: AccumulateObject&lt;T, TAccumulator&gt;
-  ): Aggregator&lt;ProjectObjectResult&lt;T, {_id: typeof props['_id']}&gt; &amp; AccumulateObjectResult&lt;T, TAccumulator&gt;&gt; {
+  ): Aggregator&lt;{_id: ProjectResult&lt;T, TId&gt;} &amp; AccumulateObjectResult&lt;T, TAccumulator&gt;&gt; {
     this.currentPipeline = {$group: {...props, ...body}};
-    return new Aggregator&lt;ProjectObjectResult&lt;T, {_id: typeof props['_id']}&gt; &amp; AccumulateObjectResult&lt;T, TAccumulator&gt;&gt;(
-      this
-    );
+    return new Aggregator&lt;{_id: ProjectResult&lt;T, TId&gt;} &amp; AccumulateObjectResult&lt;T, TAccumulator&gt;&gt;(this);
   }
 &nbsp;
   $graphLookup&lt;TOther, TAs extends string, TDepthField extends string = never&gt;(props: {
@@ -2219,7 +2240,7 @@ export class Aggregator&lt;T&gt; /*extends AggregatorLookup&lt;T&gt;*/ {
     return new Aggregator&lt;T &amp; {[key in TAs]: (TOther &amp; {[oKey in TDepthField]: number})[]}&gt;(this);
   }
 &nbsp;
-  $match(query: SafeFilterQuery&lt;T&gt;): Aggregator&lt;T&gt; {
+  $match(query: FilterQuery&lt;T&gt;): Aggregator&lt;T&gt; {
     this.currentPipeline = {$match: query};
     return new Aggregator&lt;T&gt;(this);
   }
@@ -2305,7 +2326,7 @@ export class Aggregator&lt;T&gt; /*extends AggregatorLookup&lt;T&gt;*/ {
     return new Aggregator&lt;T&gt;();
   }
 &nbsp;
-  query(): Object[] {
+  query(): {}[] {
     const pipelines = [];
     <span class="missing-if-branch" title="if path not taken" >I</span>if (this.currentPipeline) {
 <span class="cstat-no" title="statement not covered" >      pipelines.push(this.currentPipeline!);</span>
@@ -2329,7 +2350,7 @@ type Distribute&lt;T, TKey extends keyof T = keyof T, TOverwrite = T[TKey]&gt; =
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Wed Dec 02 2020 22:41:59 GMT-0700 (Mountain Standard Time)
+                at Thu Dec 03 2020 10:44:39 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>

@@ -9,13 +9,13 @@
     "module": "commonjs",
     "inlineSourceMap": true,
     "resolveJsonModule": true,
-    "noEmit": true,
     "pretty": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "outDir": "./dist",
+    "declaration": true,
     "skipLibCheck": true
   },
-  "exclude": ["./node_modules"]
+  "exclude": ["./node_modules", "./tests", "./dist"]
 }
