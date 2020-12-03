@@ -4,9 +4,6 @@ declare type NumberTypeOrNever<TValue> = number;
 declare type OnlyArrayFields<T> = {
     [key in keyof T]: T[key] extends Array<infer J> ? key : never;
 }[keyof T];
-declare type FirstTupleElement<T> = T extends [any, any] ? T[0] : never;
-declare type SecondTupleElement<T> = T extends [any, any, any] ? T[1] : never;
-declare type ThirdTupleElement<T> = T extends [any, any, any, any] ? T[2] : never;
 export declare type UnArray<T> = T extends Array<infer U> ? U : T;
 declare type ReplaceKey<T, TKey, TValue> = {
     [key in keyof T]: key extends TKey ? TValue : T[key];
@@ -169,15 +166,15 @@ declare type InterpretAccumulateOperator<TRootValue, TValue> = {
         InterpretAccumulateExpression<TRootValue, infer TArray>,
         InterpretAccumulateExpression<TRootValue, infer TIndex>
     ] ? [InterpretAccumulateExpression<TRootValue, TArray>, InterpretAccumulateExpression<TRootValue, TIndex>] : never;
-    $cond?: {
+    $cond?: [
+        InterpretAccumulateExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 0>>,
+        InterpretAccumulateExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>>,
+        InterpretAccumulateExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>>
+    ] | {
         else: InterpretAccumulateExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
         if: InterpretAccumulateExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'if'>>;
         then: InterpretAccumulateExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>;
-    } | [
-        InterpretAccumulateExpression<TRootValue, FirstTupleElement<LookupKey<TValue, '$cond'>>>,
-        InterpretAccumulateExpression<TRootValue, SecondTupleElement<LookupKey<TValue, '$cond'>>>,
-        InterpretAccumulateExpression<TRootValue, ThirdTupleElement<LookupKey<TValue, '$cond'>>>
-    ];
+    };
     $first?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$first'>>;
     $not?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$not'>>;
     $max?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$max'>>;
@@ -203,7 +200,7 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $allElementsTrue: NotImplementedYet;
     $and: NotImplementedYet;
     $anyElementTrue: NotImplementedYet;
-    $arrayElemAt: UnArray<ProjectResult<TRootValue, FirstTupleElement<LookupKey<TValue, '$arrayElemAt'>>>>;
+    $arrayElemAt: UnArray<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$arrayElemAt'>, 0>>>;
     $arrayToObject: NotImplementedYet;
     $asin: NotImplementedYet;
     $asinh: NotImplementedYet;
@@ -215,7 +212,7 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $cmp: NotImplementedYet;
     $concat: string;
     $concatArrays: NotImplementedYet;
-    $cond: LookupKey<TValue, '$cond'> extends [any, any, any] ? ProjectResult<TRootValue, SecondTupleElement<LookupKey<TValue, '$cond'>>> | ProjectResult<TRootValue, ThirdTupleElement<LookupKey<TValue, '$cond'>>> : ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+    $cond: LookupKey<TValue, '$cond'> extends Array<any> ? ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>> | ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>> : ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
     $convert: NotImplementedYet;
     $cos: NotImplementedYet;
     $dateFromParts: NotImplementedYet;
@@ -321,22 +318,23 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $zip: NotImplementedYet;
 }[keyof TValue] : TValue extends {} ? ProjectObjectResult<TRootValue, TValue> : never;
 declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
-    $cond: LookupKey<TValue, '$cond'> extends [any, any, any] ? AccumulateResult<TRootValue, SecondTupleElement<LookupKey<TValue, '$cond'>>> | AccumulateResult<TRootValue, ThirdTupleElement<LookupKey<TValue, '$cond'>>> : AccumulateResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | AccumulateResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+    $cond: LookupKey<TValue, '$cond'> extends Array<any> ? AccumulateResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>> | AccumulateResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>> : AccumulateResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | AccumulateResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
     $sum: NumberTypeOrNever<UnArray<AccumulateResult<TRootValue, LookupKey<TValue, '$sum'>>>>;
     $not: boolean;
     $addToSet: AccumulateResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
     $first: AccumulateResult<TRootValue, LookupKey<TValue, '$first'>>;
     $min: NumberTypeOrNever<UnArray<AccumulateResult<TRootValue, LookupKey<TValue, '$min'>>>>;
     $multiply: NumberTypeOrNever<UnArray<AccumulateResult<TRootValue, LookupKey<TValue, '$multiply'>>>>;
-    $arrayElemAt: UnArray<AccumulateResult<TRootValue, FirstTupleElement<LookupKey<TValue, '$arrayElemAt'>>>>;
+    $arrayElemAt: UnArray<AccumulateResult<TRootValue, LookupArray<LookupKey<TValue, '$arrayElemAt'>, 0>>>;
     $push: AccumulateResult<TRootValue, LookupKey<TValue, '$push'>>[];
 }[keyof TValue] : TValue extends {} ? AccumulateObjectResult<TRootValue, TValue> : never;
 export declare type ProjectObjectResult<TRootValue, TObj> = {
     [key in keyof TObj]: ProjectResult<TRootValue, TObj[key]>;
 };
-export declare type LookupKey<T, TKey> = {
+export declare type LookupKey<T, TKey extends string> = {
     [key in keyof T]: key extends TKey ? T[key] : never;
 }[keyof T];
+export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
 declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : TValue extends {} ? AccumulateObject<TRootValue, TValue> : never;
 declare type AccumulateObject<TRootValue, TAccumulateObject> = {
     [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;

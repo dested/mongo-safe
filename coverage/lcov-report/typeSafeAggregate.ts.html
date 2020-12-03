@@ -867,13 +867,7 @@
 <a name='L808'></a><a href='#L808'>808</a>
 <a name='L809'></a><a href='#L809'>809</a>
 <a name='L810'></a><a href='#L810'>810</a>
-<a name='L811'></a><a href='#L811'>811</a>
-<a name='L812'></a><a href='#L812'>812</a>
-<a name='L813'></a><a href='#L813'>813</a>
-<a name='L814'></a><a href='#L814'>814</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L811'></a><a href='#L811'>811</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1715,10 +1709,6 @@ type NumberTypeOrNever&lt;
 type OnlyArrayFieldsKeys&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;any&gt; ? key : never}[keyof T];
 type OnlyArrayFields&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;infer J&gt; ? key : never}[keyof T];
 &nbsp;
-type FirstTupleElement&lt;T&gt; = T extends [any, any] ? T[0] : never;
-type SecondTupleElement&lt;T&gt; = T extends [any, any, any] ? T[1] : never;
-type ThirdTupleElement&lt;T&gt; = T extends [any, any, any, any] ? T[2] : never;
-&nbsp;
 export type UnArray&lt;T&gt; = T extends Array&lt;infer U&gt; ? U : T;
 type ReplaceKey&lt;T, TKey, TValue&gt; = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 &nbsp;
@@ -2048,16 +2038,16 @@ type InterpretAccumulateOperator&lt;TRootValue, TValue&gt; = {
     ? [InterpretAccumulateExpression&lt;TRootValue, TArray&gt;, InterpretAccumulateExpression&lt;TRootValue, TIndex&gt;]
     : never;
   $cond?:
+    | [
+        InterpretAccumulateExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 0&gt;&gt;,
+        InterpretAccumulateExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 1&gt;&gt;,
+        InterpretAccumulateExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 2&gt;&gt;
+      ]
     | {
         else: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
         if: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'if'&gt;&gt;;
         then: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;;
-      }
-    | [
-        InterpretAccumulateExpression&lt;TRootValue, FirstTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;,
-        InterpretAccumulateExpression&lt;TRootValue, SecondTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;,
-        InterpretAccumulateExpression&lt;TRootValue, ThirdTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
-      ];
+      };
   $first?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$first'&gt;&gt;;
   $not?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$not'&gt;&gt;;
   $max?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$max'&gt;&gt;;
@@ -2117,7 +2107,7 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
       $allElementsTrue: NotImplementedYet;
       $and: NotImplementedYet;
       $anyElementTrue: NotImplementedYet;
-      $arrayElemAt: UnArray&lt;ProjectResult&lt;TRootValue, FirstTupleElement&lt;LookupKey&lt;TValue, '$arrayElemAt'&gt;&gt;&gt;&gt;;
+      $arrayElemAt: UnArray&lt;ProjectResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$arrayElemAt'&gt;, 0&gt;&gt;&gt;;
       $arrayToObject: NotImplementedYet;
       $asin: NotImplementedYet;
       $asinh: NotImplementedYet;
@@ -2129,10 +2119,10 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
       $cmp: NotImplementedYet;
       $concat: string;
       $concatArrays: NotImplementedYet;
-      $cond: LookupKey&lt;TValue, '$cond'&gt; extends /*[any, any]*/ [any, any, any]
+      $cond: LookupKey&lt;TValue, '$cond'&gt; extends Array&lt;any&gt;
         ?
-            | ProjectResult&lt;TRootValue, SecondTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
-            | ProjectResult&lt;TRootValue, ThirdTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+            | ProjectResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 1&gt;&gt;
+            | ProjectResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 2&gt;&gt;
         :
             | ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;
             | ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
@@ -2260,10 +2250,10 @@ type AccumulateResult&lt;TRootValue, TValue&gt; = /*
   ? TValue
   : keyof TValue extends AllAccumulateOperators
   ? {
-      $cond: LookupKey&lt;TValue, '$cond'&gt; extends /*[any, any] | */ [any, any, any]
+      $cond: LookupKey&lt;TValue, '$cond'&gt; extends Array&lt;any&gt;
         ?
-            | AccumulateResult&lt;TRootValue, SecondTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
-            | AccumulateResult&lt;TRootValue, ThirdTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+            | AccumulateResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 1&gt;&gt;
+            | AccumulateResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 2&gt;&gt;
         :
             | AccumulateResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;
             | AccumulateResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
@@ -2274,7 +2264,7 @@ type AccumulateResult&lt;TRootValue, TValue&gt; = /*
       $first: AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$first'&gt;&gt;;
       $min: NumberTypeOrNever&lt;UnArray&lt;AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$min'&gt;&gt;&gt;&gt;;
       $multiply: NumberTypeOrNever&lt;UnArray&lt;AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$multiply'&gt;&gt;&gt;&gt;;
-      $arrayElemAt: UnArray&lt;AccumulateResult&lt;TRootValue, FirstTupleElement&lt;LookupKey&lt;TValue, '$arrayElemAt'&gt;&gt;&gt;&gt;;
+      $arrayElemAt: UnArray&lt;AccumulateResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$arrayElemAt'&gt;, 0&gt;&gt;&gt;;
       $push: AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$push'&gt;&gt;[];
     }[keyof TValue]
   : TValue extends {}
@@ -2285,7 +2275,8 @@ export type ProjectObjectResult&lt;TRootValue, TObj&gt; = {
   [key in keyof TObj]: ProjectResult&lt;TRootValue, TObj[key]&gt;;
 };
 &nbsp;
-export type LookupKey&lt;T, TKey&gt; = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
+export type LookupKey&lt;T, TKey extends string&gt; = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
+export type LookupArray&lt;T, TIndex extends number&gt; = T extends Array&lt;any&gt; ? T[TIndex] : never;
 &nbsp;
 type InterpretAccumulateExpression&lt;TRootValue, TValue&gt; = /*
  */ TValue extends `$${infer TRawKey}`
@@ -2503,7 +2494,7 @@ type Distribute&lt;T, TKey extends keyof T = keyof T, TOverwrite = T[TKey]&gt; =
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Thu Dec 03 2020 15:52:45 GMT-0700 (Mountain Standard Time)
+                at Thu Dec 03 2020 16:02:42 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>
