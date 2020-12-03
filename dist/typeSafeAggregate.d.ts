@@ -1,6 +1,6 @@
 import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
-declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
+declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes[] ? TValue : TValue extends NumericTypes ? TValue : never;
 declare type OnlyArrayFields<T> = {
     [key in keyof T]: T[key] extends Array<infer J> ? key : never;
 }[keyof T];

@@ -58,7 +58,7 @@ test('project.$sum', async () => {
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{shoes: number}, typeof result>>(true);
+  assert<Has<{shoes: 7}, typeof result>>(true);
 });
 
 test('project.$sum.ref', async () => {
@@ -230,7 +230,7 @@ test('project.$sum', async () => {
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{shoes: number}, typeof result>>(true);
+  assert<Has<{shoes: 7}, typeof result>>(true);
 });
 
 test('project.$sum.ref', async () => {
@@ -260,7 +260,7 @@ test('project.$abs', async () => {
   expect(aggregator.query()).toEqual([{$project: {shoes: {$abs: 7}}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{shoes: number}, typeof result>>(true);
+  assert<Has<{shoes: 7}, typeof result>>(true);
 });
 
 test('project.$abs.ref', async () => {

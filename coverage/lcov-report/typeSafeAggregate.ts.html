@@ -820,7 +820,65 @@
 <a name='L761'></a><a href='#L761'>761</a>
 <a name='L762'></a><a href='#L762'>762</a>
 <a name='L763'></a><a href='#L763'>763</a>
-<a name='L764'></a><a href='#L764'>764</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L764'></a><a href='#L764'>764</a>
+<a name='L765'></a><a href='#L765'>765</a>
+<a name='L766'></a><a href='#L766'>766</a>
+<a name='L767'></a><a href='#L767'>767</a>
+<a name='L768'></a><a href='#L768'>768</a>
+<a name='L769'></a><a href='#L769'>769</a>
+<a name='L770'></a><a href='#L770'>770</a>
+<a name='L771'></a><a href='#L771'>771</a>
+<a name='L772'></a><a href='#L772'>772</a>
+<a name='L773'></a><a href='#L773'>773</a>
+<a name='L774'></a><a href='#L774'>774</a>
+<a name='L775'></a><a href='#L775'>775</a>
+<a name='L776'></a><a href='#L776'>776</a>
+<a name='L777'></a><a href='#L777'>777</a>
+<a name='L778'></a><a href='#L778'>778</a>
+<a name='L779'></a><a href='#L779'>779</a>
+<a name='L780'></a><a href='#L780'>780</a>
+<a name='L781'></a><a href='#L781'>781</a>
+<a name='L782'></a><a href='#L782'>782</a>
+<a name='L783'></a><a href='#L783'>783</a>
+<a name='L784'></a><a href='#L784'>784</a>
+<a name='L785'></a><a href='#L785'>785</a>
+<a name='L786'></a><a href='#L786'>786</a>
+<a name='L787'></a><a href='#L787'>787</a>
+<a name='L788'></a><a href='#L788'>788</a>
+<a name='L789'></a><a href='#L789'>789</a>
+<a name='L790'></a><a href='#L790'>790</a>
+<a name='L791'></a><a href='#L791'>791</a>
+<a name='L792'></a><a href='#L792'>792</a>
+<a name='L793'></a><a href='#L793'>793</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1597,9 +1655,13 @@
 &nbsp;
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 &nbsp;
+type NumberTypeOrNever&lt;TValue&gt; = TValue extends NumericTypes[] ? TValue : TValue extends NumericTypes ? TValue : never;
+&nbsp;
 type OnlyArrayFieldsKeys&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;any&gt; ? key : never}[keyof T];
 type OnlyArrayFields&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;infer J&gt; ? key : never}[keyof T];
 type FirstTupleElement&lt;T&gt; = T extends [infer Item, ...infer rest] ? Item : never;
+type SecondTupleElement&lt;T&gt; = T extends [infer Item, infer Item2, ...infer rest] ? Item2 : never;
+type ThirdTupleElement&lt;T&gt; = T extends [infer Item, infer Item2, infer Item3, ...infer rest] ? Item3 : never;
 &nbsp;
 export type UnArray&lt;T&gt; = T extends Array&lt;infer U&gt; ? U : T;
 type ReplaceKey&lt;T, TKey, TValue&gt; = {[key in keyof T]: key extends TKey ? TValue : T[key]};
@@ -1864,7 +1926,7 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
     ? InterpretProjectExpression&lt;TRootValue, TMultiply&gt;[]
     : never;
   $ne?: NotImplementedYet;
-  $not?: NotImplementedYet;
+  $not?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$not'&gt;&gt;;
   $objectToArray?: NotImplementedYet;
   $or?: NotImplementedYet;
   $pow?: NotImplementedYet;
@@ -1929,7 +1991,19 @@ type InterpretAccumulateOperator&lt;TRootValue, TValue&gt; = {
   ]
     ? [InterpretAccumulateExpression&lt;TRootValue, TArray&gt;, InterpretAccumulateExpression&lt;TRootValue, TIndex&gt;]
     : never;
+  $cond?:
+    | {
+        else: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
+        if: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'if'&gt;&gt;;
+        then: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;;
+      }
+    | [
+        InterpretAccumulateExpression&lt;TRootValue, FirstTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;,
+        InterpretAccumulateExpression&lt;TRootValue, SecondTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;,
+        InterpretAccumulateExpression&lt;TRootValue, ThirdTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+      ];
   $first?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$first'&gt;&gt;;
+  $not?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$not'&gt;&gt;;
   $max?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$max'&gt;&gt;;
   $min?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$min'&gt;&gt;;
   $push?: InterpretAccumulateExpression&lt;TRootValue, LookupKey&lt;TValue, '$push'&gt;&gt;;
@@ -1959,7 +2033,7 @@ type ProjectObject&lt;TRootValue, TProject&gt; = {
   [key in keyof TProject]: InterpretProjectExpression&lt;TRootValue, TProject[key]&gt;;
 };
 &nbsp;
-type AllAccumulateOperators = '$sum' | '$addToSet' | '$first' | '$min' | '$push' | '$arrayElemAt';
+type AllAccumulateOperators = '$sum' | '$addToSet' | '$first' | '$min' | '$push' | '$arrayElemAt' | '$cond' | '$not';
 &nbsp;
 type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult&lt;TRootValue, TRawKey&gt;
@@ -1968,7 +2042,7 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
   : keyof TValue extends AllOperators
   ? LookupKey&lt;
       {
-        $abs: number;
+        $abs: NumberTypeOrNever&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$abs'&gt;&gt;&gt;;
         $acos: NotImplementedYet;
         $acosh: NotImplementedYet;
         $add: NotImplementedYet;
@@ -1988,9 +2062,13 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
         $cmp: NotImplementedYet;
         $concat: string;
         $concatArrays: NotImplementedYet;
-        $cond:
-          | ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;
-          | ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
+        $cond: LookupKey&lt;TValue, '$cond'&gt; extends /*[any, any]*/ [any, any, any]
+          ?
+              | ProjectResult&lt;TRootValue, SecondTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+              | ProjectResult&lt;TRootValue, ThirdTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+          :
+              | ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;
+              | ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
         $convert: NotImplementedYet;
         $cos: NotImplementedYet;
         $dateFromParts: NotImplementedYet;
@@ -2040,17 +2118,17 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
               LookupKey&lt;LookupKey&lt;TValue, '$map'&gt;, 'in'&gt;
             &gt;[]
           : never;
-        $max: number;
+        $max: NumberTypeOrNever&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$max'&gt;&gt;&gt;;
         $mergeObjects: NotImplementedYet;
         $meta: NotImplementedYet;
         $millisecond: NotImplementedYet;
-        $min: number;
+        $min: NumberTypeOrNever&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$min'&gt;&gt;&gt;;
         $minute: NotImplementedYet;
         $mod: NotImplementedYet;
         $month: NotImplementedYet;
-        $multiply: number;
+        $multiply: NumberTypeOrNever&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$multiply'&gt;&gt;&gt;;
         $ne: NotImplementedYet;
-        $not: NotImplementedYet;
+        $not: boolean;
         $objectToArray: NotImplementedYet;
         $or: NotImplementedYet;
         $pow: NotImplementedYet;
@@ -2083,8 +2161,8 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
         $substr: NotImplementedYet;
         $substrBytes: NotImplementedYet;
         $substrCP: NotImplementedYet;
-        $subtract: number;
-        $sum: number;
+        $subtract: NumberTypeOrNever&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$subtract'&gt;&gt;&gt;;
+        $sum: NumberTypeOrNever&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$sum'&gt;&gt;&gt;;
         $switch: NotImplementedYet;
         $tan: NotImplementedYet;
         $toBool: NotImplementedYet;
@@ -2118,10 +2196,19 @@ type AccumulateResult&lt;TRootValue, TValue&gt; = /*
   : keyof TValue extends AllAccumulateOperators
   ? LookupKey&lt;
       {
-        $sum: number;
+        $cond: LookupKey&lt;TValue, '$cond'&gt; extends /*[any, any] | */ [any, any, any]
+          ?
+              | AccumulateResult&lt;TRootValue, SecondTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+              | AccumulateResult&lt;TRootValue, ThirdTupleElement&lt;LookupKey&lt;TValue, '$cond'&gt;&gt;&gt;
+          :
+              | AccumulateResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;
+              | AccumulateResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
+&nbsp;
+        $sum: NumberTypeOrNever&lt;AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$sum'&gt;&gt;&gt;;
+        $not: boolean;
         $addToSet: AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$addToSet'&gt;&gt;[];
         $first: AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$first'&gt;&gt;;
-        $min: number;
+        $min: NumberTypeOrNever&lt;AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$min'&gt;&gt;&gt;;
         $arrayElemAt: UnArray&lt;AccumulateResult&lt;TRootValue, FirstTupleElement&lt;LookupKey&lt;TValue, '$arrayElemAt'&gt;&gt;&gt;&gt;;
         $push: AccumulateResult&lt;TRootValue, LookupKey&lt;TValue, '$push'&gt;&gt;[];
       },
@@ -2353,7 +2440,7 @@ type Distribute&lt;T, TKey extends keyof T = keyof T, TOverwrite = T[TKey]&gt; =
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Thu Dec 03 2020 13:29:08 GMT-0700 (Mountain Standard Time)
+                at Thu Dec 03 2020 14:45:53 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>

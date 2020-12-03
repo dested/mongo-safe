@@ -12,7 +12,7 @@ import {
 
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 
-type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
+type NumberTypeOrNever<TValue> = TValue extends NumericTypes[] ? TValue : TValue extends NumericTypes ? TValue : never;
 
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];

@@ -312,7 +312,7 @@ test('$group.groupThenAddFieldDeep', async () => {
     )
     .$addFields({
       shoes: {
-        $min: '$numbersLeftArr.count',
+        $min: '$numbersLeftArr.count.someNumber',
       },
     });
 
@@ -333,7 +333,7 @@ test('$group.groupThenAddFieldDeep', async () => {
     {
       $addFields: {
         shoes: {
-          $min: '$numbersLeftArr.count',
+          $min: '$numbersLeftArr.count.someNumber',
         },
       },
     },
