@@ -1,13 +1,12 @@
 import {
   Aggregator,
-  AggregatorLookup,
   ExpressionStringReferenceKey,
   LookupKey,
   ProjectObjectResult,
   UnArray,
 } from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
-import {assert, Has} from 'conditional-type-checks';
+import {assert, Has, NotHas} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
 import {ObjectID} from 'mongodb';
 import {Combine, ReplaceKey} from './typeUtils';
@@ -35,9 +34,7 @@ test('$match', async () => {
 });
 
 test('$match.deep', async () => {
-  const aggregator = Aggregator.start<DBCar>().$matchCallback((agg) => ({
-    ...agg.keyFilter((a) => a.tailPipe.count, 4),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$match({'tailPipe.count': 4});
   expect(aggregator.query()).toEqual([{$match: {'tailPipe.count': 4}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -53,7 +50,7 @@ test('$project.simple', async () => {
 });
 
 test('$project.callback', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: 'black'}));
+  const aggregator = Aggregator.start<DBCar>().$project({color: 'black'});
   expect(aggregator.query()).toEqual([{$project: {color: 'black'}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -61,7 +58,7 @@ test('$project.callback', async () => {
 });
 
 test('$project.nested', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: {foo: 12}}));
+  const aggregator = Aggregator.start<DBCar>().$project({color: {foo: 12}});
   expect(aggregator.query()).toEqual([{$project: {color: {foo: 12}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -69,7 +66,7 @@ test('$project.nested', async () => {
 });
 
 test('$project.reference', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({color: agg.referenceKey((a) => a.color)}));
+  const aggregator = Aggregator.start<DBCar>().$project({color: '$color'});
   expect(aggregator.query()).toEqual([{$project: {color: '$color'}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -78,29 +75,19 @@ test('$project.reference', async () => {
 });
 
 test('$project.nested-reference', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    color: {foo: agg.referenceKey((a) => a.color)},
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({color: {foo: '$color'}});
   expect(aggregator.query()).toEqual([{$project: {color: {foo: '$color'}}}]);
 
   const [result] = await aggregator.result(mockCollection);
-
   assert<Has<{color: {foo: Color}}, typeof result>>(true);
 });
 
 test('$project.map', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    mappedDoors: agg.operators.$map(
-      agg.key((a) => a.doors),
-      'door',
-      (innerAgg) => ({
-        good: 'foo',
-        side: innerAgg.referenceKey((a) => a.door.side),
-      })
-    ),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({
+    mappedDoors: {$map: {input: '$doors', as: 'door', in: {good: 'foo', side: '$$door.side'}}},
+  });
   expect(aggregator.query()).toEqual([
-    {$project: {mappedDoors: {$map: {input: 'doors', as: 'door', in: {good: 'foo', side: '$$door.side'}}}}},
+    {$project: {mappedDoors: {$map: {input: '$doors', as: 'door', in: {good: 'foo', side: '$$door.side'}}}}},
   ]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -108,9 +95,7 @@ test('$project.map', async () => {
 });
 
 test('$project.id', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    id: agg.referenceKey((a) => a._id),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({id: '$_id'});
   expect(aggregator.query()).toEqual([{$project: {id: '$_id'}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -118,10 +103,10 @@ test('$project.id', async () => {
 });
 
 test('$project.array', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    doorHeads: agg.referenceKey((a) => a.doors.bolts.type),
-    carbHeads: agg.referenceKey((a) => a.carburetor.bolts.type),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doorHeads: '$doors.bolts.type',
+    carbHeads: '$carburetor.bolts.type',
+  });
 
   expect(aggregator.query()).toEqual([
     {
@@ -137,12 +122,12 @@ test('$project.array', async () => {
 });
 
 test('$lookup', async () => {
-  const aggregator = Aggregator.start<DBCar>().$lookupCallback((agg, aggLookup: AggregatorLookup<DBWindow>) => ({
+  const aggregator = Aggregator.start<DBCar>().$lookup<DBWindow, 'windows'>({
     from: 'window',
-    localField: agg.key((a) => a._id),
-    foreignField: aggLookup.key((a) => a.carId),
+    localField: '_id',
+    foreignField: 'carId',
     as: 'windows',
-  }));
+  });
 
   expect(aggregator.query()).toEqual([
     {
@@ -171,15 +156,14 @@ test('$addField.simple', async () => {
 });
 
 test('$addField.complex', async () => {
-  const aggregator = Aggregator.start<DBCar>().$addFieldsCallback((agg) => ({
-    shoes: agg.referenceKey((a) => a.doors.bolts),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$addFields({shoes: '$doors.bolts'});
 
   expect(aggregator.query()).toEqual([{$addFields: {shoes: '$doors.bolts'}}]);
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<Bolt['type'], typeof result.shoes[0]['type']>>(true);
   assert<Has<DBCar & {shoes: Bolt[]}, typeof result>>(true);
+  assert<NotHas<DBCar & {shoes: Bolt}, typeof result>>(true);
 });
 
 test('$unwind.simple', async () => {
@@ -214,26 +198,22 @@ test('$unwind.3', async () => {
 });
 
 test('$graphLookup.otherTable', async () => {
-  const aggregator = Aggregator.start<DBCar>().$graphLookup(
-    (aggregator, aggregatorLookup: AggregatorLookup<DBWindow>) => {
-      return {
-        collectionName: 'window',
-        startWith: aggregatorLookup.referenceKey((a) => a.tint),
-        as: 'shoes',
-        connectFromField: aggregator.key((a) => a.carburetor),
-        connectToField: aggregator.key((a) => a.doors),
-      };
-    }
-  );
+  const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes'>({
+    collectionName: 'window',
+    startWith: '$doors',
+    as: 'shoes',
+    connectFromField: 'someDate',
+    connectToField: 'tint',
+  });
 
   expect(aggregator.query()).toEqual([
     {
       $graphLookup: {
         collectionName: 'window',
-        startWith: '$tint',
+        startWith: '$doors',
         as: 'shoes',
-        connectFromField: 'carburetor',
-        connectToField: 'doors',
+        connectFromField: 'someDate',
+        connectToField: 'tint',
       },
     },
   ]);
@@ -243,14 +223,12 @@ test('$graphLookup.otherTable', async () => {
 });
 
 test('$graphLookup.sameTable', async () => {
-  const aggregator = Aggregator.start<DBCar>().$graphLookup((aggregator, aggregatorLookup: AggregatorLookup<DBCar>) => {
-    return {
-      collectionName: 'car',
-      startWith: aggregatorLookup.referenceKey((a) => a.color),
-      as: 'shoes',
-      connectFromField: aggregator.key((a) => a.carburetor),
-      connectToField: aggregator.key((a) => a.doors),
-    };
+  const aggregator = Aggregator.start<DBCar>().$graphLookup<DBCar, 'shoes'>({
+    collectionName: 'car',
+    startWith: '$color',
+    as: 'shoes',
+    connectFromField: 'carburetor',
+    connectToField: 'doors',
   });
 
   expect(aggregator.query()).toEqual([
@@ -270,27 +248,23 @@ test('$graphLookup.sameTable', async () => {
 });
 
 test('$graphLookup.depthField', async () => {
-  const aggregator = Aggregator.start<DBCar>().$graphLookup(
-    (aggregator, aggregatorLookup: AggregatorLookup<DBWindow>) => {
-      return {
-        collectionName: 'window',
-        startWith: aggregatorLookup.referenceKey((a) => a.tint),
-        as: 'shoes',
-        connectFromField: aggregator.key((a) => a.carburetor),
-        connectToField: aggregator.key((a) => a.doors),
-        depthField: 'numConnections',
-      };
-    }
-  );
+  const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes', 'numConnections'>({
+    collectionName: 'window',
+    startWith: '$color',
+    as: 'shoes',
+    connectFromField: 'carburetor',
+    connectToField: 'tint',
+    depthField: 'numConnections',
+  });
 
   expect(aggregator.query()).toEqual([
     {
       $graphLookup: {
         collectionName: 'window',
-        startWith: '$tint',
+        startWith: '$color',
         as: 'shoes',
         connectFromField: 'carburetor',
-        connectToField: 'doors',
+        connectToField: 'tint',
         depthField: 'numConnections',
       },
     },
@@ -300,17 +274,26 @@ test('$graphLookup.depthField', async () => {
   assert<Has<Combine<DBCar, 'shoes', Combine<DBWindow, 'numConnections', number>[]>, typeof result>>(true);
 });
 
-test('$group.simple', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group((agg) => [{simple: true}]);
+test('$group.simple1', async () => {
+  const aggregator = Aggregator.start<DBCar>().$group({_id: 8});
+
+  expect(aggregator.query()).toEqual([{$group: {_id: 8}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: 8}, typeof result>>(true);
+});
+
+test('$group.simple2', async () => {
+  const aggregator = Aggregator.start<DBCar>().$group({_id: {simple: true}});
 
   expect(aggregator.query()).toEqual([{$group: {_id: {simple: true}}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{_id: {simple: boolean}}, typeof result>>(true);
+  assert<Has<{_id: {simple: true}}, typeof result>>(true);
 });
 
 test('$group.simple-key', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group((agg) => [agg.referenceKey((a) => a.color)]);
+  const aggregator = Aggregator.start<DBCar>().$group({_id: '$color'});
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color'}}]);
 
@@ -319,7 +302,7 @@ test('$group.simple-key', async () => {
 });
 
 test('$group.simple-ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group((agg) => [agg.referenceKey((a) => a.color)]);
+  const aggregator = Aggregator.start<DBCar>().$group({_id: '$color'});
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color'}}]);
 
@@ -328,7 +311,7 @@ test('$group.simple-ref', async () => {
 });
 
 test('$group.simple-nested-ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group((agg) => [{color: agg.referenceKey((a) => a.color)}]);
+  const aggregator = Aggregator.start<DBCar>().$group({_id: {color: '$color'}});
 
   expect(aggregator.query()).toEqual([{$group: {_id: {color: '$color'}}}]);
 
@@ -337,10 +320,7 @@ test('$group.simple-nested-ref', async () => {
 });
 
 test('$group.ref-and-keys', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group((agg) => [
-    agg.referenceKey((a) => a.color),
-    {side: {$sum: agg.referenceKey((a) => a.doors.someNumber)}},
-  ]);
+  const aggregator = Aggregator.start<DBCar>().$group({_id: '$color'}, {side: {$sum: '$doors.someNumber'}});
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color', side: {$sum: '$doors.someNumber'}}}]);
 
@@ -349,14 +329,9 @@ test('$group.ref-and-keys', async () => {
 });
 
 test('$project.ref-and-keyes', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    side: {
-      $dateToString: {
-        date: agg.referenceKey((a) => a.doors.someDate),
-        format: 'shoes',
-      },
-    },
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({
+    side: {$dateToString: {date: '$doors.someDate', format: 'shoes'}},
+  });
 
   expect(aggregator.query()).toEqual([{$project: {side: {$dateToString: {date: '$doors.someDate', format: 'shoes'}}}}]);
 
@@ -365,11 +340,7 @@ test('$project.ref-and-keyes', async () => {
 });
 
 test('$project.$sum', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    side: {
-      $sum: agg.referenceKey((a) => a.doors.someNumber),
-    },
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({side: {$sum: '$doors.someNumber'}});
 
   expect(aggregator.query()).toEqual([{$project: {side: {$sum: '$doors.someNumber'}}}]);
 

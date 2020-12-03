@@ -104,7 +104,6 @@ test('project.$cond.ref', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  const m = typeof result.shoes === 'string' ? result.shoes === 'left' : result.shoes[0].type;
 
   assert<Has<{shoes: 'left' | 'right' | Bolt[]}, typeof result>>(true);
   assert<NotHas<{shoes: Bolt}, typeof result>>(true);
@@ -135,29 +134,6 @@ test('project.$eq.ref', async () => {
   assert<Has<{shoes: boolean}, typeof result>>(true);
 });
 
-/*
-    $map: <TAsKey extends string, TAsValue, TArrayInput>(
-      input: ExpressionStringKey<TArrayInput>,
-      as: TAsKey,
-      inArg: (agg: AggregatorLookup<{[key in TAsKey]: TArrayInput} & T>) => ProjectObject<TAsValue>
-    ): {
-      $map: {
-        input: typeof input;
-        as: typeof as;
-        in: ProjectObject<TAsValue>;
-      };
-    } => {
-      return {
-        $map: {
-          input,
-          as,
-          in: (inArg(
-            new AggregatorLookup<{[key in TAsKey]: TArrayInput} & T>(this.variableLookupLevel + 1)
-          ) as unknown) as ProjectObject<TAsValue>,
-        },
-      };
-    },*/
-//agg.operators.$map( agg.key((a) => a.doors), 'thing', (innerAgg) => ({ a: true, b: 1, }) )
 test('project.$map', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: 1}}},
@@ -191,7 +167,6 @@ test('project.$map.nested.ref', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  result.shoes[0].b.bar;
   assert<Has<{shoes: {a: true; b: {bar: number}}[]}, typeof result>>(true);
 });
 

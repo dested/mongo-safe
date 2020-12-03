@@ -9,47 +9,13 @@ type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
 export type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
-/*
-export type MongoPseudoArray<T> = T extends Array<infer J> ? (T extends J ? true : false) : false;
 
-export type UnwrapMongoPseudoArrayDeep<T> = {
-  [key in keyof T]: MongoPseudoArray<T[key]> extends true
-    ? T[key] extends Array<infer J>
-      ? UnwrapMongoPseudoArrayDeep<J>[]
-      : never
-    : T[key] extends {}
-    ? UnwrapMongoPseudoArrayDeep<T[key]>
-    : T[key];
-};*/
 export type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
   : TRef extends {}
   ? {[key in keyof TRef]: DeReferenceExpression<TRootValue, TRef[key]>}
   : TRef;
 
-/*
-export type FlattenArray<T> = {
-  [key in keyof T]: T[key] extends Array<infer J>
-    ? Arrayish<FlattenArray<J>> & FlattenArray<J>
-    : T[key] extends ObjectID
-    ? T[key]
-    : T[key] extends {}
-    ? FlattenArray<T[key]>
-    : T[key];
-};
-*/
-
-// export type UnwarpArrayish<T> = T extends Arrayish<infer J> ? J[] : T;
-
-/*
-export type UnwarpArrayishObject<T> = {
-  [key in keyof T]: T[key] extends Arrayish<infer J>
-    ? UnwarpArrayishObject<J>[]
-    : T[key] extends {}
-    ? UnwarpArrayishObject<T[key]>
-    : T[key];
-};
-*/
 type NotImplementedYet = never;
 
 type AllOperators =
@@ -379,7 +345,7 @@ export type ProjectObject<TRootValue, TProject> = {
 type AllAccumulateOperators = '$sum' | '$addToSet';
 
 type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
-  ? ExpressionStringReferenceKey<TRootValue>
+  ? DeepKeysResult<TRootValue, TRawKey>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
@@ -528,20 +494,20 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? ProjectObjectResult<TRootValue, TValue>
   : never;
 
-type AccumulateResult<TValue> = TValue extends ExpressionStringReferenceKey<infer J>
-  ? J
+type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
+  ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllAccumulateOperators
   ? LookupKey<
       {
         $sum: number;
-        $addToSet: DeReferenceExpression<LookupKey<TValue, '$addToSet'>>[];
+        $addToSet: DeReferenceExpression<TRootValue, LookupKey<TValue, '$addToSet'>>[];
       },
       keyof TValue
     >
   : TValue extends {}
-  ? AccumulateObjectResult<TValue>
+  ? AccumulateObjectResult<TRootValue, TValue>
   : never;
 
 export type ProjectObjectResult<TRootValue, TObj> = {
@@ -551,12 +517,8 @@ export type ProjectObjectResult<TRootValue, TObj> = {
 export type LookupKey<T, TKey> = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
 
 export type InterpretAccumulateExpression<TRootValue, TValue> = /*
- */ /* TValue extends ExpressionStringReferenceKey<FlattenArray<infer JA>>
-  ? ExpressionStringReferenceKey<JA>
-  :*/ TValue extends ExpressionStringReferenceKey<
-  infer J
->
-  ? ExpressionStringReferenceKey<J>
+ */ TValue extends `$${infer TRawKey}`
+  ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllAccumulateOperators
@@ -564,14 +526,17 @@ export type InterpretAccumulateExpression<TRootValue, TValue> = /*
   : never;
 
 export type AccumulateObject<TRootValue, TAccumulateObject> = {
-  [key in keyof TAccumulateObject]: InterpretAccumulateExpression<
-    TRootValue,
-    TAccumulateObject[key],
-    AccumulateObject<TRootValue, TAccumulateObject[key]>
-  >;
+  [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
-export type AccumulateObjectResult<TObj> = {
-  [key in keyof TObj]: AccumulateResult<TObj[key]>;
+export type AccumulateObjectResult<TRootValue, TObj> = {
+  [key in keyof TObj]: AccumulateResult<TRootValue, TObj[key]>;
+};
+
+type $LookupType<T, TLookupTable, TAs extends string> = {
+  from: string;
+  localField: DeepKeys<T>;
+  foreignField: DeepKeys<TLookupTable>;
+  as: TAs;
 };
 
 export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
@@ -582,10 +547,32 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
     // this.variableLookupLevel = parent?.variableLookupLevel ?? 1;
   }
 
-  /* $addFields<T2>(fields: ProjectObject<T2>): Aggregator<T & ProjectObjectResult<T2>> {
-    this.currentPipeline = {$addFields: fields};
-    return new Aggregator<T & ProjectObjectResult<T2>>(this);
+  $lookup<TLookupTable, TAs extends string>(
+    props: $LookupType<T, TLookupTable, TAs>
+  ): Aggregator<T & {[key in TAs]: TLookupTable[]}> {
+    this.currentPipeline = {
+      $lookup: {
+        from: props.from,
+        localField: props.localField,
+        foreignField: props.foreignField,
+        as: props.as,
+      },
+    };
+    return new Aggregator<T & {[key in TAs]: TLookupTable[]}>(this);
   }
+  $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectObjectResult<T, TProject>> {
+    this.currentPipeline = {$addFields: fields};
+    return new Aggregator<T & ProjectObjectResult<T, TProject>>(this);
+  }
+  $count<TKey extends string>(key: TKey): Aggregator<{[cKey in TKey]: number}> {
+    this.currentPipeline = {$count: key};
+    return new Aggregator<{[cKey in TKey]: number}>(this);
+  }
+  $limit(limit: number): Aggregator<T> {
+    this.currentPipeline = {$limit: limit};
+    return new Aggregator<T>(this);
+  }
+  /*
 
   $addFieldsCallback<T2>(
     callback: (aggregator: AggregatorLookup<T>) => ProjectObject<T2>
@@ -603,10 +590,7 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
   $collStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $count<TKey extends string>(key: TKey): Aggregator<{[cKey in TKey]: number}> {
-    this.currentPipeline = {$count: key};
-    return new Aggregator<{[cKey in TKey]: number}>(this);
-  }
+
   $currentOp(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
@@ -616,84 +600,20 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
   $geoNear(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $graphLookup<
-    TOther,
-    TAs extends string,
-    TStartsWith,
-    TConnectFromField,
-    TConnectToField,
-    TDepthField extends string = never
-  >(
-    callback: (
-      aggregator: AggregatorLookup<T>,
-      aggregatorLookup: AggregatorLookup<TOther>
-    ) => {
-      collectionName: string;
-      startWith: ExpressionStringReferenceKey<TStartsWith>;
-      connectFromField: ExpressionStringKey<TConnectFromField>;
-      connectToField: ExpressionStringKey<TConnectToField>;
-      as: TAs;
-      maxDepth?: number;
-      depthField?: TDepthField;
-    }
-  ): Aggregator<T & {[key in TAs]: (TOther & {[oKey in TDepthField]: number})[]}> {
-    this.currentPipeline = {$graphLookup: callback(this, new AggregatorLookup<TOther>(this.variableLookupLevel))};
-    return new Aggregator<T & {[key in TAs]: (TOther & {[oKey in TDepthField]: number})[]}>(this);
-  }
 
-  $group<TGroupId extends InterpretProjectExpression<T, any, ProjectObject<any>>, TAccumulator extends {}>(
-    callback: (aggregator: AggregatorLookup<T>) => [TGroupId] | [TGroupId, AccumulateObject<T, TAccumulator>]
-  ): Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>> {
-    const result = callback(this);
-    this.currentPipeline = {$group: {_id: result[0], ...result[1]}};
-    return new Aggregator<ProjectObjectResult<{_id: TGroupId}> & AccumulateObjectResult<TAccumulator>>(this);
-  }
 
   $indexStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $limit(limit: number): Aggregator<T> {
-    this.currentPipeline = {$limit: limit};
-    return new Aggregator<T>(this);
-  }
+
   $listLocalSessions(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
   $listSessions(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $lookupCallback<TLookupTable, TLocalType, TForeignType extends TLocalType, TAs extends string>(
-    callback: (
-      aggregator: AggregatorLookup<T>,
-      aggregatorLookup: AggregatorLookup<TLookupTable>
-    ) => {
-      from: string;
-      localField: ExpressionStringKey<TLocalType>;
-      foreignField: ExpressionStringKey<TForeignType>;
-      as: TAs;
-    }
-  ): Aggregator<T & {[key in TAs]: TLookupTable[]}> {
-    const result = callback(this, new AggregatorLookup<TLookupTable>(this.variableLookupLevel));
-    this.currentPipeline = {
-      $lookup: {
-        from: result.from,
-        localField: result.localField,
-        foreignField: result.foreignField,
-        as: result.as,
-      },
-    };
-    return new Aggregator<T & {[key in TAs]: TLookupTable[]}>(this);
-  }
 
-  $match(query: SafeFilterQuery<T>): Aggregator<T> {
-    this.currentPipeline = {$match: query};
-    return new Aggregator<T>(this);
-  }
 
-  $matchCallback(callback: (aggregator: AggregatorLookup<T>) => SafeFilterQuery<T>): Aggregator<T> {
-    this.currentPipeline = {$match: callback(this)};
-    return new Aggregator<T>(this);
-  }
 
   $merge(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -704,6 +624,37 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
   $planCacheStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }*/
+
+  $group<TId, TAccumulator extends {}>(
+    props: {
+      _id: InterpretProjectExpression<T, TId>;
+    },
+    body?: AccumulateObject<T, TAccumulator>
+  ): Aggregator<ProjectObjectResult<T, {_id: typeof props['_id']}> & AccumulateObjectResult<T, TAccumulator>> {
+    this.currentPipeline = {$group: {...props, ...body}};
+    return new Aggregator<ProjectObjectResult<T, {_id: typeof props['_id']}> & AccumulateObjectResult<T, TAccumulator>>(
+      this
+    );
+  }
+
+  $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
+    collectionName: string;
+    startWith: ExpressionStringReferenceKey<T>;
+    connectFromField: DeepKeys<T>;
+    connectToField: DeepKeys<TOther>;
+    as: TAs;
+    maxDepth?: number;
+    depthField?: TDepthField;
+  }): Aggregator<T & {[key in TAs]: (TOther & {[oKey in TDepthField]: number})[]}> {
+    this.currentPipeline = {$graphLookup: props};
+    return new Aggregator<T & {[key in TAs]: (TOther & {[oKey in TDepthField]: number})[]}>(this);
+  }
+
+  $match(query: SafeFilterQuery<T>): Aggregator<T> {
+    this.currentPipeline = {$match: query};
+    return new Aggregator<T>(this);
+  }
+
   $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<ProjectObjectResult<T, TProject>> {
     this.currentPipeline = {$project: query};
     return new Aggregator<ProjectObjectResult<T, TProject>>(this);
@@ -735,14 +686,13 @@ export class Aggregator<T> /*extends AggregatorLookup<T>*/ {
     this.currentPipeline = {$skip: skip};
     return new Aggregator<T>(this);
   }
-  $sort(sorts: Distribute<T, keyof T, 1 | -1>): Aggregator<T> {
+  $sort(sorts: {[key in DeepKeys<T>]?: 1 | -1}): Aggregator<T> {
     this.currentPipeline = {$sort: sorts};
     return new Aggregator<T>(this);
-  } /*
-  $sortCallback(callback: (aggregator: AggregatorLookup<T>) => Distribute<T, keyof T, 1 | -1>): Aggregator<T> {
-    this.currentPipeline = {$sort: callback(this)};
-    return new Aggregator<T>(this);
-  }*/
+  }
+
+  /*
+   */
   $sortByCount(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
