@@ -182,12 +182,19 @@ type ExpressionOrAny<TTest, TRootValue, TForceValue = any> = TTest extends `$${i
   ? ExpressionStringReferenceKey<TRootValue>
   : any;
 
+type InterpretExpressionForceType<TRootValue, TValue, TForcedType = any> = /*
+ */ DeReferenceExpression<TRootValue, TValue> extends TForcedType
+  ? InterpretProjectExpression<TRootValue, TValue>
+  : ProjectResult<TRootValue, TValue> extends TForcedType
+  ? InterpretProjectExpression<TRootValue, TValue>
+  : never;
+
 type InterpretOperator<TRootValue, TValue> = {
   $dateToString?: {
     date: ExpressionType<TRootValue, Date>;
     format?: string;
   };
-  $sum?: ExpressionType<TRootValue, number>;
+  $sum?: InterpretExpressionForceType<TRootValue, LookupKey<TValue, '$sum'>, number>;
   $cond?: {
     if: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'if'>, TRootValue>;
     then: ExpressionOrAny<LookupKey<LookupKey<TValue, '$cond'>, 'then'>, TRootValue>;
@@ -221,7 +228,7 @@ type InterpretOperator<TRootValue, TValue> = {
       }
     : never;
 
-  $abs?: ExpressionType<TRootValue, number>;
+  $abs?: InterpretExpressionForceType<TRootValue, LookupKey<TValue, '$abs'>, number>;
   $acos?: NotImplementedYet;
   $acosh?: NotImplementedYet;
   $add?: NotImplementedYet;
@@ -361,6 +368,8 @@ export type InterpretProjectExpression<TRootValue, TValue> = /*
   ? TValue
   : keyof TValue extends AllOperators
   ? InterpretOperator<TRootValue, TValue>
+  : TValue extends {}
+  ? ProjectObject<TRootValue, TValue>
   : never;
 
 export type ProjectObject<TRootValue, TProject> = {
@@ -369,8 +378,8 @@ export type ProjectObject<TRootValue, TProject> = {
 
 type AllAccumulateOperators = '$sum' | '$addToSet';
 
-type ProjectResult<TRootValue, TValue> = TValue extends ExpressionStringReferenceKey<infer J>
-  ? J
+type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
+  ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators

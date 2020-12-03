@@ -183,28 +183,75 @@ test('project.$map.ref', async () => {
 });
 
 test('project.$map.nested.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    shoes: agg.operators.$map(
-      agg.key((a) => a.doors),
-      'thing',
-      (innerAgg) => ({
-        a: true,
-        b: {bar: innerAgg.referenceKey((a) => a.thing.someNumber)},
-      })
-    ),
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: {bar: '$$thing.someNumber'}}}},
+  } as const);
   expect(aggregator.query()).toEqual([
-    {$project: {shoes: {$map: {input: 'doors', as: 'thing', in: {a: true, b: {bar: '$$thing.someNumber'}}}}}},
+    {$project: {shoes: {$map: {input: '$doors', as: 'thing', in: {a: true, b: {bar: '$$thing.someNumber'}}}}}},
   ]);
 
   const [result] = await aggregator.result(mockCollection);
+  result.shoes[0].b.bar;
   assert<Has<{shoes: {a: true; b: {bar: number}}[]}, typeof result>>(true);
 });
 
+/*
+test('project.$map.double-nested.ref', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: {
+      $map: {
+        input: '$doors',
+        as: 'thing',
+        in: {
+          a: true,
+          b: {
+            $map: {
+              input: '$$thing.bolts',
+              as: 'bb',
+              in: {
+                fire: '$$bb.type',
+              },
+            },
+          },
+        },
+      },
+    },
+  } as const);
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        shoes: {
+          $map: {
+            input: '$doors',
+            as: 'thing',
+            in: {
+              a: true,
+              b: {
+                $map: {
+                  input: '$$thing.bolts',
+                  as: 'bb',
+                  in: {
+                    fire: '$$bb.type',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  result.shoes[0].b[0].fire === 'phiull';
+  assert<Has<{shoes: {a: true; b: {fire: 'phillips' | 'flat'}[]}[]}, typeof result>>(true);
+});
+*/
+
 test('project.$sum', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {$sum: 7},
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: 7}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -212,11 +259,11 @@ test('project.$sum', async () => {
 });
 
 test('project.$sum.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
-      $sum: agg.referenceKey((a) => a.doors.someNumber),
+      $sum: '$doors.someNumber',
     },
-  }));
+  } as const);
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: '$doors.someNumber'}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -224,11 +271,7 @@ test('project.$sum.ref', async () => {
 });
 
 test('project.$sum.ref.nested', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    shoes: {
-      $sum: {$sum: {$sum: agg.referenceKey((a) => a.doors.someNumber)}},
-    },
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({shoes: {$sum: {$sum: {$sum: '$doors.someNumber'}}}} as const);
   expect(aggregator.query()).toEqual([{$project: {shoes: {$sum: {$sum: {$sum: '$doors.someNumber'}}}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -236,9 +279,9 @@ test('project.$sum.ref.nested', async () => {
 });
 
 test('project.$abs', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
+  const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {$abs: 7},
-  }));
+  });
   expect(aggregator.query()).toEqual([{$project: {shoes: {$abs: 7}}}]);
 
   const [result] = await aggregator.result(mockCollection);
@@ -246,11 +289,7 @@ test('project.$abs', async () => {
 });
 
 test('project.$abs.ref', async () => {
-  const aggregator = Aggregator.start<DBCar>().$projectCallback((agg) => ({
-    shoes: {
-      $abs: agg.referenceKey((a) => a.doors.someNumber),
-    },
-  }));
+  const aggregator = Aggregator.start<DBCar>().$project({shoes: {$abs: '$doors.someNumber'}});
   expect(aggregator.query()).toEqual([{$project: {shoes: {$abs: '$doors.someNumber'}}}]);
 
   const [result] = await aggregator.result(mockCollection);
