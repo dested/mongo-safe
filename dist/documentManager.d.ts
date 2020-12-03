@@ -1,6 +1,5 @@
 /// <reference path="../mongodb.d.ts" />
-/// <reference path="../types/mongodb.d.ts" />
-import { Cursor, Db, FilterQuery, IndexOptions, ObjectID, ObjectId, OptionalId, UpdateQuery, WithId } from 'mongodb';
+import { Cursor, Db, DeepKeys, FilterQuery, IndexOptions, ObjectID, ObjectId, OptionalId, UpdateQuery, WithId } from 'mongodb';
 export declare class DocumentManager<T extends {
     _id: ObjectId;
 }> {
@@ -13,6 +12,17 @@ export declare class DocumentManager<T extends {
     updateOne(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void>;
     updateMany(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void>;
     updateDocument(document: T): Promise<T>;
+    getOneProject<TOverride extends {
+        [key in keyof T]: T[key];
+    } = {
+        [key in keyof T]: T[key];
+    }, TProjection extends {
+        [key in keyof TOverride]?: 1 | -1;
+    } = {
+        [key in keyof TOverride]?: 1 | -1;
+    }, TKeys extends keyof TProjection & keyof TOverride = keyof T>(query: FilterQuery<T>, projection: TProjection): Promise<{
+        [key in TKeys]: TOverride[key];
+    }>;
     getOne(query: FilterQuery<T>, projection?: any): Promise<T | null>;
     getAllProject<TOverride extends {
         [key in keyof T]: T[key];
@@ -31,8 +41,8 @@ export declare class DocumentManager<T extends {
     deleteOne(query: FilterQuery<T>): Promise<void>;
     getAll(query: FilterQuery<T>): Promise<T[]>;
     exists(query: FilterQuery<T>): Promise<boolean>;
-    getAllPaged(query: FilterQuery<T>, sortKey: keyof T, sortDirection: number, page: number, take: number): Promise<T[]>;
-    getAllCursor(query: FilterQuery<T>, sortKey: keyof T, sortDirection: number, page: number, take: number): Promise<Cursor<T>>;
+    getAllPaged(query: FilterQuery<T>, sortKey: DeepKeys<T>, sortDirection: number, page: number, take: number): Promise<T[]>;
+    getAllCursor(query: FilterQuery<T>, sortKey: DeepKeys<T>, sortDirection: number, page: number, take: number): Promise<Cursor<T>>;
     count(query: FilterQuery<T>): Promise<number>;
     ensureIndex(spec: any, options: IndexOptions): Promise<string>;
 }

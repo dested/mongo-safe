@@ -1644,7 +1644,7 @@ declare module 'mongodb' {
     DeepQuery<TSchema, any[]>;
 
   /** https://docs.mongodb.com/manual/reference/operator/update */
-  export type UpdateQuery<TSchema> = UpdateQueryImpl<DeepRequired<T>>;
+  export type UpdateQuery<TSchema> = UpdateQueryImpl<DeepRequired<TSchema>>;
   type UpdateQueryImpl<TSchema> = {
     /** https://docs.mongodb.com/manual/reference/operator/update-field/ */
     $currentDate?: OnlyFieldsOfType<TSchema, Date, true | {$type: 'date' | 'timestamp'}>;

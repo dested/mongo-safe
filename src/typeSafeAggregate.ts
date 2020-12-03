@@ -12,9 +12,13 @@ import {
 
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 
+type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
+
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 type FirstTupleElement<T> = T extends [infer Item, ...infer rest] ? Item : never;
+type SecondTupleElement<T> = T extends [infer Item, infer Item2, ...infer rest] ? Item2 : never;
+type ThirdTupleElement<T> = T extends [infer Item, infer Item2, infer Item3, ...infer rest] ? Item3 : never;
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
 type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
@@ -279,7 +283,7 @@ type InterpretProjectOperator<TRootValue, TValue> = {
     ? InterpretProjectExpression<TRootValue, TMultiply>[]
     : never;
   $ne?: NotImplementedYet;
-  $not?: NotImplementedYet;
+  $not?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$not'>>;
   $objectToArray?: NotImplementedYet;
   $or?: NotImplementedYet;
   $pow?: NotImplementedYet;
@@ -344,7 +348,19 @@ type InterpretAccumulateOperator<TRootValue, TValue> = {
   ]
     ? [InterpretAccumulateExpression<TRootValue, TArray>, InterpretAccumulateExpression<TRootValue, TIndex>]
     : never;
+  $cond?:
+    | {
+        else: InterpretAccumulateExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+        if: InterpretAccumulateExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'if'>>;
+        then: InterpretAccumulateExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>;
+      }
+    | [
+        InterpretAccumulateExpression<TRootValue, FirstTupleElement<LookupKey<TValue, '$cond'>>>,
+        InterpretAccumulateExpression<TRootValue, SecondTupleElement<LookupKey<TValue, '$cond'>>>,
+        InterpretAccumulateExpression<TRootValue, ThirdTupleElement<LookupKey<TValue, '$cond'>>>
+      ];
   $first?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$first'>>;
+  $not?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$not'>>;
   $max?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$max'>>;
   $min?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$min'>>;
   $push?: InterpretAccumulateExpression<TRootValue, LookupKey<TValue, '$push'>>;
@@ -374,7 +390,7 @@ type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 
-type AllAccumulateOperators = '$sum' | '$addToSet' | '$first' | '$min' | '$push' | '$arrayElemAt';
+type AllAccumulateOperators = '$sum' | '$addToSet' | '$first' | '$min' | '$push' | '$arrayElemAt' | '$cond' | '$not';
 
 type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -383,7 +399,7 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   : keyof TValue extends AllOperators
   ? LookupKey<
       {
-        $abs: number;
+        $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
         $acos: NotImplementedYet;
         $acosh: NotImplementedYet;
         $add: NotImplementedYet;
@@ -403,9 +419,13 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
         $cmp: NotImplementedYet;
         $concat: string;
         $concatArrays: NotImplementedYet;
-        $cond:
-          | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
-          | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+        $cond: LookupKey<TValue, '$cond'> extends /*[any, any]*/ [any, any, any]
+          ?
+              | ProjectResult<TRootValue, SecondTupleElement<LookupKey<TValue, '$cond'>>>
+              | ProjectResult<TRootValue, ThirdTupleElement<LookupKey<TValue, '$cond'>>>
+          :
+              | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
+              | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
         $convert: NotImplementedYet;
         $cos: NotImplementedYet;
         $dateFromParts: NotImplementedYet;
@@ -455,17 +475,17 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
               LookupKey<LookupKey<TValue, '$map'>, 'in'>
             >[]
           : never;
-        $max: number;
+        $max: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>;
         $mergeObjects: NotImplementedYet;
         $meta: NotImplementedYet;
         $millisecond: NotImplementedYet;
-        $min: number;
+        $min: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$min'>>>;
         $minute: NotImplementedYet;
         $mod: NotImplementedYet;
         $month: NotImplementedYet;
-        $multiply: number;
+        $multiply: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$multiply'>>>;
         $ne: NotImplementedYet;
-        $not: NotImplementedYet;
+        $not: boolean;
         $objectToArray: NotImplementedYet;
         $or: NotImplementedYet;
         $pow: NotImplementedYet;
@@ -498,8 +518,8 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
         $substr: NotImplementedYet;
         $substrBytes: NotImplementedYet;
         $substrCP: NotImplementedYet;
-        $subtract: number;
-        $sum: number;
+        $subtract: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$subtract'>>>;
+        $sum: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$sum'>>>;
         $switch: NotImplementedYet;
         $tan: NotImplementedYet;
         $toBool: NotImplementedYet;
@@ -533,10 +553,19 @@ type AccumulateResult<TRootValue, TValue> = /*
   : keyof TValue extends AllAccumulateOperators
   ? LookupKey<
       {
-        $sum: number;
+        $cond: LookupKey<TValue, '$cond'> extends /*[any, any] | */ [any, any, any]
+          ?
+              | AccumulateResult<TRootValue, SecondTupleElement<LookupKey<TValue, '$cond'>>>
+              | AccumulateResult<TRootValue, ThirdTupleElement<LookupKey<TValue, '$cond'>>>
+          :
+              | AccumulateResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
+              | AccumulateResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+
+        $sum: NumberTypeOrNever<AccumulateResult<TRootValue, LookupKey<TValue, '$sum'>>>;
+        $not: boolean;
         $addToSet: AccumulateResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
         $first: AccumulateResult<TRootValue, LookupKey<TValue, '$first'>>;
-        $min: number;
+        $min: NumberTypeOrNever<AccumulateResult<TRootValue, LookupKey<TValue, '$min'>>>;
         $arrayElemAt: UnArray<AccumulateResult<TRootValue, FirstTupleElement<LookupKey<TValue, '$arrayElemAt'>>>>;
         $push: AccumulateResult<TRootValue, LookupKey<TValue, '$push'>>[];
       },

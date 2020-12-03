@@ -1,4 +1,15 @@
-import {Cursor, Db, FilterQuery, IndexOptions, ObjectID, ObjectId, OptionalId, UpdateQuery, WithId} from 'mongodb';
+import {
+  Cursor,
+  Db,
+  DeepKeys,
+  FilterQuery,
+  IndexOptions,
+  ObjectID,
+  ObjectId,
+  OptionalId,
+  UpdateQuery,
+  WithId,
+} from 'mongodb';
 
 export class DocumentManager<T extends {_id: ObjectId}> {
   constructor(private collectionName: string, private getConnection: () => Promise<Db>) {}
@@ -40,6 +51,15 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     await collection.findOneAndReplace({_id: document._id} as any, document);
     // console.log('update', this.collectionName);
     return document;
+  }
+
+  async getOneProject<
+    TOverride extends {[key in keyof T]: T[key]} = {[key in keyof T]: T[key]},
+    TProjection extends {[key in keyof TOverride]?: 1 | -1} = {[key in keyof TOverride]?: 1 | -1},
+    TKeys extends keyof TProjection & keyof TOverride = keyof T
+  >(query: FilterQuery<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}> {
+    const item = await (await this.getCollection<any>()).findOne(query, {projection});
+    return item;
   }
 
   async getOne(query: FilterQuery<T>, projection?: any): Promise<T | null> {
@@ -97,13 +117,13 @@ export class DocumentManager<T extends {_id: ObjectId}> {
 
   async getAllPaged(
     query: FilterQuery<T>,
-    sortKey: keyof T,
+    sortKey: DeepKeys<T>,
     sortDirection: number,
     page: number,
     take: number
   ): Promise<T[]> {
-    let cursor = (await this.getCollection()).find(query);
-    if (sortKey) {
+    let cursor = (await this.getCollection()).find(query as any);
+    if (sortKey as any) {
       cursor = cursor.sort(sortKey as any, sortDirection);
     }
     return (await cursor.skip(page * take).limit(take)).toArray();
@@ -111,13 +131,13 @@ export class DocumentManager<T extends {_id: ObjectId}> {
 
   async getAllCursor(
     query: FilterQuery<T>,
-    sortKey: keyof T,
+    sortKey: DeepKeys<T>,
     sortDirection: number,
     page: number,
     take: number
   ): Promise<Cursor<T>> {
     let cursor = (await this.getCollection()).find(query);
-    if (sortKey) {
+    if (sortKey as any) {
       cursor = cursor.sort(sortKey as any, sortDirection);
     }
     return cursor.skip(page * take).limit(take);
