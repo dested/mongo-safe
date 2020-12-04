@@ -185,7 +185,7 @@ declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
-declare type ProjectResult<TRootValue, TUnInferValue> = TUnInferValue extends infer TValue ? TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
+declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
     $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
     $acos: NotImplementedYet;
     $acosh: NotImplementedYet;
@@ -310,8 +310,8 @@ declare type ProjectResult<TRootValue, TUnInferValue> = TUnInferValue extends in
     $week: NotImplementedYet;
     $year: NotImplementedYet;
     $zip: NotImplementedYet;
-}[keyof TValue] : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : never : never;
-declare type AccumulateResult<TRootValue, TUnInferValue> = TUnInferValue extends infer TValue ? TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
+}[keyof TValue] : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : never;
+declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
     $avg: never;
     $last: never;
     $mergeObjects: never;
@@ -323,19 +323,19 @@ declare type AccumulateResult<TRootValue, TUnInferValue> = TUnInferValue extends
     $min: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$min'>>>>;
     $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>>;
     $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
-}[keyof TValue] : never : never;
-export declare type ProjectResultObject<TRootValue, TObj> = {
-    [key in keyof TObj]: ProjectResult<TRootValue, TObj[key]>;
-};
+}[keyof TValue] : never;
+export declare type ProjectResultObject<TRootValue, TObj> = TObj extends infer T ? {
+    [key in keyof T]: ProjectResult<TRootValue, T[key]>;
+} : never;
 export declare type LookupKey<T, TKey extends string> = TKey extends keyof T ? T[TKey] : never;
 export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
 declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : never;
 declare type AccumulateObject<TRootValue, TAccumulateObject> = {
     [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
-declare type AccumulateResultObject<TRootValue, TObj> = {
-    [key in keyof TObj]: AccumulateResult<TRootValue, TObj[key]>;
-};
+declare type AccumulateResultObject<TRootValue, TObj> = TObj extends infer T ? {
+    [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
+} : never;
 export declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
     [key in TAs]: (TOther & {
         [oKey in TDepthField]: number;

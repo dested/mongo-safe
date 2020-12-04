@@ -3200,10 +3200,8 @@ declare module 'mongodb' {
                   | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
                   | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
                   | `${key}.${AllowedArrayIndexes}`
-            : T[key] extends infer D_
-            ? D_ extends {}
-              ? `${key}` | `${key}.${DeepKeys<D_, NextDepth<TDepth>>}`
-              : never
+            : T[key] extends {}
+            ? `${key}` | `${key}.${DeepKeys<T[key], NextDepth<TDepth>>}`
             : never
           : never;
       }[keyof T];
@@ -3214,46 +3212,42 @@ declare module 'mongodb' {
     ? [TKey]
     : [];
 
-  export type DeepKeysValue<TUnInferredValue, TKey extends string> = TUnInferredValue extends infer TValue
-    ? TKey extends keyof T
-      ? T[TKey] extends Array<infer Value>
-        ? T[TKey] | Value
-        : T[TKey]
-      : T extends Array<infer Value>
-      ? Value extends SafeTypes
-        ? Value
-        : TKey extends `${infer key}.${infer rest}` // go deeper into array
-        ? key extends AllowedArrayIndexes // 0.rest
-          ? DeepKeysValue<Value, rest> // 0.rest
-          : DeepKeysValue<Value, TKey> // .rest
-        : DeepKeysValue<Value, TKey> // its just Value
-      : keyof T extends string
-      ? TKey extends `${infer key}.${infer rest}`
-        ? key extends keyof T
-          ? DeepKeysValue<T[key], rest>
-          : never
+  export type DeepKeysValue<T, TKey extends string> = TKey extends keyof T
+    ? T[TKey] extends Array<infer Value>
+      ? T[TKey] | Value
+      : T[TKey]
+    : T extends Array<infer Value>
+    ? Value extends SafeTypes
+      ? Value
+      : TKey extends `${infer key}.${infer rest}` // go deeper into array
+      ? key extends AllowedArrayIndexes // 0.rest
+        ? DeepKeysValue<Value, rest> // 0.rest
+        : DeepKeysValue<Value, TKey> // .rest
+      : DeepKeysValue<Value, TKey> // its just Value
+    : keyof T extends string
+    ? TKey extends `${infer key}.${infer rest}`
+      ? key extends keyof T
+        ? DeepKeysValue<T[key], rest>
         : never
       : never
     : never;
 
-  export type DeepKeysResult<TUnInferredValue, TKey extends string> = TUnInferredValue extends infer TValue
-    ? TKey extends keyof T
-      ? T[TKey] extends Array<infer Value>
-        ? T[TKey] // | Value ** this is the only difference
-        : T[TKey]
-      : T extends Array<infer Value>
-      ? Value extends SafeTypes
-        ? Value
-        : TKey extends `${infer key}.${infer rest}` // go deeper into array
-        ? key extends AllowedArrayIndexes // 0.rest
-          ? DeepKeysResult<Value, rest> // 0.rest
-          : DeepKeysResult<Value, TKey> // .rest
-        : DeepKeysResult<Value, TKey> // its just Value
-      : keyof T extends string
-      ? TKey extends `${infer key}.${infer rest}`
-        ? key extends keyof T
-          ? DeepKeysResult<T[key], rest>
-          : never
+  export type DeepKeysResult<T, TKey extends string> = TKey extends keyof T
+    ? T[TKey] extends Array<infer Value>
+      ? T[TKey] // | Value ** this is the only difference
+      : T[TKey]
+    : T extends Array<infer Value>
+    ? Value extends SafeTypes
+      ? Value
+      : TKey extends `${infer key}.${infer rest}` // go deeper into array
+      ? key extends AllowedArrayIndexes // 0.rest
+        ? DeepKeysResult<Value, rest> // 0.rest
+        : DeepKeysResult<Value, TKey> // .rest
+      : DeepKeysResult<Value, TKey> // its just Value
+    : keyof T extends string
+    ? TKey extends `${infer key}.${infer rest}`
+      ? key extends keyof T
+        ? DeepKeysResult<T[key], rest>
         : never
       : never
     : never;
