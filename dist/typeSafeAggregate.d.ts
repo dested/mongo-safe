@@ -342,6 +342,11 @@ declare type AccumulateObject<TRootValue, TAccumulateObject> = {
 declare type AccumulateObjectResult<TRootValue, TObj> = {
     [key in keyof TObj]: AccumulateResult<TRootValue, TObj[key]>;
 };
+declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
+    [key in TAs]: (TOther & {
+        [oKey in TDepthField]: number;
+    } & GraphDeep<TOther, TAs, TDepthField>)[];
+};
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
@@ -359,17 +364,13 @@ export declare class Aggregator<T> {
     $geoNear(): Aggregator<T>;
     $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
         as: TAs;
-        collectionName: string;
+        from: string;
         connectFromField: DeepKeys<T>;
         connectToField: DeepKeys<TOther>;
         depthField?: TDepthField;
         maxDepth?: number;
         startWith: ExpressionStringReferenceKey<T>;
-    }): Aggregator<T & {
-        [key in TAs]: (TOther & {
-            [oKey in TDepthField]: number;
-        })[];
-    }>;
+    }): Aggregator<T & GraphDeep<TOther, TAs, TDepthField>>;
     $group<TId, TAccumulator extends {}>(props: {
         _id: InterpretProjectExpression<T, TId>;
     }, body?: AccumulateObject<T, TAccumulator>): Aggregator<{

@@ -3174,25 +3174,39 @@ declare module 'mongodb' {
   export type SafeTypes = number | string | boolean | ObjectId | Date | NumericTypes;
   export type AllowedArrayIndexes = '0'; // | '1' | '2'; // | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
-  export type DeepKeys<T extends {}> = {
-    [key in keyof T]: key extends string
-      ? T[key] extends SafeTypes
-        ? `${key}`
-        : T[key] extends Array<infer D>
-        ? D extends SafeTypes
-          ? `${key}` | `${key}.${AllowedArrayIndexes}`
-          :
-              | `${key}`
-              | `${key}.${DeepKeys<D>}`
-              | `${key}.${AllowedArrayIndexes}.${DeepKeys<D>}`
-              | `${key}.${AllowedArrayIndexes}`
-        : T[key] extends infer D_
-        ? D_ extends {}
-          ? `${key}` | `${key}.${DeepKeys<D_>}`
-          : never
-        : never
-      : never;
-  }[keyof T];
+  type Depths = 1 | 2 | 3 | 4 | 5;
+
+  type NextDepth<TDepth extends Depths> = TDepth extends 1
+    ? 2
+    : TDepth extends 2
+    ? 3
+    : TDepth extends 3
+    ? 4
+    : TDepth extends 4
+    ? 5
+    : never;
+
+  export type DeepKeys<T extends {}, TDepth extends Depths = 1> = TDepth extends 5
+    ? ''
+    : {
+        [key in keyof T]: key extends string
+          ? T[key] extends SafeTypes
+            ? `${key}`
+            : T[key] extends Array<infer D>
+            ? D extends SafeTypes
+              ? `${key}` | `${key}.${AllowedArrayIndexes}`
+              :
+                  | `${key}`
+                  | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
+                  | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
+                  | `${key}.${AllowedArrayIndexes}`
+            : T[key] extends infer D_
+            ? D_ extends {}
+              ? `${key}` | `${key}.${DeepKeys<D_, NextDepth<TDepth>>}`
+              : never
+            : never
+          : never;
+      }[keyof T];
 
   export type DeepKeysValue<T, TKey extends string> = TKey extends keyof T
     ? T[TKey] extends Array<infer Value>

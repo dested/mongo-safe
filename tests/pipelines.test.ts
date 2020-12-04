@@ -200,7 +200,7 @@ test('$unwind.3', async () => {
 
 test('$graphLookup.otherTable', async () => {
   const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes'>({
-    collectionName: 'window',
+    from: 'window',
     startWith: '$doors',
     as: 'shoes',
     connectFromField: 'someDate',
@@ -225,7 +225,7 @@ test('$graphLookup.otherTable', async () => {
 
 test('$graphLookup.sameTable', async () => {
   const aggregator = Aggregator.start<DBCar>().$graphLookup<DBCar, 'shoes'>({
-    collectionName: 'car',
+    from: 'car',
     startWith: '$color',
     as: 'shoes',
     connectFromField: 'carburetor',
@@ -250,7 +250,7 @@ test('$graphLookup.sameTable', async () => {
 
 test('$graphLookup.depthField', async () => {
   const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes', 'numConnections'>({
-    collectionName: 'window',
+    from: 'window',
     startWith: '$color',
     as: 'shoes',
     connectFromField: 'carburetor',
