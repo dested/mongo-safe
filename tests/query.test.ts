@@ -1,7 +1,6 @@
 /// <reference path="../mongodb.d.ts"/>
 import {assert} from 'conditional-type-checks';
 import {DeepKeys, DeepKeysValue, DeepQuery, FilterQuery, UpdateQuery} from 'mongodb';
-import {ObjectId} from 'bson';
 
 const a = {
   a: 1,

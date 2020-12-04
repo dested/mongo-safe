@@ -1,7 +1,8 @@
 /// <reference path="../mongodb.d.ts"/>
 import {Aggregator, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
-import {assert, Has, NotHas} from 'conditional-type-checks';
+import {assert, Has, IsExact, NotHas} from 'conditional-type-checks';
+import {ObjectId} from 'bson';
 
 const mockCollection: any = {
   aggregate: () => ({
@@ -103,6 +104,48 @@ test('project.$cond.ref', async () => {
 
   assert<Has<{shoes: 'left' | 'right' | Bolt[]}, typeof result>>(true);
   assert<NotHas<{shoes: Bolt}, typeof result>>(true);
+});
+
+test('project.match array', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$project({
+      shoes: [{a: 'abc'}],
+    })
+    .$match({
+      'shoes.a': 'abc',
+    });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        shoes: [{a: 'abc'}],
+      },
+    },
+    {$match: {'shoes.a': 'abc'}},
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+
+  assert<Has<{shoes: {a: 'abc'}[]}, typeof result>>(true);
+});
+
+test('project.match array', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$project({
+      shoes: '$doors',
+    })
+    .$sort({'shoes.someNumber': 1})
+    .$match({'shoes.someNumber': 1});
+
+  expect(aggregator.query()).toEqual([
+    {$project: {shoes: '$doors'}},
+    {$sort: {'shoes.someNumber': 1}},
+    {$match: {'shoes.someNumber': 1}},
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+
+  assert<Has<{shoes: Door[]}, typeof result>>(true);
 });
 
 test('project.$eq', async () => {
@@ -265,4 +308,85 @@ test('project.$abs.ref', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
+});
+
+test('project.1', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: 1,
+  });
+  expect(aggregator.query()).toEqual([{$project: {doors: 1}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{doors: Door[]}, typeof result>>(true);
+});
+
+test('project.bad 1', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shmores: 1,
+  });
+  expect(aggregator.query()).toEqual([{$project: {shmores: 1}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{}, typeof result>>(true);
+});
+
+test('project.good _id', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    _id: 1,
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        _id: 1,
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: ObjectId}, typeof result>>(true);
+});
+test('project.exclude _id', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    _id: 0,
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{}, typeof result>>(true);
+});
+test('project.exclude other1', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: 0,
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        shoes: 0,
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{shoes: 0}, typeof result>>(true);
+});
+test('project.exclude other2', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: 0,
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: 0,
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{doors: 0}, typeof result>>(true);
 });

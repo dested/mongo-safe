@@ -33,6 +33,7 @@ test('complex1', async () => {
       id: '$_id',
       something: 7,
       color: '$color',
+      doors: 1,
       tires: {
         $map: {
           input: '$tires',
@@ -45,6 +46,7 @@ test('complex1', async () => {
       },
     })
     .$sort({something: 1})
+    .$sort({'doors.someNumber': 1})
     .$sort({'tires.shoes': 1})
     .$skip(5)
     .$limit(6);
@@ -56,12 +58,14 @@ test('complex1', async () => {
     {
       $project: {
         color: '$color',
+        doors: 1,
         id: '$_id',
         something: 7,
         tires: {$map: {as: 'tire', in: {id: '$$tire._id', shoes: '$$tire.size'}, input: '$tires'}},
       },
     },
     {$sort: {something: 1}},
+    {$sort: {'doors.someNumber': 1}},
     {$sort: {'tires.shoes': 1}},
     {$skip: 5},
     {$limit: 6},

@@ -14,10 +14,17 @@ import {
 import {Decimal128, Double, Int32, Long} from 'bson';
 
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
+type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
 
 // type NumberTypeOrNever<TValue> = number;
 type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
-
+type DeepExcludeNever<T> = T extends NonObjectValues
+  ? T
+  : T extends Array<infer TArr>
+  ? Array<DeepExcludeNever<T[number]>>
+  : {
+      [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;
+    };
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
@@ -378,15 +385,15 @@ export type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
     : never]: 1;
 };
 
-export type InterpretProjectExpression<TRootValue, TValue> = /*
- */ TValue extends 1
-  ? 1
-  : TValue extends `$${infer TRawKey}`
+export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add one more here lol
+ */ TValue extends `$${string}`
   ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
   ? InterpretProjectOperator<TRootValue, TValue>
+  : TValue extends Array<infer TValueArr>
+  ? Array<ProjectObject<TRootValue, TValueArr>>
   : TValue extends {}
   ? ProjectObject<TRootValue, TValue>
   : never;
@@ -408,10 +415,19 @@ type AllAccumulateOperators =
   | '$stdDevSamp'
   | '$sum';
 
-type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
+type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
+type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue extends 0 | false
+  ? [TKey] extends ['_id']
+    ? 1
+    : 0
+  : 0;
+
+type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
-  : TValue extends 1
-  ? keyof TValue
+  : CheckProjectDeepKey<TKey, TValue> extends 1
+  ? DeepKeysResult<TRootValue, TKey>
+  : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1
+  ? never
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
@@ -556,8 +572,10 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
       $year: NotImplementedYet;
       $zip: NotImplementedYet;
     }[keyof TValue]
+  : TValue extends Array<infer TValueArray>
+  ? Array<ProjectResultObject<TRootValue, TValueArray, TKey>>
   : TValue extends {}
-  ? ProjectResultObject<TRootValue, TValue>
+  ? ProjectResultObject<TRootValue, TValue, TKey>
   : never;
 
 type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
@@ -581,9 +599,17 @@ type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
     }[keyof TValue]
   : never;
 
-export type ProjectResultObject<TRootValue, TObj> = TObj extends infer T
+type GetProjectDeepKey<TDeepProjectKey extends string, key> = TDeepProjectKey extends never
+  ? never
+  : TDeepProjectKey extends ''
+  ? key
+  : key extends string
+  ? `${TDeepProjectKey}.${key}`
+  : '';
+
+export type ProjectResultObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T
   ? {
-      [key in keyof T]: ProjectResult<TRootValue, T[key]>;
+      [key in keyof T]: ProjectResult<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
     }
   : never;
 
@@ -718,10 +744,13 @@ export class Aggregator<T> {
     throw new Error('Not Implemented');
   }
 
-  $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<ProjectResultObject<T, TProject>> {
+  $project<TProject>(
+    query: ProjectObject<T, TProject>
+  ): Aggregator<DeepExcludeNever<ProjectResultObject<T, TProject, ''>>> {
     this.currentPipeline = {$project: query};
-    return new Aggregator<ProjectResultObject<T, TProject>>(this);
+    return new Aggregator<DeepExcludeNever<ProjectResultObject<T, TProject, ''>>>(this);
   }
+
   $redact(): Aggregator<T> {
     throw new Error('Not Implemented');
   }

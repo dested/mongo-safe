@@ -1804,7 +1804,7 @@ declare module 'mongodb' {
   type DontDeepRequire = ObjectID | Decimal128 | Double | Int32 | Long;
 
   export type DeepRequired<T> = {
-    [P in keyof T]-?: T[P] extends DontDeepRequire ? T[P] : T[P] extends {} ? DeepRequired<T[P]> : T[P];
+    [P in keyof T]-?: DontDeepRequire extends T[P] ? T[P] : T[P] extends {} ? DeepRequired<T[P]> : T[P];
   };
 
   export type FilterQuery<T> = FilterQueryImpl<DeepRequired<T>>;
@@ -3192,13 +3192,13 @@ declare module 'mongodb' {
         [key in keyof T]: key extends string
           ? T[key] extends SafeTypes
             ? `${key}`
-            : T[key] extends Array<infer D>
-            ? D extends SafeTypes
+            : number extends keyof T[key]
+            ? T[key][number] extends SafeTypes
               ? `${key}` | `${key}.${AllowedArrayIndexes}`
               :
                   | `${key}`
-                  | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
-                  | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
+                  | `${key}.${DeepKeys<T[key][number], NextDepth<TDepth>>}`
+                  | `${key}.${AllowedArrayIndexes}.${DeepKeys<T[key][number], NextDepth<TDepth>>}`
                   | `${key}.${AllowedArrayIndexes}`
             : T[key] extends {}
             ? `${key}` | `${key}.${DeepKeys<T[key], NextDepth<TDepth>>}`
@@ -3233,9 +3233,7 @@ declare module 'mongodb' {
     : never;
 
   export type DeepKeysResult<T, TKey extends string> = TKey extends keyof T
-    ? T[TKey] extends Array<infer Value>
-      ? T[TKey] // | Value ** this is the only difference
-      : T[TKey]
+    ? T[TKey] // this is the difference between DeepKeysValue, we return out the array, not array | TValue
     : T extends Array<infer Value>
     ? Value extends SafeTypes
       ? Value

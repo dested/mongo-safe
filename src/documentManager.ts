@@ -59,7 +59,7 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     TProjection extends {[key in keyof TOverride]?: 1 | -1} = {[key in keyof TOverride]?: 1 | -1},
     TKeys extends keyof TProjection & keyof TOverride = keyof T
   >(query: FilterQuery<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}> {
-    const item = await (await this.getCollection<any>()).findOne(query, {projection});
+    const item = await (await this.getCollection<any>()).findOne(query as any, {projection});
     return item;
   }
 
@@ -83,7 +83,10 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     TKeys extends keyof TProjection & keyof TOverride = keyof T
   >(query: FilterQuery<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}[]> {
     // console.time(`getting all`);
-    const items = (await this.getCollection<any>()).find(query).project(projection).toArray();
+    const items = (await this.getCollection<any>())
+      .find(query as any)
+      .project(projection)
+      .toArray();
     // console.timeEnd(`getting all`);
     return items;
   }
