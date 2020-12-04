@@ -643,8 +643,8 @@ export class Aggregator<T> {
 
   private constructor(private parent?: Aggregator<any>) {}
 
-  static start<T>(): Aggregator<DeepRequired<T>> {
-    return new Aggregator<DeepRequired<T>>();
+  static start<T>(): Aggregator<T> {
+    return new Aggregator<T>();
   }
   $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>> {
     this.currentPipeline = {$addFields: fields};

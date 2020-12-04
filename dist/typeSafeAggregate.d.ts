@@ -1,4 +1,4 @@
-import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray, AggregationCursor } from 'mongodb';
+import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepKeyArray, AggregationCursor } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 declare type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
 declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
@@ -352,7 +352,7 @@ export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
     private constructor();
-    static start<T>(): Aggregator<DeepRequired<T>>;
+    static start<T>(): Aggregator<T>;
     $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>>;
     $bucket(): Aggregator<T>;
     $bucketAuto(): Aggregator<T>;

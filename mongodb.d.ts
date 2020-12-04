@@ -3212,7 +3212,9 @@ declare module 'mongodb' {
     ? [TKey]
     : [];
 
-  export type DeepKeysValue<T, TKey extends string> = TKey extends keyof T
+  export type DeepKeysValue<T, TKey extends string> = SafeTypes extends T
+    ? T
+    : TKey extends keyof T
     ? T[TKey] extends Array<infer Value>
       ? T[TKey] | Value
       : T[TKey]
@@ -3232,10 +3234,12 @@ declare module 'mongodb' {
       : never
     : never;
 
-  export type DeepKeysResult<T, TKey extends string> = TKey extends keyof T
+  export type DeepKeysResult<T, TKey extends string> = SafeTypes extends T
+    ? T
+    : TKey extends keyof T
     ? T[TKey] // this is the difference between DeepKeysValue, we return out the array, not array | TValue
     : T extends Array<infer Value>
-    ? Value extends SafeTypes
+    ? SafeTypes extends Value
       ? Value
       : TKey extends `${infer key}.${infer rest}` // go deeper into array
       ? key extends AllowedArrayIndexes // 0.rest

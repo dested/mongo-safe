@@ -319,6 +319,24 @@ test('project.1', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{doors: Door[]}, typeof result>>(true);
 });
+test('project.1 objectid', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    _id: 1,
+  });
+  expect(aggregator.query()).toEqual([{$project: {_id: 1}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{_id: ObjectId}, typeof result>>(true);
+});
+test('project.objectid', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    theId: '$_id',
+  });
+  expect(aggregator.query()).toEqual([{$project: {theId: '$_id'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{theId: ObjectId}, typeof result>>(true);
+});
 
 test('project.bad 1', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
