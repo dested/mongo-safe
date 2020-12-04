@@ -3,7 +3,7 @@ import {
   Aggregator,
   ExpressionStringReferenceKey,
   LookupKey,
-  ProjectObjectResult,
+  ProjectResultObject,
   UnArray,
 } from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';

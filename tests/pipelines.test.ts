@@ -4,7 +4,7 @@ import {
   ExpressionStringReferenceKey,
   GraphDeep,
   LookupKey,
-  ProjectObjectResult,
+  ProjectResultObject,
   UnArray,
 } from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
@@ -293,6 +293,7 @@ test('$group.groupThenAddField', async () => {
   expect(aggregator.query()).toEqual([{$group: {_id: 8, a: 1}}, {$addFields: {shoes: '$a'}}]);
 
   const [result] = await aggregator.result(mockCollection);
+
   assert<Has<{_id: 8; a: 1; shoes: 1}, typeof result>>(true);
 });
 
@@ -341,7 +342,7 @@ test('$group.groupThenAddFieldDeep', async () => {
   ]);
 
   const result = await aggregator.result(mockCollection);
-  const j = result.map((a) => a.numbersLeftArr.map((b) => b.count)); // should not be excesively deep
+  const j = result.map((a) => a.numbersLeftArr.map((b) => b.count)); // should not be excessively deep
   assert<Has<{_id: 8; numbersLeftArr: {boardId: ObjectID; count: Door}[]; shoes: number}, typeof result[0]>>(true);
 });
 

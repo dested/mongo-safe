@@ -1,6 +1,6 @@
 import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
-declare type NumberTypeOrNever<TValue> = number;
+declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
 export declare type UnArray<T> = T extends Array<infer U> ? U : T;
 declare type ReplaceKey<T, TKey, TValue> = {
     [key in keyof T]: key extends TKey ? TValue : T[key];
@@ -185,7 +185,7 @@ declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
-declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
+declare type ProjectResult<TRootValue, TUnInferValue> = TUnInferValue extends infer TValue ? TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
     $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
     $acos: NotImplementedYet;
     $acosh: NotImplementedYet;
@@ -310,8 +310,8 @@ declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKe
     $week: NotImplementedYet;
     $year: NotImplementedYet;
     $zip: NotImplementedYet;
-}[keyof TValue] : TValue extends {} ? ProjectObjectResult<TRootValue, TValue> : never;
-declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
+}[keyof TValue] : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : never : never;
+declare type AccumulateResult<TRootValue, TUnInferValue> = TUnInferValue extends infer TValue ? TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
     $avg: never;
     $last: never;
     $mergeObjects: never;
@@ -323,8 +323,8 @@ declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRa
     $min: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$min'>>>>;
     $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>>;
     $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
-}[keyof TValue] : never;
-export declare type ProjectObjectResult<TRootValue, TObj> = {
+}[keyof TValue] : never : never;
+export declare type ProjectResultObject<TRootValue, TObj> = {
     [key in keyof TObj]: ProjectResult<TRootValue, TObj[key]>;
 };
 export declare type LookupKey<T, TKey extends string> = TKey extends keyof T ? T[TKey] : never;
@@ -333,7 +333,7 @@ declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends 
 declare type AccumulateObject<TRootValue, TAccumulateObject> = {
     [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
-declare type AccumulateObjectResult<TRootValue, TObj> = {
+declare type AccumulateResultObject<TRootValue, TObj> = {
     [key in keyof TObj]: AccumulateResult<TRootValue, TObj[key]>;
 };
 export declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
@@ -346,7 +346,7 @@ export declare class Aggregator<T> {
     private currentPipeline?;
     private constructor();
     static start<T>(): Aggregator<DeepRequired<T>>;
-    $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectObjectResult<T, TProject>>;
+    $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>>;
     $bucket(): Aggregator<T>;
     $bucketAuto(): Aggregator<T>;
     $collStats(): Aggregator<T>;
@@ -369,7 +369,7 @@ export declare class Aggregator<T> {
         _id: InterpretProjectExpression<T, TId>;
     }, body?: AccumulateObject<T, TAccumulator>): Aggregator<{
         _id: ProjectResult<T, TId>;
-    } & AccumulateObjectResult<T, TAccumulator>>;
+    } & AccumulateResultObject<T, TAccumulator>>;
     $indexStats(): Aggregator<T>;
     $limit(limit: number): Aggregator<T>;
     $listLocalSessions(): Aggregator<T>;
@@ -386,7 +386,7 @@ export declare class Aggregator<T> {
     $merge(): Aggregator<T>;
     $out(): Aggregator<T>;
     $planCacheStats(): Aggregator<T>;
-    $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<ProjectObjectResult<T, TProject>>;
+    $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<ProjectResultObject<T, TProject>>;
     $redact(): Aggregator<T>;
     $replaceRoot(): Aggregator<T>;
     $replaceWith(): Aggregator<T>;
