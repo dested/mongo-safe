@@ -3208,6 +3208,12 @@ declare module 'mongodb' {
           : never;
       }[keyof T];
 
+  export type DeepKeyArray<TKey extends string> = TKey extends `${infer key}.${infer rest}`
+    ? [key, ...DeepKeyArray<rest>]
+    : TKey extends `${infer key}`
+    ? [TKey]
+    : [];
+
   export type DeepKeysValue<T, TKey extends string> = TKey extends keyof T
     ? T[TKey] extends Array<infer Value>
       ? T[TKey] | Value

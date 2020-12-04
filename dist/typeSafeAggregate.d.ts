@@ -1,13 +1,13 @@
-import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired } from 'mongodb';
+import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 declare type NumberTypeOrNever<TValue> = number;
-declare type OnlyArrayFields<T> = {
-    [key in keyof T]: T[key] extends Array<infer J> ? key : never;
-}[keyof T];
 export declare type UnArray<T> = T extends Array<infer U> ? U : T;
 declare type ReplaceKey<T, TKey, TValue> = {
     [key in keyof T]: key extends TKey ? TValue : T[key];
 };
+declare type DeepReplaceKey<T, TKeys extends Array<any>, TValue> = TKeys extends [infer TCurrentKey, ...infer TRestKeys] ? TRestKeys extends [] ? ReplaceKey<T, TKeys[0], TValue> : {
+    [key in keyof T]: key extends TCurrentKey ? DeepReplaceKey<T[key], TRestKeys, TValue> : T[key];
+} : never;
 export declare type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TRef extends {} ? {
     [key in keyof TRef]: DeReferenceExpression<TRootValue, TRef[key]>;
 } : TRef;
@@ -400,9 +400,7 @@ export declare class Aggregator<T> {
     }): Aggregator<T>;
     $sortByCount(): Aggregator<T>;
     $unset(): Aggregator<T>;
-    $unwind<TKey extends OnlyArrayFields<T>>(key: TKey): Aggregator<ReplaceKey<T, TKey, UnArray<T[TKey]>>>;
-    $unwind<TKey extends keyof T, TKey2 extends OnlyArrayFields<T[TKey]>>(key: TKey, key2: TKey2): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, UnArray<T[TKey][TKey2]>>>>;
-    $unwind<TKey extends keyof T, TKey2 extends keyof T[TKey], TKey3 extends OnlyArrayFields<T[TKey][TKey2]>>(key: TKey, key2: TKey2, key3: TKey3): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, ReplaceKey<T[TKey][TKey2], TKey3, UnArray<T[TKey][TKey2][TKey3]>>>>>;
+    $unwind<TKey extends DeepKeys<T>>(key: `$${TKey}`): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>;
     query(): {}[];
     result<TDoc extends {
         _id: ObjectId;

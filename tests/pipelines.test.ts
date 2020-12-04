@@ -169,7 +169,7 @@ test('$addField.complex', async () => {
 });
 
 test('$unwind.simple', async () => {
-  const aggregator = Aggregator.start<DBCar>().$unwind('doors');
+  const aggregator = Aggregator.start<DBCar>().$unwind('$doors');
 
   expect(aggregator.query()).toEqual([{$unwind: '$doors'}]);
 
@@ -177,7 +177,7 @@ test('$unwind.simple', async () => {
   assert<Has<ReplaceKey<DBCar, 'doors', Door>, typeof result>>(true);
 });
 test('$unwind.2', async () => {
-  const aggregator = Aggregator.start<DBCar>().$unwind('carburetor', 'bolts');
+  const aggregator = Aggregator.start<DBCar>().$unwind('$carburetor.bolts');
 
   expect(aggregator.query()).toEqual([{$unwind: '$carburetor.bolts'}]);
 
@@ -186,7 +186,7 @@ test('$unwind.2', async () => {
 });
 
 test('$unwind.3', async () => {
-  const aggregator = Aggregator.start<DBCar>().$unwind('carburetor', 'base', 'bolts');
+  const aggregator = Aggregator.start<DBCar>().$unwind('$carburetor.base.bolts');
 
   expect(aggregator.query()).toEqual([{$unwind: '$carburetor.base.bolts'}]);
 

@@ -8,6 +8,7 @@ import {
   ObjectID,
   ObjectId,
   DeepRequired,
+  DeepKeyArray,
 } from 'mongodb';
 import {Decimal128, Double, Int32, Long} from 'bson';
 
@@ -20,6 +21,14 @@ type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
 type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
+
+type DeepReplaceKey<T, TKeys extends Array<any>, TValue> = TKeys extends [infer TCurrentKey, ...infer TRestKeys]
+  ? TRestKeys extends []
+    ? ReplaceKey<T, TKeys[0], TValue>
+    : {
+        [key in keyof T]: key extends TCurrentKey ? DeepReplaceKey<T[key], TRestKeys, TValue> : T[key];
+      }
+  : never;
 
 export type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -735,32 +744,11 @@ export class Aggregator<T> {
     throw new Error('Not Implemented');
   }
 
-  $unwind<TKey extends OnlyArrayFields<T>>(key: TKey): Aggregator<ReplaceKey<T, TKey, UnArray<T[TKey]>>>;
-
-  $unwind<TKey extends keyof T, TKey2 extends OnlyArrayFields<T[TKey]>>(
-    key: TKey,
-    key2: TKey2
-  ): Aggregator<ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, UnArray<T[TKey][TKey2]>>>>;
-
-  $unwind<TKey extends keyof T, TKey2 extends keyof T[TKey], TKey3 extends OnlyArrayFields<T[TKey][TKey2]>>(
-    key: TKey,
-    key2: TKey2,
-    key3: TKey3
-  ): Aggregator<
-    ReplaceKey<T, TKey, ReplaceKey<T[TKey], TKey2, ReplaceKey<T[TKey][TKey2], TKey3, UnArray<T[TKey][TKey2][TKey3]>>>>
-  >;
-
-  $unwind<TKey, TKey2 = undefined, TKey3 = undefined>(key: TKey, key2?: TKey2, key3?: TKey3): any {
-    let result = '$';
-    result += key;
-    if (key2) {
-      result += `.${key2}`;
-    }
-    if (key3) {
-      result += `.${key3}`;
-    }
-    this.currentPipeline = {$unwind: result};
-    return new Aggregator<T>(this);
+  $unwind<TKey extends DeepKeys<T>>(
+    key: `$${TKey}`
+  ): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>> {
+    this.currentPipeline = {$unwind: key};
+    return new Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>(this);
   }
 
   query(): {}[] {
