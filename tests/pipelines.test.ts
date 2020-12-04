@@ -2,6 +2,7 @@
 import {
   Aggregator,
   ExpressionStringReferenceKey,
+  GraphDeep,
   LookupKey,
   ProjectObjectResult,
   UnArray,
@@ -210,7 +211,7 @@ test('$graphLookup.otherTable', async () => {
   expect(aggregator.query()).toEqual([
     {
       $graphLookup: {
-        collectionName: 'window',
+        from: 'window',
         startWith: '$doors',
         as: 'shoes',
         connectFromField: 'someDate',
@@ -220,7 +221,7 @@ test('$graphLookup.otherTable', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<Combine<DBCar, 'shoes', DBWindow[]>, typeof result>>(true);
+  assert<Has<DBCar & GraphDeep<DBWindow, 'shoes', never>, typeof result>>(true);
 });
 
 test('$graphLookup.sameTable', async () => {
@@ -235,7 +236,7 @@ test('$graphLookup.sameTable', async () => {
   expect(aggregator.query()).toEqual([
     {
       $graphLookup: {
-        collectionName: 'car',
+        from: 'car',
         startWith: '$color',
         as: 'shoes',
         connectFromField: 'carburetor',
@@ -245,7 +246,7 @@ test('$graphLookup.sameTable', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<Combine<DBCar, 'shoes', DBCar[]>, typeof result>>(true);
+  assert<Has<DBCar & GraphDeep<DBCar, 'shoes', never>, typeof result>>(true);
 });
 
 test('$graphLookup.depthField', async () => {
@@ -261,7 +262,7 @@ test('$graphLookup.depthField', async () => {
   expect(aggregator.query()).toEqual([
     {
       $graphLookup: {
-        collectionName: 'window',
+        from: 'window',
         startWith: '$color',
         as: 'shoes',
         connectFromField: 'carburetor',
@@ -272,7 +273,7 @@ test('$graphLookup.depthField', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<Combine<DBCar, 'shoes', Combine<DBWindow, 'numConnections', number>[]>, typeof result>>(true);
+  assert<Has<DBCar & GraphDeep<DBWindow, 'shoes', 'numConnections'>, typeof result>>(true);
 });
 
 test('$group.simple1', async () => {
