@@ -1,5 +1,5 @@
 /// <reference path="../mongodb.d.ts"/>
-import {Aggregator, ExpressionStringReferenceKey} from '../src/typeSafeAggregate';
+import {Aggregator} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, IsExact, NotHas} from 'conditional-type-checks';
 import {ObjectId} from 'bson';
@@ -34,7 +34,6 @@ test('project.$dateToString', async () => {
   assert<Has<{shoes: string}, typeof result>>(true);
 });
 
-const j: ExpressionStringReferenceKey<DBCar, Date> = '$someDate';
 test('project.$dateToString.ref', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
@@ -336,6 +335,130 @@ test('project.objectid', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<IsExact<{theId: ObjectId}, typeof result>>(true);
+});
+test('project.switch', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    food: {
+      $switch: {
+        branches: [
+          {case: {$lte: ['$someRootNumber', 2]}, then: -5},
+          {case: {$lte: ['$someRootNumber', 5]}, then: 0},
+          {case: {$lte: ['$someRootNumber', 8]}, then: 5},
+          {case: {$lte: ['$someRootNumber', 12]}, then: 10},
+        ],
+        default: 15,
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        food: {
+          $switch: {
+            branches: [
+              {case: {$lte: ['$someRootNumber', 2]}, then: -5},
+              {case: {$lte: ['$someRootNumber', 5]}, then: 0},
+              {case: {$lte: ['$someRootNumber', 8]}, then: 5},
+              {case: {$lte: ['$someRootNumber', 12]}, then: 10},
+            ],
+            default: 15,
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{food: -5 | 0 | 5 | 10 | 15}, typeof result>>(true);
+});
+test('project.fancyAdd', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$project({
+      food: {
+        $switch: {
+          branches: [
+            {case: {$lte: ['$someRootNumber', 2]}, then: -5},
+            {case: {$lte: ['$someRootNumber', 5]}, then: 0},
+            {case: {$lte: ['$someRootNumber', 8]}, then: 5},
+            {case: {$lte: ['$someRootNumber', 12]}, then: 10},
+          ],
+          default: 15,
+        },
+      },
+    })
+    .$addFields({
+      shoes: {
+        $add: [
+          {
+            $multiply: [
+              {
+                $divide: [
+                  {
+                    $add: [
+                      {$divide: ['$food', '$food']},
+                      {$divide: ['$food', '$food']},
+                      {$divide: ['$food', '$food']},
+                      {$divide: ['$food', '$food']},
+                    ],
+                  },
+                  '$food',
+                ],
+              },
+              '$food',
+            ],
+          },
+          '$food',
+        ],
+      },
+    });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        food: {
+          $switch: {
+            branches: [
+              {case: {$lte: ['$someRootNumber', 2]}, then: -5},
+              {case: {$lte: ['$someRootNumber', 5]}, then: 0},
+              {case: {$lte: ['$someRootNumber', 8]}, then: 5},
+              {case: {$lte: ['$someRootNumber', 12]}, then: 10},
+            ],
+            default: 15,
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        shoes: {
+          $add: [
+            {
+              $multiply: [
+                {
+                  $divide: [
+                    {
+                      $add: [
+                        {$divide: ['$food', '$food']},
+                        {$divide: ['$food', '$food']},
+                        {$divide: ['$food', '$food']},
+                        {$divide: ['$food', '$food']},
+                      ],
+                    },
+                    '$food',
+                  ],
+                },
+                '$food',
+              ],
+            },
+            '$food',
+          ],
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<typeof result['food'], number>>(true);
+  assert<Has<typeof result['shoes'], number>>(true);
 });
 
 test('project.bad 1', async () => {

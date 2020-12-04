@@ -1,16 +1,7 @@
 /// <reference path="../mongodb.d.ts"/>
-import {
-  Aggregator,
-  ExpressionStringReferenceKey,
-  LookupKey,
-  ProjectResultObject,
-  UnArray,
-} from '../src/typeSafeAggregate';
+import {Aggregator} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, NotHas, IsExact} from 'conditional-type-checks';
-import {DBWindow} from './models/dbWindow';
-import {ObjectID} from 'mongodb';
-import {Combine, ReplaceKey} from './typeUtils';
 
 const mockCollection: any = {
   aggregate: () => ({

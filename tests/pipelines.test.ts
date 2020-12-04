@@ -1,12 +1,5 @@
 /// <reference path="../mongodb.d.ts"/>
-import {
-  Aggregator,
-  ExpressionStringReferenceKey,
-  GraphDeep,
-  LookupKey,
-  ProjectResultObject,
-  UnArray,
-} from '../src/typeSafeAggregate';
+import {Aggregator, GraphDeep} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, NotHas, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
@@ -247,6 +240,34 @@ test('$graphLookup.sameTable', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar & GraphDeep<DBCar, 'shoes', never>, typeof result>>(true);
+});
+test('$graphLookup.double', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$graphLookup<DBCar, 'shoes'>({
+      from: 'car',
+      startWith: '$color',
+      as: 'shoes',
+      connectFromField: 'carburetor',
+      connectToField: 'doors',
+    })
+    .$graphLookup<DBCar, 'shoes2'>({
+      from: 'car',
+      startWith: '$color',
+      as: 'shoes2',
+      connectFromField: 'carburetor',
+      connectToField: 'doors',
+    })
+    .$graphLookup<DBCar, 'shoes3'>({
+      from: 'car',
+      startWith: '$color',
+      as: 'shoes3',
+      connectFromField: 'carburetor',
+      connectToField: 'doors',
+    });
+
+  const [result] = await aggregator.result(mockCollection);
+  //shouldnt overflow
+  assert<true>(true);
 });
 
 test('$graphLookup.depthField', async () => {

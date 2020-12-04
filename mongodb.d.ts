@@ -1730,7 +1730,7 @@ declare module 'mongodb' {
   // string types can be searched using a regex in mongo
   // array types can be searched using their element type
   type RegExpForString<T> = T extends string ? RegExp | T : T;
-  type MongoAltQuery<T> = T extends ReadonlyArray<infer U> ? T | RegExpForString<U> : RegExpForString<T>;
+  export type MongoAltQuery<T> = T extends ReadonlyArray<infer U> ? T | RegExpForString<U> : RegExpForString<T>;
 
   /** https://docs.mongodb.com/manual/reference/operator/query/#query-selectors */
   export type QuerySelector<T> = {
@@ -1767,8 +1767,8 @@ declare module 'mongodb' {
     $maxDistance?: number;
     // Array
     // TODO: define better types for $all and $elemMatch
-    $all?: T extends ReadonlyArray<infer U> ? any[] : never;
-    $elemMatch?: T extends ReadonlyArray<infer U> ? object : never;
+    $all?: T extends ReadonlyArray<infer U> ? FilterQuery<U>[] : never;
+    $elemMatch?: T extends ReadonlyArray<infer U> ? FilterQuery<U> : never;
     $size?: T extends ReadonlyArray<infer U> ? number : never;
     // Bitwise
     $bitsAllClear?: BitwiseQuery;
@@ -1804,11 +1804,11 @@ declare module 'mongodb' {
   type DontDeepRequire = ObjectID | Decimal128 | Double | Int32 | Long;
 
   export type DeepRequired<T> = {
-    [P in keyof T]-?: DontDeepRequire extends T[P] ? T[P] : T[P] extends {} ? DeepRequired<T[P]> : T[P];
+    [P in keyof T]-?: T[P] extends DontDeepRequire ? T[P] : T[P] extends {} ? DeepRequired<T[P]> : T[P];
   };
 
   export type FilterQuery<T> = FilterQueryImpl<DeepRequired<T>>;
-  type FilterQueryImpl<T> = {
+  export type FilterQueryImpl<T> = {
     [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
   } &
     RootQuerySelector<T>;
@@ -3192,16 +3192,18 @@ declare module 'mongodb' {
         [key in keyof T]: key extends string
           ? T[key] extends SafeTypes
             ? `${key}`
-            : number extends keyof T[key]
-            ? T[key][number] extends SafeTypes
+            : T[key] extends Array<infer D>
+            ? D extends SafeTypes
               ? `${key}` | `${key}.${AllowedArrayIndexes}`
               :
                   | `${key}`
-                  | `${key}.${DeepKeys<T[key][number], NextDepth<TDepth>>}`
-                  | `${key}.${AllowedArrayIndexes}.${DeepKeys<T[key][number], NextDepth<TDepth>>}`
+                  | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
+                  | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
                   | `${key}.${AllowedArrayIndexes}`
-            : T[key] extends {}
-            ? `${key}` | `${key}.${DeepKeys<T[key], NextDepth<TDepth>>}`
+            : T[key] extends infer D_
+            ? D_ extends {}
+              ? `${key}` | `${key}.${DeepKeys<D_, NextDepth<TDepth>>}`
+              : never
             : never
           : never;
       }[keyof T];
