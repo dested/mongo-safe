@@ -15,6 +15,7 @@ import {Decimal128, Double, Int32, Long} from 'bson';
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 
 type NumberTypeOrNever<TValue> = number;
+// type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
 
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
@@ -580,7 +581,7 @@ export type ProjectObjectResult<TRootValue, TObj> = {
   [key in keyof TObj]: ProjectResult<TRootValue, TObj[key]>;
 };
 
-export type LookupKey<T, TKey extends string> = {[key in keyof T]: key extends TKey ? T[key] : never}[keyof T];
+export type LookupKey<T, TKey extends string> = TKey extends keyof T ? T[TKey] : never;
 export type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
 
 type InterpretAccumulateExpression<TRootValue, TValue> = /*
@@ -765,7 +766,9 @@ export class Aggregator<T> {
   }
 
   async result<TDoc extends {_id: ObjectId}>(collection: Collection<TDoc>): Promise<T[]> {
-    return collection.aggregate<T>(this.query()).toArray();
+    const query = this.query();
+    // console.log(JSON.stringify(q, null, 2));
+    return collection.aggregate<T>(query).toArray();
   }
 }
 

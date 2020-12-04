@@ -92,11 +92,7 @@ test('project.$cond', async () => {
 test('project.$cond.ref', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
-      $cond: {
-        if: '$doors.side',
-        then: '$doors.side',
-        else: '$doors.bolts',
-      },
+      $cond: {if: '$doors.side', then: '$doors.side', else: '$doors.bolts'},
     },
   });
   expect(aggregator.query()).toEqual([

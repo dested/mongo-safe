@@ -327,9 +327,7 @@ declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRa
 export declare type ProjectObjectResult<TRootValue, TObj> = {
     [key in keyof TObj]: ProjectResult<TRootValue, TObj[key]>;
 };
-export declare type LookupKey<T, TKey extends string> = {
-    [key in keyof T]: key extends TKey ? T[key] : never;
-}[keyof T];
+export declare type LookupKey<T, TKey extends string> = TKey extends keyof T ? T[TKey] : never;
 export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
 declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : never;
 declare type AccumulateObject<TRootValue, TAccumulateObject> = {
