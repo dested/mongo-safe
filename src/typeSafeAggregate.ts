@@ -9,6 +9,7 @@ import {
   ObjectId,
   DeepRequired,
   DeepKeyArray,
+  AggregationCursor,
 } from 'mongodb';
 import {Decimal128, Double, Int32, Long} from 'bson';
 
@@ -378,7 +379,9 @@ export type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
 };
 
 export type InterpretProjectExpression<TRootValue, TValue> = /*
- */ TValue extends `$${infer TRawKey}`
+ */ TValue extends 1
+  ? 1
+  : TValue extends `$${infer TRawKey}`
   ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
@@ -407,6 +410,8 @@ type AllAccumulateOperators =
 
 type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
+  : TValue extends 1
+  ? keyof TValue
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
@@ -726,8 +731,9 @@ export class Aggregator<T> {
   $replaceWith(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $sample(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $sample(props: {size: number}): Aggregator<T> {
+    this.currentPipeline = {$sample: props};
+    return new Aggregator<T>(this);
   }
   $set(): Aggregator<T> {
     throw new Error('Not Implemented');
@@ -749,7 +755,7 @@ export class Aggregator<T> {
   }
 
   $unwind<TKey extends DeepKeys<T>>(
-    key: `$${TKey}`
+    key: `$${TKey}` | {path: `$${TKey}`; preserveNullAndEmptyArrays?: boolean}
   ): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>> {
     this.currentPipeline = {$unwind: key};
     return new Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>(this);
@@ -772,6 +778,12 @@ export class Aggregator<T> {
     const query = this.query();
     // console.log(JSON.stringify(q, null, 2));
     return collection.aggregate<T>(query).toArray();
+  }
+
+  async resultCursor<TDoc extends {_id: ObjectId}>(collection: Collection<TDoc>): Promise<AggregationCursor<T>> {
+    const query = this.query();
+    // console.log(JSON.stringify(q, null, 2));
+    return collection.aggregate<T>(query);
   }
 }
 

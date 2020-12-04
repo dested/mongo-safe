@@ -1,4 +1,5 @@
 import {
+  AggregationCursor,
   Cursor,
   Db,
   DeepKeys,
@@ -89,6 +90,10 @@ export class DocumentManager<T extends {_id: ObjectId}> {
 
   async aggregate<TAgg>(query: any): Promise<TAgg[]> {
     return (await this.getCollection<any>()).aggregate(query).toArray();
+  }
+
+  async aggregateCursor<TAgg>(query: any): Promise<AggregationCursor<TAgg>> {
+    return (await this.getCollection<any>()).aggregate(query);
   }
 
   async getById(id: string | ObjectID, projection?: any): Promise<T | null> {

@@ -1,5 +1,5 @@
 /// <reference path="../mongodb.d.ts" />
-import { Cursor, Db, DeepKeys, FilterQuery, IndexOptions, ObjectID, ObjectId, OptionalId, UpdateQuery, WithId } from 'mongodb';
+import { AggregationCursor, Cursor, Db, DeepKeys, FilterQuery, IndexOptions, ObjectID, ObjectId, OptionalId, UpdateQuery, WithId } from 'mongodb';
 export declare class DocumentManager<T extends {
     _id: ObjectId;
 }> {
@@ -36,6 +36,7 @@ export declare class DocumentManager<T extends {
         [key in TKeys]: TOverride[key];
     }[]>;
     aggregate<TAgg>(query: any): Promise<TAgg[]>;
+    aggregateCursor<TAgg>(query: any): Promise<AggregationCursor<TAgg>>;
     getById(id: string | ObjectID, projection?: any): Promise<T | null>;
     deleteMany(query: FilterQuery<T>): Promise<void>;
     deleteOne(query: FilterQuery<T>): Promise<void>;

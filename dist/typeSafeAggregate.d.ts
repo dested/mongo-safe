@@ -1,4 +1,4 @@
-import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray } from 'mongodb';
+import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray, AggregationCursor } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
 export declare type UnArray<T> = T extends Array<infer U> ? U : T;
@@ -180,12 +180,12 @@ declare type InterpretAccumulateOperator<TRootValue, TValue> = {
 export declare type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
     [key in DeepKeys<T> as DeepKeysValue<T, key> extends ForceValue ? DeepKeysValue<T, key> extends never ? never : `$${key}` : never]: 1;
 };
-export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretProjectOperator<TRootValue, TValue> : TValue extends {} ? ProjectObject<TRootValue, TValue> : never;
+export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends 1 ? 1 : TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretProjectOperator<TRootValue, TValue> : TValue extends {} ? ProjectObject<TRootValue, TValue> : never;
 declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
-declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
+declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends 1 ? keyof TValue : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
     $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
     $acos: NotImplementedYet;
     $acosh: NotImplementedYet;
@@ -390,7 +390,9 @@ export declare class Aggregator<T> {
     $redact(): Aggregator<T>;
     $replaceRoot(): Aggregator<T>;
     $replaceWith(): Aggregator<T>;
-    $sample(): Aggregator<T>;
+    $sample(props: {
+        size: number;
+    }): Aggregator<T>;
     $set(): Aggregator<T>;
     $skip(skip: number): Aggregator<T>;
     $sort(sorts: {
@@ -398,10 +400,16 @@ export declare class Aggregator<T> {
     }): Aggregator<T>;
     $sortByCount(): Aggregator<T>;
     $unset(): Aggregator<T>;
-    $unwind<TKey extends DeepKeys<T>>(key: `$${TKey}`): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>;
+    $unwind<TKey extends DeepKeys<T>>(key: `$${TKey}` | {
+        path: `$${TKey}`;
+        preserveNullAndEmptyArrays?: boolean;
+    }): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>;
     query(): {}[];
     result<TDoc extends {
         _id: ObjectId;
     }>(collection: Collection<TDoc>): Promise<T[]>;
+    resultCursor<TDoc extends {
+        _id: ObjectId;
+    }>(collection: Collection<TDoc>): Promise<AggregationCursor<T>>;
 }
 export {};
