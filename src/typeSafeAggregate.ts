@@ -413,8 +413,8 @@ type InterpretProjectOperator<TRootValue, TValue> = {
 };
 
 type InterpretAccumulateOperator<TRootValue, TValue> = {
-  $avg?: never;
-  $last?: never;
+  $avg?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$avg'>>;
+  $last?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$last'>>;
   $mergeObjects?: never;
   $stdDevPop?: never;
   $stdDevSamp?: never;
@@ -660,8 +660,8 @@ type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? TValue
   : keyof TValue extends AllAccumulateOperators
   ? {
-      $avg: never;
-      $last: never;
+      $avg: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$avg'>>>>;
+      $last: ProjectResult<TRootValue, LookupKey<TValue, '$last'>>;
       $mergeObjects: never;
       $stdDevPop: never;
       $stdDevSamp: never;
