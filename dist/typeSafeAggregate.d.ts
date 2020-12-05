@@ -1,7 +1,7 @@
 import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray, AggregationCursor, QuerySelector, RootQuerySelector, MongoAltQuery } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 declare type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
-declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
+declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
 declare type DeepExcludeNever<T> = T extends NonObjectValues ? T : T extends Array<infer TArr> ? Array<DeepExcludeNever<T[number]>> : {
     [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;
 };
@@ -186,7 +186,10 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
     $toString?: NotImplementedYet;
     $toUpper?: NotImplementedYet;
     $trim?: NotImplementedYet;
-    $trunc?: NotImplementedYet;
+    $trunc?: [InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>] | [
+        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>,
+        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 1>>
+    ] | InterpretProjectExpression<TRootValue, LookupKey<TValue, '$trunc'>>;
     $type?: NotImplementedYet;
     $week?: NotImplementedYet;
     $year?: NotImplementedYet;
@@ -205,7 +208,7 @@ declare type InterpretAccumulateOperator<TRootValue, TValue> = {
     $push?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$push'>>;
     $sum?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$sum'>>;
 };
-export declare type ExpressionStringReferenceKey<T> = `$${DeepKeys<T>}`;
+export declare type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
 export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends `$${string}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretProjectOperator<TRootValue, TValue> : TValue extends Array<infer TValueArr> ? Array<ProjectObject<TRootValue, TValueArr>> : TValue extends {} ? ProjectObject<TRootValue, TValue> : never;
 declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
@@ -213,7 +216,7 @@ declare type ProjectObject<TRootValue, TProject> = {
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
 declare type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
 declare type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue extends 0 | false ? [TKey] extends ['_id'] ? 1 : 0 : 0;
-declare type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
+declare type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
     $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
     $acos: NotImplementedYet;
     $acosh: NotImplementedYet;
@@ -333,7 +336,7 @@ declare type ProjectResult<TRootValue, TValue, TKey extends string = never> = TV
     $toString: NotImplementedYet;
     $toUpper: NotImplementedYet;
     $trim: NotImplementedYet;
-    $trunc: NotImplementedYet;
+    $trunc: LookupKey<TValue, '$trunc'> extends Array<any> ? NumberTypeOrNever<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>> : NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$trunc'>>>;
     $type: NotImplementedYet;
     $week: NotImplementedYet;
     $year: NotImplementedYet;
@@ -429,7 +432,7 @@ export declare class Aggregator<T> {
     }>;
     $match(query: FilterQuery<T>): Aggregator<T>;
     $merge(): Aggregator<T>;
-    $out(): Aggregator<T>;
+    $out(tableName: string): Aggregator<void>;
     $planCacheStats(): Aggregator<T>;
     $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultObject<T, TProject, ''>>>;
     $redact(): Aggregator<T>;
@@ -445,10 +448,13 @@ export declare class Aggregator<T> {
     }): Aggregator<T>;
     $sortByCount(): Aggregator<T>;
     $unset(): Aggregator<T>;
-    $unwind<TKey extends DeepKeys<T>>(key: `$${TKey}` | {
+    $unwind<TKey extends DeepKeys<T>, TArrayIndexField extends string = never>(key: `$${TKey}` | {
         path: `$${TKey}`;
         preserveNullAndEmptyArrays?: boolean;
-    }): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>;
+        includeArrayIndex?: TArrayIndexField;
+    }): Aggregator<DeepReplaceKey<T & {
+        [key in TArrayIndexField]: number;
+    }, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>;
     query(): {}[];
     result<TDoc extends {
         _id: ObjectId;

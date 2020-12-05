@@ -19,7 +19,7 @@ import {Decimal128, Double, Int32, Long} from 'bson';
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
 
-type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? TValue : never;
+type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
 type DeepExcludeNever<T> = T extends NonObjectValues
   ? T
   : T extends Array<infer TArr>
@@ -401,7 +401,13 @@ type InterpretProjectOperator<TRootValue, TValue> = {
   $toString?: NotImplementedYet;
   $toUpper?: NotImplementedYet;
   $trim?: NotImplementedYet;
-  $trunc?: NotImplementedYet;
+  $trunc?:
+    | [InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>]
+    | [
+        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>,
+        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 1>>
+      ]
+    | InterpretProjectExpression<TRootValue, LookupKey<TValue, '$trunc'>>;
   $type?: NotImplementedYet;
   $week?: NotImplementedYet;
   $year?: NotImplementedYet;
@@ -423,7 +429,7 @@ type InterpretAccumulateOperator<TRootValue, TValue> = {
   $sum?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$sum'>>;
 };
 
-export type ExpressionStringReferenceKey<T> = `$${DeepKeys<T>}`;
+export type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
 /*export type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
   [key in DeepKeys<T> as DeepKeysValue<T, key> extends ForceValue
     ? DeepKeysValue<T, key> extends never
@@ -469,7 +475,9 @@ type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue
     : 0
   : 0;
 
-type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$${infer TRawKey}`
+type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT`
+  ? TRootValue
+  : TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
   : CheckProjectDeepKey<TKey, TValue> extends 1
   ? DeepKeysResult<TRootValue, TKey>
@@ -618,7 +626,9 @@ type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue ext
       $toString: NotImplementedYet;
       $toUpper: NotImplementedYet;
       $trim: NotImplementedYet;
-      $trunc: NotImplementedYet;
+      $trunc: LookupKey<TValue, '$trunc'> extends Array<any>
+        ? NumberTypeOrNever<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>>
+        : NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$trunc'>>>;
       $type: NotImplementedYet;
       $week: NotImplementedYet;
       $year: NotImplementedYet;
@@ -806,9 +816,12 @@ export class Aggregator<T> {
   $merge(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $out(): Aggregator<T> {
-    throw new Error('Not Implemented');
+
+  $out(tableName: string): Aggregator<void> {
+    this.currentPipeline = {$out: tableName};
+    return new Aggregator<void>(this);
   }
+
   $planCacheStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
@@ -852,11 +865,15 @@ export class Aggregator<T> {
     throw new Error('Not Implemented');
   }
 
-  $unwind<TKey extends DeepKeys<T>>(
-    key: `$${TKey}` | {path: `$${TKey}`; preserveNullAndEmptyArrays?: boolean}
-  ): Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>> {
+  $unwind<TKey extends DeepKeys<T>, TArrayIndexField extends string = never>(
+    key: `$${TKey}` | {path: `$${TKey}`; preserveNullAndEmptyArrays?: boolean; includeArrayIndex?: TArrayIndexField}
+  ): Aggregator<
+    DeepReplaceKey<T & {[key in TArrayIndexField]: number}, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>
+  > {
     this.currentPipeline = {$unwind: key};
-    return new Aggregator<DeepReplaceKey<T, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>>(this);
+    return new Aggregator<
+      DeepReplaceKey<T & {[key in TArrayIndexField]: number}, DeepKeyArray<TKey>, UnArray<DeepKeysResult<T, TKey>>>
+    >(this);
   }
 
   query(): {}[] {

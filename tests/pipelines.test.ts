@@ -191,6 +191,14 @@ test('$unwind.3', async () => {
     >
   >(true);
 });
+test('$unwind.includeArrayIndex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$unwind({path: '$doors', includeArrayIndex: 'shoes'});
+
+  expect(aggregator.query()).toEqual([{$unwind: {path: '$doors', includeArrayIndex: 'shoes'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<ReplaceKey<DBCar & {shoes: number}, 'doors', Door>, typeof result>>(true);
+});
 
 test('$graphLookup.otherTable', async () => {
   const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes'>({
@@ -402,6 +410,62 @@ test('$group.simple-nested-ref', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: {color: Color}}, typeof result>>(true);
 });
+test('$group.nested-id', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$group(
+      {
+        _id: {
+          entityId: '$someDate',
+          action: '$someRootNumber',
+          hexId: '$color',
+        },
+      },
+      {
+        count: {$sum: 1},
+      }
+    )
+    .$group(
+      {_id: '$_id.entityId'},
+      {
+        actions: {
+          $push: {
+            action: '$_id.action',
+            hexId: '$_id.hexId',
+            count: '$count',
+          },
+        },
+      }
+    );
+
+  expect(aggregator.query()).toEqual([
+    {
+      $group: {
+        _id: {
+          entityId: '$someDate',
+          action: '$someRootNumber',
+          hexId: '$color',
+        },
+        count: {$sum: 1},
+      },
+    },
+
+    {
+      $group: {
+        _id: '$_id.entityId',
+        actions: {
+          $push: {
+            action: '$_id.action',
+            hexId: '$_id.hexId',
+            count: '$count',
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: Date; actions: {action: number; hexId: Color; count: 1}[]}, typeof result>>(true);
+});
 
 test('$group.ref-and-keys', async () => {
   const aggregator = Aggregator.start<DBCar>().$group({_id: '$color'}, {side: {$sum: '$doors.someNumber'}});
@@ -410,6 +474,17 @@ test('$group.ref-and-keys', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: Color; side: number}, typeof result>>(true);
+});
+
+test('$group.$$CURRENT', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$project({shoes: 'shoes'})
+    .$group({_id: 1}, {side: {$push: '$$CURRENT'}});
+
+  expect(aggregator.query()).toEqual([{$project: {shoes: 'shoes'}}, {$group: {_id: 1, side: {$push: '$$CURRENT'}}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: 1; side: {shoes: 'shoes'}[]}, typeof result>>(true);
 });
 
 test('$project.ref-and-keyes', async () => {
