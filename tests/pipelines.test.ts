@@ -315,7 +315,7 @@ test('$group.simple1', async () => {
 });
 
 test('$group.groupThenAddField', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group({_id: 8}, {a: 1}).$addFields({
+  const aggregator = Aggregator.start<DBCar>().$group({_id: 8, a: 1}).$addFields({
     shoes: '$a',
   });
 
@@ -328,19 +328,17 @@ test('$group.groupThenAddField', async () => {
 
 test('$group.groupThenAddFieldDeep', async () => {
   const aggregator = Aggregator.start<DBCar>()
-    .$group(
-      {_id: 8},
-      {
-        numbersLeftArr: {
-          $push: {
-            boardId: '$_id',
-            count: {
-              $arrayElemAt: ['$doors', 0],
-            },
+    .$group({
+      _id: 8,
+      numbersLeftArr: {
+        $push: {
+          boardId: '$_id',
+          count: {
+            $arrayElemAt: ['$doors', 0],
           },
         },
-      }
-    )
+      },
+    })
     .$addFields({
       shoes: {
         $min: '$numbersLeftArr.count.someNumber',
@@ -412,30 +410,25 @@ test('$group.simple-nested-ref', async () => {
 });
 test('$group.nested-id', async () => {
   const aggregator = Aggregator.start<DBCar>()
-    .$group(
-      {
-        _id: {
-          entityId: '$someDate',
-          action: '$someRootNumber',
-          hexId: '$color',
+    .$group({
+      _id: {
+        entityId: '$someDate',
+        action: '$someRootNumber',
+        hexId: '$color',
+      },
+
+      count: {$sum: 1},
+    })
+    .$group({
+      _id: '$_id.entityId',
+      actions: {
+        $push: {
+          action: '$_id.action',
+          hexId: '$_id.hexId',
+          count: '$count',
         },
       },
-      {
-        count: {$sum: 1},
-      }
-    )
-    .$group(
-      {_id: '$_id.entityId'},
-      {
-        actions: {
-          $push: {
-            action: '$_id.action',
-            hexId: '$_id.hexId',
-            count: '$count',
-          },
-        },
-      }
-    );
+    });
 
   expect(aggregator.query()).toEqual([
     {
@@ -468,7 +461,7 @@ test('$group.nested-id', async () => {
 });
 
 test('$group.ref-and-keys', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group({_id: '$color'}, {side: {$sum: '$doors.someNumber'}});
+  const aggregator = Aggregator.start<DBCar>().$group({_id: '$color', side: {$sum: '$doors.someNumber'}});
 
   expect(aggregator.query()).toEqual([{$group: {_id: '$color', side: {$sum: '$doors.someNumber'}}}]);
 
@@ -479,7 +472,8 @@ test('$group.ref-and-keys', async () => {
 test('$group.$$CURRENT', async () => {
   const aggregator = Aggregator.start<DBCar>()
     .$project({shoes: 'shoes'})
-    .$group({_id: 1}, {side: {$push: '$$CURRENT'}});
+
+    .$group({_id: 1, side: {$push: '$$CURRENT'}});
 
   expect(aggregator.query()).toEqual([{$project: {shoes: 'shoes'}}, {$group: {_id: 1, side: {$push: '$$CURRENT'}}}]);
 

@@ -9,12 +9,7 @@ const mockCollection: any = {
   }),
 };
 test('$group.notExcessive', async () => {
-  const aggregator = Aggregator.start<DBCar>().$group(
-    {_id: 8},
-    {
-      numbersLeftArr: 1,
-    }
-  );
+  const aggregator = Aggregator.start<DBCar>().$group({_id: 8, numbersLeftArr: 1});
 
   expect(aggregator.query()).toEqual([
     {

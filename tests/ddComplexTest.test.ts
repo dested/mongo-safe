@@ -250,7 +250,7 @@ test('complex1', async () => {
     .$skip(params.page * perPage)
     .$limit(perPage);
 
-  console.log(aggregator.query());
+  // console.log(aggregator.query());
   // expect(aggregator.query()).toEqual([{}]);
 
   const [result] = await aggregator.result(mockCollection);

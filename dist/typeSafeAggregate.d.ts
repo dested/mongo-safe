@@ -196,8 +196,8 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
     $zip?: NotImplementedYet;
 };
 declare type InterpretAccumulateOperator<TRootValue, TValue> = {
-    $avg?: never;
-    $last?: never;
+    $avg?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$avg'>>;
+    $last?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$last'>>;
     $mergeObjects?: never;
     $stdDevPop?: never;
     $stdDevSamp?: never;
@@ -345,8 +345,8 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $zip: NotImplementedYet;
 };
 declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
-    $avg: never;
-    $last: never;
+    $avg: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$avg'>>>>;
+    $last: ProjectResult<TRootValue, LookupKey<TValue, '$last'>>;
     $mergeObjects: never;
     $stdDevPop: never;
     $stdDevSamp: never;
@@ -367,11 +367,11 @@ export declare type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey ex
 export declare type LookupKey<T, TKey extends string> = TKey extends keyof T ? T[TKey] : never;
 export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
 declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : never;
-declare type AccumulateObject<TRootValue, TAccumulateObject> = {
-    [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
+declare type AccumulateRootObject<TRootValue, TAccumulateObject> = {
+    [key in keyof TAccumulateObject]: key extends '_id' ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]> : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
-declare type AccumulateResultObject<TRootValue, TObj> = TObj extends infer T ? {
-    [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
+declare type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T ? {
+    [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue, T[key]> : AccumulateResult<TRootValue, T[key]>;
 } : never;
 export declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
     [key in TAs]: (TOther & {
@@ -418,11 +418,7 @@ export declare class Aggregator<T> {
         maxDepth?: number;
         startWith: ExpressionStringReferenceKey<T>;
     }): Aggregator<T & GraphDeep<TOther, TAs, TDepthField>>;
-    $group<TId, TAccumulator extends {}>(props: {
-        _id: InterpretProjectExpression<T, TId>;
-    }, body?: AccumulateObject<T, TAccumulator>): Aggregator<{
-        _id: ProjectResult<T, TId>;
-    } & AccumulateResultObject<T, TAccumulator>>;
+    $group<TAccumulator>(props: AccumulateRootObject<T, TAccumulator>): Aggregator<AccumulateRootResultObject<T, TAccumulator>>;
     $indexStats(): Aggregator<T>;
     $limit(limit: number): Aggregator<T>;
     $listLocalSessions(): Aggregator<T>;

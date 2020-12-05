@@ -707,9 +707,20 @@ type InterpretAccumulateExpression<TRootValue, TValue> = /*
   ? InterpretAccumulateOperator<TRootValue, TValue>
   : never;
 
+type AccumulateRootObject<TRootValue, TAccumulateObject> = {
+  [key in keyof TAccumulateObject]: key extends '_id'
+    ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]>
+    : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
+};
 type AccumulateObject<TRootValue, TAccumulateObject> = {
   [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
+
+type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T
+  ? {
+      [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue, T[key]> : AccumulateResult<TRootValue, T[key]>;
+    }
+  : never;
 type AccumulateResultObject<TRootValue, TObj> = TObj extends infer T
   ? {
       [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
@@ -786,14 +797,12 @@ export class Aggregator<T> {
     return new Aggregator<T & GraphDeep<TOther, TAs, TDepthField>>(this);
   }
 
-  $group<TId, TAccumulator extends {}>(
-    props: {
-      _id: InterpretProjectExpression<T, TId>;
-    },
-    body?: AccumulateObject<T, TAccumulator>
-  ): Aggregator<{_id: ProjectResult<T, TId>} & AccumulateResultObject<T, TAccumulator>> {
-    this.currentPipeline = {$group: {...props, ...body}};
-    return new Aggregator<{_id: ProjectResult<T, TId>} & AccumulateResultObject<T, TAccumulator>>(this);
+  $group<TAccumulator>(
+    props: AccumulateRootObject<T, TAccumulator>
+  ):
+  Aggregator<AccumulateRootResultObject<T, TAccumulator>> {
+    this.currentPipeline = {$group: props};
+    return new Aggregator<AccumulateRootResultObject<T, TAccumulator>>(this);
   }
 
   $indexStats(): Aggregator<T> {

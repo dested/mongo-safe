@@ -73,14 +73,14 @@ test('complex.socialwargames', async () => {
         },
       },
     })
-    .$group(
-      {
-        _id: '$userId',
-      },
-      {userName: {$first: '$userName'}, gameId: {$first: '$gameId'}, score: {$sum: '$score'}}
-    )
+    .$group({
+      _id: '$userId',
+      userName: {$first: '$userName'},
+      gameId: {$first: '$gameId'},
+      score: {$sum: '$score'},
+    })
     .$sort({score: -1})
-    .$group({_id: 1}, {ranks: {$push: '$$CURRENT'}})
+    .$group({_id: 1, ranks: {$push: '$$CURRENT'}})
     .$unwind({path: '$ranks', includeArrayIndex: 'rank'})
     .$project({
       _id: '$ranks._id',
