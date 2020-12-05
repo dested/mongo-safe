@@ -18,6 +18,29 @@ test('project.none', async () => {
   assert<Has<{shoes: true}, typeof result>>(true);
 });
 
+test('project.optionalFiends', async () => {
+  type T = {a?: number; b: number; c: {d: number; e?: number}};
+  const aggregator = Aggregator.start<T>().$match({
+    'c.d': 12,
+    a: 15,
+    b: 220,
+    'c.e': 1010,
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $match: {
+        'c.d': 12,
+        a: 15,
+        b: 220,
+        'c.e': 1010,
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<T, typeof result>>(true);
+});
+
 test('project.$dateToString', async () => {
   let date = new Date();
   const aggregator = Aggregator.start<DBCar>().$project({

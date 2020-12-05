@@ -958,11 +958,7 @@
 <a name='L899'></a><a href='#L899'>899</a>
 <a name='L900'></a><a href='#L900'>900</a>
 <a name='L901'></a><a href='#L901'>901</a>
-<a name='L902'></a><a href='#L902'>902</a>
-<a name='L903'></a><a href='#L903'>903</a>
-<a name='L904'></a><a href='#L904'>904</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L902'></a><a href='#L902'>902</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1670,10 +1666,10 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">158x</span>
+<span class="cline-any cline-yes">160x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">67x</span>
+<span class="cline-any cline-yes">68x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
@@ -1771,8 +1767,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1839,22 +1835,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">132x</span>
-<span class="cline-any cline-yes">132x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">134x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">132x</span>
-<span class="cline-any cline-yes">132x</span>
-<span class="cline-any cline-yes">171x</span>
-<span class="cline-any cline-yes">171x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">173x</span>
+<span class="cline-any cline-yes">173x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">132x</span>
+<span class="cline-any cline-yes">134x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">67x</span>
+<span class="cline-any cline-yes">68x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">67x</span>
+<span class="cline-any cline-yes">68x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1872,14 +1868,12 @@
   Collection,
   ObjectID,
   ObjectId,
-  DeepRequired,
   DeepKeyArray,
   AggregationCursor,
   QuerySelector,
   RootQuerySelector,
   MongoAltQuery,
 } from 'mongodb';
-import {Decimal128, Double, Int32, Long} from 'bson';
 &nbsp;
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
@@ -2566,17 +2560,17 @@ export type GraphDeep&lt;TOther, TAs extends string, TDepthField extends string&
 };
 &nbsp;
 type FilterQueryReimpl&lt;T&gt; = {
-  [key in DeepKeys&lt;T&gt;]?: MongoAltQuery&lt;DeepKeysValue&lt;T, key&gt;&gt; | QuerySelector&lt;DeepKeysValue&lt;DeepRequired&lt;T&gt;, key&gt;&gt;;
+  [key in DeepKeys&lt;T&gt;]?: MongoAltQuery&lt;DeepKeysValue&lt;T, key&gt;&gt; | QuerySelector&lt;DeepKeysValue&lt;T, key&gt;&gt;;
 } &amp;
-  RootQuerySelector&lt;DeepRequired&lt;T&gt;&gt;;
+  RootQuerySelector&lt;T&gt;;
 &nbsp;
 export class Aggregator&lt;T&gt; {
   private currentPipeline?: {};
 &nbsp;
   private constructor(private parent?: any) {}
 &nbsp;
-  static start&lt;T&gt;(): Aggregator&lt;DeepRequired&lt;T&gt;&gt; {
-    return new Aggregator&lt;DeepRequired&lt;T&gt;&gt;();
+  static start&lt;T&gt;(): Aggregator&lt;T&gt; {
+    return new Aggregator&lt;T&gt;();
   }
   $addFields&lt;TProject&gt;(fields: ProjectObject&lt;T, TProject&gt;): Aggregator&lt;T &amp; ProjectResultObject&lt;T, TProject&gt;&gt; {
     this.currentPipeline = {$addFields: fields};
@@ -2773,7 +2767,7 @@ export class Aggregator&lt;T&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Fri Dec 04 2020 21:46:01 GMT-0700 (Mountain Standard Time)
+                at Fri Dec 04 2020 22:06:18 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>

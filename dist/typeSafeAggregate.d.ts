@@ -1,4 +1,4 @@
-import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepRequired, DeepKeyArray, AggregationCursor, QuerySelector, RootQuerySelector, MongoAltQuery } from 'mongodb';
+import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepKeyArray, AggregationCursor, QuerySelector, RootQuerySelector, MongoAltQuery } from 'mongodb';
 declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 declare type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
 declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
@@ -374,13 +374,14 @@ export declare type GraphDeep<TOther, TAs extends string, TDepthField extends st
     } & GraphDeep<TOther, TAs, TDepthField>)[];
 };
 declare type FilterQueryReimpl<T> = {
-    [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<DeepRequired<T>, key>>;
-} & RootQuerySelector<DeepRequired<T>>;
+    [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
+} & RootQuerySelector<T>;
+
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
     private constructor();
-    static start<T>(): Aggregator<DeepRequired<T>>;
+    static start<T>(): Aggregator<T>;
     $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>>;
     $bucket(): Aggregator<T>;
     $bucketAuto(): Aggregator<T>;

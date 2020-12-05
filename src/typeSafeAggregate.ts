@@ -7,14 +7,12 @@ import {
   Collection,
   ObjectID,
   ObjectId,
-  DeepRequired,
   DeepKeyArray,
   AggregationCursor,
   QuerySelector,
   RootQuerySelector,
   MongoAltQuery,
 } from 'mongodb';
-import {Decimal128, Double, Int32, Long} from 'bson';
 
 type RawTypes = number | boolean | string | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
@@ -701,17 +699,17 @@ export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = 
 };
 
 type FilterQueryReimpl<T> = {
-  [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<DeepRequired<T>, key>>;
+  [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
 } &
-  RootQuerySelector<DeepRequired<T>>;
+  RootQuerySelector<T>;
 
 export class Aggregator<T> {
   private currentPipeline?: {};
 
   private constructor(private parent?: any) {}
 
-  static start<T>(): Aggregator<DeepRequired<T>> {
-    return new Aggregator<DeepRequired<T>>();
+  static start<T>(): Aggregator<T> {
+    return new Aggregator<T>();
   }
   $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>> {
     this.currentPipeline = {$addFields: fields};

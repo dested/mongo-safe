@@ -1644,7 +1644,7 @@ declare module 'mongodb' {
     DeepQuery<TSchema, any[]>;
 
   /** https://docs.mongodb.com/manual/reference/operator/update */
-  export type UpdateQuery<TSchema> = UpdateQueryImpl<DeepRequired<TSchema>>;
+  export type UpdateQuery<TSchema> = UpdateQueryImpl<TSchema>;
   type UpdateQueryImpl<TSchema> = {
     /** https://docs.mongodb.com/manual/reference/operator/update-field/ */
     $currentDate?: OnlyFieldsOfType<TSchema, Date, true | {$type: 'date' | 'timestamp'}>;
@@ -1801,13 +1801,7 @@ declare module 'mongodb' {
 
   export type Condition<T> = MongoAltQuery<T> | QuerySelector<MongoAltQuery<T>>;
 
-  type DontDeepRequire = ObjectID | Decimal128 | Double | Int32 | Long;
-
-  export type DeepRequired<T> = {
-    [P in keyof T]-?: T[P] extends DontDeepRequire ? T[P] : T[P] extends {} ? DeepRequired<T[P]> : T[P];
-  };
-
-  export type FilterQuery<T> = FilterQueryImpl<DeepRequired<T>>;
+  export type FilterQuery<T> = FilterQueryImpl<T>;
   export type FilterQueryImpl<T> = {
     [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
   } &
@@ -3189,10 +3183,10 @@ declare module 'mongodb' {
   export type DeepKeys<T extends {}, TDepth extends Depths = 1> = TDepth extends 5
     ? ''
     : {
-        [key in keyof T]: key extends string
-          ? T[key] extends SafeTypes
+        [key in keyof T]-?: key extends string
+          ? Exclude<T[key],undefined> extends SafeTypes
             ? `${key}`
-            : T[key] extends Array<infer D>
+            : Exclude<T[key],undefined> extends Array<infer D>
             ? D extends SafeTypes
               ? `${key}` | `${key}.${AllowedArrayIndexes}`
               :
@@ -3200,10 +3194,8 @@ declare module 'mongodb' {
                   | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
                   | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
                   | `${key}.${AllowedArrayIndexes}`
-            : T[key] extends infer D_
-            ? D_ extends {}
-              ? `${key}` | `${key}.${DeepKeys<D_, NextDepth<TDepth>>}`
-              : never
+            : Exclude<T[key],undefined> extends {}
+            ? `${key}` | `${key}.${DeepKeys<Exclude<T[key],undefined>, NextDepth<TDepth>>}`
             : never
           : never;
       }[keyof T];
