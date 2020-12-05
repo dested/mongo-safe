@@ -473,7 +473,21 @@ type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue
     : 0
   : 0;
 
-type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT`
+type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT`
+  ? TRootValue
+  : TValue extends `$${infer TRawKey}`
+  ? DeepKeysResult<TRootValue, TRawKey>
+  : TValue extends RawTypes
+  ? TValue
+  : keyof TValue extends AllOperators
+  ? ProjectResultOperators<TRootValue, TValue>[keyof TValue]
+  : TValue extends Array<infer TValueArray>
+  ? Array<ProjectResultObject<TRootValue, TValueArray>>
+  : TValue extends {}
+  ? ProjectResultObject<TRootValue, TValue>
+  : never;
+
+type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT`
   ? TRootValue
   : TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -484,159 +498,161 @@ type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue ext
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
-  ? {
-      $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
-      $acos: NotImplementedYet;
-      $acosh: NotImplementedYet;
-      $add: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$add'>>>>;
-      $addToSet: ProjectResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
-      $allElementsTrue: NotImplementedYet;
-      $and: NotImplementedYet;
-      $anyElementTrue: NotImplementedYet;
-      $arrayElemAt: UnArray<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$arrayElemAt'>, 0>>>;
-      $arrayToObject: NotImplementedYet;
-      $asin: NotImplementedYet;
-      $asinh: NotImplementedYet;
-      $atan: NotImplementedYet;
-      $atan2: NotImplementedYet;
-      $atanh: NotImplementedYet;
-      $avg: NotImplementedYet;
-      $ceil: NotImplementedYet;
-      $cmp: NotImplementedYet;
-      $concat: string;
-      $concatArrays: NotImplementedYet;
-      $cond: LookupKey<TValue, '$cond'> extends Array<any>
-        ?
-            | ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>>
-            | ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>>
-        :
-            | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
-            | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
-      $convert: NotImplementedYet;
-      $cos: NotImplementedYet;
-      $dateFromParts: NotImplementedYet;
-      $dateFromString: NotImplementedYet;
-      $dateToParts: NotImplementedYet;
-      $dateToString: string;
-      $dayOfMonth: NotImplementedYet;
-      $dayOfWeek: NotImplementedYet;
-      $dayOfYear: NotImplementedYet;
-      $degreesToRadians: NotImplementedYet;
-      $divide: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$divide'>>>>;
-      $eq: boolean;
-      $exp: NotImplementedYet;
-      $filter: NotImplementedYet;
-      $first: ProjectResult<TRootValue, LookupKey<TValue, '$first'>>;
-      $floor: NotImplementedYet;
-      $gt: boolean;
-      $gte: boolean;
-      $hour: NotImplementedYet;
-      $ifNull: ProjectResult<TRootValue, LookupKey<TValue, '$ifNull'>>;
-      $in: ProjectResult<TRootValue, LookupKey<TValue, '$in'>>;
-      $indexOfArray: NotImplementedYet;
-      $indexOfBytes: NotImplementedYet;
-      $indexOfCP: NotImplementedYet;
-      $isArray: NotImplementedYet;
-      $isoDayOfWeek: NotImplementedYet;
-      $isoWeek: NotImplementedYet;
-      $isoWeekYear: NotImplementedYet;
-      $last: NotImplementedYet;
-      $let: NotImplementedYet;
-      $literal: NotImplementedYet;
-      $ln: NotImplementedYet;
-      $log: NotImplementedYet;
-      $log10: NotImplementedYet;
-      $lt: boolean;
-      $lte: boolean;
-      $ltrim: NotImplementedYet;
-      $map: LookupKey<LookupKey<TValue, '$map'>, 'as'> extends string
-        ? ProjectResult<
-            TRootValue &
-              {
-                [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: ProjectResult<
-                  TRootValue,
-                  LookupKey<LookupKey<TValue, '$map'>, 'input'>
-                >;
-              },
-            LookupKey<LookupKey<TValue, '$map'>, 'in'>
-          >[]
-        : never;
-      $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>>;
-      $mergeObjects: NotImplementedYet;
-      $meta: NotImplementedYet;
-      $millisecond: NotImplementedYet;
-      $min: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$min'>>>>;
-      $minute: NotImplementedYet;
-      $mod: NotImplementedYet;
-      $month: NotImplementedYet;
-      $multiply: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$multiply'>>>>;
-      $ne: boolean;
-      $not: boolean;
-      $objectToArray: NotImplementedYet;
-      $or: NotImplementedYet;
-      $pow: NotImplementedYet;
-      $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
-      $radiansToDegrees: NotImplementedYet;
-      $range: NotImplementedYet;
-      $reduce: NotImplementedYet;
-      $regexFind: NotImplementedYet;
-      $regexFindAll: NotImplementedYet;
-      $regexMatch: NotImplementedYet;
-      $reverseArray: NotImplementedYet;
-      $round: NotImplementedYet;
-      $rtrim: NotImplementedYet;
-      $second: NotImplementedYet;
-      $setDifference: NotImplementedYet;
-      $setEquals: NotImplementedYet;
-      $setIntersection: UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$setIntersection'>>>;
-      $setIsSubset: NotImplementedYet;
-      $setUnion: NotImplementedYet;
-      $sin: NotImplementedYet;
-      $size: number;
-      $slice: NotImplementedYet;
-      $split: NotImplementedYet;
-      $sqrt: NotImplementedYet;
-      $stdDevPop: NotImplementedYet;
-      $stdDevSamp: NotImplementedYet;
-      $strcasecmp: NotImplementedYet;
-      $strLenBytes: NotImplementedYet;
-      $strLenCP: NotImplementedYet;
-      $substr: NotImplementedYet;
-      $substrBytes: NotImplementedYet;
-      $substrCP: NotImplementedYet;
-      $subtract: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$subtract'>>>>;
-      $sum: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$sum'>>>>;
-      $switch:
-        | InterpretProjectExpression<
-            TRootValue,
-            LookupKey<LookupArray<LookupKey<LookupKey<TValue, '$switch'>, 'branches'>, number>, 'then'>
-          >
-        | InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$switch'>, 'default'>>;
-      $tan: NotImplementedYet;
-      $toBool: NotImplementedYet;
-      $toDate: NotImplementedYet;
-      $toDecimal: NotImplementedYet;
-      $toDouble: NotImplementedYet;
-      $toInt: NotImplementedYet;
-      $toLong: NotImplementedYet;
-      $toLower: NotImplementedYet;
-      $toObjectId: NotImplementedYet;
-      $toString: NotImplementedYet;
-      $toUpper: NotImplementedYet;
-      $trim: NotImplementedYet;
-      $trunc: LookupKey<TValue, '$trunc'> extends Array<any>
-        ? NumberTypeOrNever<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>>
-        : NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$trunc'>>>;
-      $type: NotImplementedYet;
-      $week: NotImplementedYet;
-      $year: NotImplementedYet;
-      $zip: NotImplementedYet;
-    }[keyof TValue]
+  ? ProjectResultOperators<TRootValue, TValue>[keyof TValue]
   : TValue extends Array<infer TValueArray>
-  ? Array<ProjectResultObject<TRootValue, TValueArray, TKey>>
+  ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>>
   : TValue extends {}
-  ? ProjectResultObject<TRootValue, TValue, TKey>
+  ? ProjectResultRootObject<TRootValue, TValue, TKey>
   : never;
+
+type ProjectResultOperators<TRootValue, TValue> = {
+  $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
+  $acos: NotImplementedYet;
+  $acosh: NotImplementedYet;
+  $add: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$add'>>>>;
+  $addToSet: ProjectResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
+  $allElementsTrue: NotImplementedYet;
+  $and: NotImplementedYet;
+  $anyElementTrue: NotImplementedYet;
+  $arrayElemAt: UnArray<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$arrayElemAt'>, 0>>>;
+  $arrayToObject: NotImplementedYet;
+  $asin: NotImplementedYet;
+  $asinh: NotImplementedYet;
+  $atan: NotImplementedYet;
+  $atan2: NotImplementedYet;
+  $atanh: NotImplementedYet;
+  $avg: NotImplementedYet;
+  $ceil: NotImplementedYet;
+  $cmp: NotImplementedYet;
+  $concat: string;
+  $concatArrays: NotImplementedYet;
+  $cond: LookupKey<TValue, '$cond'> extends Array<any>
+    ?
+        | ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>>
+        | ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>>
+    :
+        | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
+        | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+  $convert: NotImplementedYet;
+  $cos: NotImplementedYet;
+  $dateFromParts: NotImplementedYet;
+  $dateFromString: NotImplementedYet;
+  $dateToParts: NotImplementedYet;
+  $dateToString: string;
+  $dayOfMonth: NotImplementedYet;
+  $dayOfWeek: NotImplementedYet;
+  $dayOfYear: NotImplementedYet;
+  $degreesToRadians: NotImplementedYet;
+  $divide: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$divide'>>>>;
+  $eq: boolean;
+  $exp: NotImplementedYet;
+  $filter: NotImplementedYet;
+  $first: ProjectResult<TRootValue, LookupKey<TValue, '$first'>>;
+  $floor: NotImplementedYet;
+  $gt: boolean;
+  $gte: boolean;
+  $hour: NotImplementedYet;
+  $ifNull: ProjectResult<TRootValue, LookupKey<TValue, '$ifNull'>>;
+  $in: ProjectResult<TRootValue, LookupKey<TValue, '$in'>>;
+  $indexOfArray: NotImplementedYet;
+  $indexOfBytes: NotImplementedYet;
+  $indexOfCP: NotImplementedYet;
+  $isArray: NotImplementedYet;
+  $isoDayOfWeek: NotImplementedYet;
+  $isoWeek: NotImplementedYet;
+  $isoWeekYear: NotImplementedYet;
+  $last: NotImplementedYet;
+  $let: NotImplementedYet;
+  $literal: NotImplementedYet;
+  $ln: NotImplementedYet;
+  $log: NotImplementedYet;
+  $log10: NotImplementedYet;
+  $lt: boolean;
+  $lte: boolean;
+  $ltrim: NotImplementedYet;
+  $map: LookupKey<LookupKey<TValue, '$map'>, 'as'> extends string
+    ? ProjectResult<
+        TRootValue &
+          {
+            [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: ProjectResult<
+              TRootValue,
+              LookupKey<LookupKey<TValue, '$map'>, 'input'>
+            >;
+          },
+        LookupKey<LookupKey<TValue, '$map'>, 'in'>
+      >[]
+    : never;
+  $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>>;
+  $mergeObjects: NotImplementedYet;
+  $meta: NotImplementedYet;
+  $millisecond: NotImplementedYet;
+  $min: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$min'>>>>;
+  $minute: NotImplementedYet;
+  $mod: NotImplementedYet;
+  $month: NotImplementedYet;
+  $multiply: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$multiply'>>>>;
+  $ne: boolean;
+  $not: boolean;
+  $objectToArray: NotImplementedYet;
+  $or: NotImplementedYet;
+  $pow: NotImplementedYet;
+  $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
+  $radiansToDegrees: NotImplementedYet;
+  $range: NotImplementedYet;
+  $reduce: NotImplementedYet;
+  $regexFind: NotImplementedYet;
+  $regexFindAll: NotImplementedYet;
+  $regexMatch: NotImplementedYet;
+  $reverseArray: NotImplementedYet;
+  $round: NotImplementedYet;
+  $rtrim: NotImplementedYet;
+  $second: NotImplementedYet;
+  $setDifference: NotImplementedYet;
+  $setEquals: NotImplementedYet;
+  $setIntersection: UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$setIntersection'>>>;
+  $setIsSubset: NotImplementedYet;
+  $setUnion: NotImplementedYet;
+  $sin: NotImplementedYet;
+  $size: number;
+  $slice: NotImplementedYet;
+  $split: NotImplementedYet;
+  $sqrt: NotImplementedYet;
+  $stdDevPop: NotImplementedYet;
+  $stdDevSamp: NotImplementedYet;
+  $strcasecmp: NotImplementedYet;
+  $strLenBytes: NotImplementedYet;
+  $strLenCP: NotImplementedYet;
+  $substr: NotImplementedYet;
+  $substrBytes: NotImplementedYet;
+  $substrCP: NotImplementedYet;
+  $subtract: NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, '$subtract'>>>>;
+  $sum: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$sum'>>>>;
+  $switch:
+    | InterpretProjectExpression<
+        TRootValue,
+        LookupKey<LookupArray<LookupKey<LookupKey<TValue, '$switch'>, 'branches'>, number>, 'then'>
+      >
+    | InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$switch'>, 'default'>>;
+  $tan: NotImplementedYet;
+  $toBool: NotImplementedYet;
+  $toDate: NotImplementedYet;
+  $toDecimal: NotImplementedYet;
+  $toDouble: NotImplementedYet;
+  $toInt: NotImplementedYet;
+  $toLong: NotImplementedYet;
+  $toLower: NotImplementedYet;
+  $toObjectId: NotImplementedYet;
+  $toString: NotImplementedYet;
+  $toUpper: NotImplementedYet;
+  $trim: NotImplementedYet;
+  $trunc: LookupKey<TValue, '$trunc'> extends Array<any>
+    ? NumberTypeOrNever<ProjectResult<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>>
+    : NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$trunc'>>>;
+  $type: NotImplementedYet;
+  $week: NotImplementedYet;
+  $year: NotImplementedYet;
+  $zip: NotImplementedYet;
+};
 
 type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -667,9 +683,15 @@ type GetProjectDeepKey<TDeepProjectKey extends string, key> = TDeepProjectKey ex
   ? `${TDeepProjectKey}.${key}`
   : '';
 
-export type ProjectResultObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T
+export type ProjectResultObject<TRootValue, TObj> = TObj extends infer T
   ? {
-      [key in keyof T]: ProjectResult<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
+      [key in keyof T]: ProjectResult<TRootValue, T[key]>;
+    }
+  : never;
+
+export type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T
+  ? {
+      [key in keyof T]: ProjectResultRoot<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
     }
   : never;
 
@@ -826,9 +848,9 @@ export class Aggregator<T> {
 
   $project<TProject>(
     query: ProjectObject<T, TProject>
-  ): Aggregator<DeepExcludeNever<ProjectResultObject<T, TProject, ''>>> {
+  ): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>> {
     this.currentPipeline = {$project: query};
-    return new Aggregator<DeepExcludeNever<ProjectResultObject<T, TProject, ''>>>(this);
+    return new Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>(this);
   }
 
   $redact(): Aggregator<T> {

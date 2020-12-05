@@ -216,7 +216,9 @@ declare type ProjectObject<TRootValue, TProject> = {
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
 declare type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
 declare type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue extends 0 | false ? [TKey] extends ['_id'] ? 1 : 0 : 0;
-declare type ProjectResult<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? {
+declare type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultObject<TRootValue, TValueArray>> : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : never;
+declare type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>> : TValue extends {} ? ProjectResultRootObject<TRootValue, TValue, TKey> : never;
+declare type ProjectResultOperators<TRootValue, TValue> = {
     $abs: NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, '$abs'>>>;
     $acos: NotImplementedYet;
     $acosh: NotImplementedYet;
@@ -341,7 +343,7 @@ declare type ProjectResult<TRootValue, TValue, TKey extends string = never> = TV
     $week: NotImplementedYet;
     $year: NotImplementedYet;
     $zip: NotImplementedYet;
-}[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultObject<TRootValue, TValueArray, TKey>> : TValue extends {} ? ProjectResultObject<TRootValue, TValue, TKey> : never;
+};
 declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
     $avg: never;
     $last: never;
@@ -356,8 +358,11 @@ declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRa
     $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
 }[keyof TValue] : never;
 declare type GetProjectDeepKey<TDeepProjectKey extends string, key> = TDeepProjectKey extends never ? never : TDeepProjectKey extends '' ? key : key extends string ? `${TDeepProjectKey}.${key}` : '';
-export declare type ProjectResultObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T ? {
-    [key in keyof T]: ProjectResult<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
+export declare type ProjectResultObject<TRootValue, TObj> = TObj extends infer T ? {
+    [key in keyof T]: ProjectResult<TRootValue, T[key]>;
+} : never;
+export declare type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T ? {
+    [key in keyof T]: ProjectResultRoot<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
 } : never;
 export declare type LookupKey<T, TKey extends string> = TKey extends keyof T ? T[TKey] : never;
 export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
@@ -376,7 +381,6 @@ export declare type GraphDeep<TOther, TAs extends string, TDepthField extends st
 declare type FilterQueryReimpl<T> = {
     [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
 } & RootQuerySelector<T>;
-
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
@@ -435,7 +439,7 @@ export declare class Aggregator<T> {
     $merge(): Aggregator<T>;
     $out(tableName: string): Aggregator<void>;
     $planCacheStats(): Aggregator<T>;
-    $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultObject<T, TProject, ''>>>;
+    $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>;
     $redact(): Aggregator<T>;
     $replaceRoot(): Aggregator<T>;
     $replaceWith(): Aggregator<T>;

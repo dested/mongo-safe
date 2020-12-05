@@ -1,44 +1,70 @@
-/*
 import {assert, Has} from 'conditional-type-checks';
 import {ObjectID} from 'bson';
 import {Aggregator} from '../src';
+export class MongoDocument {
+  _id!: ObjectID;
+}
 
 class DBEventTester {
   _id!: ObjectID;
   relationshipId!: ObjectID;
   user1Id!: ObjectID;
   user2Id!: ObjectID;
+  date!: {stamp: number};
+  isPrivate!: boolean;
+  test!: number;
+  eventDetails!: DBEventDetails;
+  when!: 'a' | 'b' | 'c';
+  relationshipsInterested!: DBEventInterestedRelationship[];
 }
 
-export class DBRelationshipTester extends MongoDocument {
-  static collectionName = 'relationship';
-
-  user1: DBRelationshipUser;
-  user2: DBRelationshipUser;
+export interface DBFlag {
+  userId: ObjectID;
+  flagDate: Date;
 }
 
-export class DBUserTester {
+export interface DBEventDetails {
+  cancelled: boolean;
+  user1Approved: boolean;
+  user2Approved: boolean;
+}
+
+export class DBRelationship extends MongoDocument {
+  flags!: DBFlag[];
+}
+export interface DBEventInterestedRelationship {
+  chosen: boolean;
+}
+export class DBUser {
   _id!: ObjectID;
   static collectionName = 'user';
 
   name!: string;
   email?: string;
   profile!: DBUserProfile;
-  userState!: DBUserState;
-  relationshipDetails!: DBUserRelationshipDetails;
-  createdDate!: FullDate;
-  realCreatedDate!: Date;
-  phoneDetails?: DBPhoneDetails;
-  settings!: DBUserSettings;
-  lastActivity!: Date;
-  bannedState?: DBUserBannedState;
 }
+export interface DBUserProfile {
+  links: DBLink[];
+  birthday: {stamp: number};
+}
+
+export interface DBLink {
+  linkId: ObjectID;
+  answerId: ObjectID;
+  decision: 1 | -1;
+}
+
+const mockCollection: any = {
+  aggregate: () => ({
+    toArray: () => [],
+  }),
+};
 
 test('complex1', async () => {
   const params: any = {};
   const perPage: any = 0;
 
-  const result = await Aggregator.start<DBEventTester>()
+  const aggregator = Aggregator.start<DBEventTester>()
     .$geoNear({
       near: {
         type: 'Point',
@@ -53,18 +79,13 @@ test('complex1', async () => {
         'eventDetails.user1Approved': true,
         'eventDetails.user2Approved': true,
         isPrivate: false,
-        relationshipId: {$ne: ObjectID.createFromHexString('abc')},
-        $nor: [
-          {'relationshipsInterested.chosen': true},
-          // {'relationshipsInterested.relationshipId': params.myRelationshipId},
-          // {'relationshipsInterested.relationshipId': params.myRelationshipId},
-          // {'relationshipsMaybeInterested.relationshipId': params.myRelationshipId},
-        ],
+        relationshipId: {$ne: new ObjectID()},
+        $nor: [{'relationshipsInterested.chosen': true}],
         'date.stamp': 1,
       },
     })
     .$addFields({
-      otherUser1Ida: {$sum: '$nasdfjasdf'},
+      otherUser1Ida: {$sum: 'test'},
       otherUser1Idb: {$sum: 1},
       otherUser2Idd: 8,
       otherField3: '$when',
@@ -72,31 +93,31 @@ test('complex1', async () => {
       otherUser1Id: 1,
       otherUser2Id: 2,
     })
-    .$lookup<DBRelationshipTester, 'relationship'>({
+    .$lookup<DBRelationship, 'relationship'>({
       from: 'relationship',
       localField: 'relationshipId',
       foreignField: '_id',
       as: 'relationship',
     })
-    .$lookup<DBUserTester, 'user1'>({
+    .$lookup<DBUser, 'user1'>({
       from: 'user',
       localField: 'user1Id',
       foreignField: '_id',
       as: 'user1',
     })
-    .$lookup<DBUserTester, 'user2'>({
+    .$lookup<DBUser, 'user2'>({
       from: 'user',
       localField: 'user2Id',
       foreignField: '_id',
       as: 'user2',
     })
-    .$lookup<DBUserTester, 'otherUser1'>({
+    .$lookup<DBUser, 'otherUser1'>({
       from: 'user',
       localField: 'otherUser1Id',
       foreignField: '_id',
       as: 'otherUser1',
     })
-    .$lookup<DBUserTester, 'otherUser2'>({
+    .$lookup<DBUser, 'otherUser2'>({
       from: 'user',
       localField: 'otherUser2Id',
       foreignField: '_id',
@@ -112,28 +133,28 @@ test('complex1', async () => {
     .$addFields({
       user1Links: {
         $map: {
-          input: '$user1.profile.personalityLinks',
+          input: '$user1.profile.links',
           as: 'link',
           in: {answerId: '$$link.answerId', decision: '$$link.decision'},
         },
       },
       user2Links: {
         $map: {
-          input: '$user2.profile.personalityLinks',
+          input: '$user2.profile.links',
           as: 'link',
           in: {answerId: '$$link.answerId', decision: '$$link.decision'},
         },
       },
       otherUser1Links: {
         $map: {
-          input: '$otherUser1.profile.personalityLinks',
+          input: '$otherUser1.profile.links',
           as: 'link',
           in: {answerId: '$$link.answerId', decision: '$$link.decision'},
         },
       },
       otherUser2Links: {
         $map: {
-          input: '$otherUser2.profile.personalityLinks',
+          input: '$otherUser2.profile.links',
           as: 'link',
           in: {answerId: '$$link.answerId', decision: '$$link.decision'},
         },
@@ -227,16 +248,13 @@ test('complex1', async () => {
       distance: 1,
     })
     .$skip(params.page * perPage)
-    .$limit(perPage)
-    .result(undefined!);
-  result[0].score = 1;
-  result[0].agePenalty = 5;
-  // const [result] = await aggregator.result(mockCollection);
-  assert<true>(true);
-});
-*/
-import {assert} from 'conditional-type-checks';
+    .$limit(perPage);
 
-test('complex2', async () => {
+  console.log(aggregator.query());
+  // expect(aggregator.query()).toEqual([{}]);
+
+  const [result] = await aggregator.result(mockCollection);
+
+  assert<Has<typeof result, {score: number; agePenalty: number}>>(true);
   assert<true>(true);
 });
