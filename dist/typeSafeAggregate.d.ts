@@ -1,6 +1,6 @@
 import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepKeyArray, AggregationCursor, QuerySelector, RootQuerySelector, MongoAltQuery } from 'mongodb';
-declare type RawTypes = number | boolean | string | ObjectID | NumericTypes;
-declare type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
+declare type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
+declare type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
 declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
 declare type DeepExcludeNever<T> = T extends NonObjectValues ? T : T extends Array<infer TArr> ? Array<DeepExcludeNever<T[number]>> : {
     [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;

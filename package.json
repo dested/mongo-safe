@@ -10,6 +10,7 @@
     "access": "public"
   },
   "scripts": {
+    "tsc-t": "tsc -p ./tsconfig.tests.json",
     "test": "jest",
     "debug-test": "node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand "
   },

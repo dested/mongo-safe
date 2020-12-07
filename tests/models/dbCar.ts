@@ -3,7 +3,7 @@ import {ObjectID} from 'mongodb';
 export interface DBCar {
   _id: ObjectID;
   color: Color;
-  someDate: Date;
+  someDate?: Date;
   someRootNumber: number;
   tailPipe: {
     length: number;

@@ -40,6 +40,14 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     await (await this.getCollection()).updateOne(filter, update);
   }
 
+  async updateOneGet(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<T | undefined> {
+    const result = await (await this.getCollection()).updateOne(filter, update as any);
+    if (result.upsertedCount === 1 || result.modifiedCount === 1) {
+      return this.getOne(filter);
+    }
+    return undefined;
+  }
+
   async updateMany(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void> {
     await (await this.getCollection()).updateMany(filter, update);
   }
@@ -63,17 +71,17 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     return item;
   }
 
-  async getOne(query: FilterQuery<T>, projection?: any): Promise<T | null> {
+  async getOne(query: FilterQuery<T>, projection?: any): Promise<T | undefined> {
     if (projection) {
       console.log('get one project');
       const result = await (await this.getCollection()).findOne(query, {projection});
       console.log('got one project');
-      return result;
+      return result ?? undefined;
     } else {
       // console.log('get one');
       const result = await (await this.getCollection()).findOne(query);
       // console.log('got one');
-      return result;
+      return result ?? undefined;
     }
   }
 
@@ -99,15 +107,17 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     return (await this.getCollection<any>()).aggregate(query);
   }
 
-  async getById(id: string | ObjectID, projection?: any): Promise<T | null> {
+  async getById(id: string | ObjectID, projection?: any): Promise<T | undefined> {
     const objectId: ObjectID = typeof id === 'string' ? ObjectID.createFromHexString(id) : id;
+    let result: T | null;
     if (projection) {
-      return (await this.getCollection()).findOne({_id: objectId} as any, {projection});
+      result = await (await this.getCollection<any>()).findOne({_id: objectId} as any, {projection});
     } else {
-      return (await this.getCollection()).findOne({_id: objectId} as any);
+      result = await (await this.getCollection<any>()).findOne({_id: objectId} as any);
     }
+    if (!result) return undefined;
+    return result;
   }
-
   async deleteMany(query: FilterQuery<T>): Promise<void> {
     await (await this.getCollection()).deleteMany(query);
   }

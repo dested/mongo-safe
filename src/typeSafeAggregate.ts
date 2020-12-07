@@ -14,8 +14,8 @@ import {
   MongoAltQuery,
 } from 'mongodb';
 
-type RawTypes = number | boolean | string | ObjectID | NumericTypes;
-type NonObjectValues = number | boolean | string | ObjectID | NumericTypes;
+type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
+type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
 
 type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
 type DeepExcludeNever<T> = T extends NonObjectValues
@@ -799,8 +799,7 @@ export class Aggregator<T> {
 
   $group<TAccumulator>(
     props: AccumulateRootObject<T, TAccumulator>
-  ):
-  Aggregator<AccumulateRootResultObject<T, TAccumulator>> {
+  ): Aggregator<AccumulateRootResultObject<T, TAccumulator>> {
     this.currentPipeline = {$group: props};
     return new Aggregator<AccumulateRootResultObject<T, TAccumulator>>(this);
   }

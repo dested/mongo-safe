@@ -93,6 +93,20 @@ test('deepField', () => {
   assert(true);
 });
 
+test('any', () => {
+  type Thing = {a: any; b: number; c: number};
+
+  query<Thing>({a: 'a'});
+  assert(true);
+});
+
+test('optional any', () => {
+  type Thing = {a?: any; b: number; c: number};
+
+  query<Thing>({a: 'a'});
+  assert(true);
+});
+
 test('deepOptionalField', () => {
   type Thing = {a?: number; b: {c?: string}};
 

@@ -3183,22 +3183,24 @@ declare module 'mongodb' {
   export type DeepKeys<T extends {}, TDepth extends Depths = 1> = TDepth extends 5
     ? ''
     : {
-        [key in keyof T]-?: key extends string
-          ? Exclude<T[key],undefined> extends SafeTypes
-            ? `${key}`
-            : Exclude<T[key],undefined> extends Array<infer D>
-            ? D extends SafeTypes
-              ? `${key}` | `${key}.${AllowedArrayIndexes}`
-              :
-                  | `${key}`
-                  | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
-                  | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
-                  | `${key}.${AllowedArrayIndexes}`
-            : Exclude<T[key],undefined> extends {}
-            ? `${key}` | `${key}.${DeepKeys<Exclude<T[key],undefined>, NextDepth<TDepth>>}`
-            : never
-          : never;
+        [key in keyof T]-?: DeepKeeyLookup<NotAny<Exclude<T[key], undefined>>, key>;
       }[keyof T];
+
+  type DeepKeyLookup<T, key> = Exclude<T, undefined> extends SafeTypes
+    ? `${key}`
+    : Exclude<T, undefined> extends Array<infer D>
+    ? D extends SafeTypes
+      ? `${key}` | `${key}.${AllowedArrayIndexes}`
+      :
+          | `${key}`
+          | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
+          | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
+          | `${key}.${AllowedArrayIndexes}`
+    : Exclude<T, undefined> extends {}
+    ? `${key}` | `${key}.${DeepKeys<Exclude<T, undefined>, NextDepth<TDepth>>}`
+    : never;
+
+  type NotAny<T> = any extends T ? never : T;
 
   export type DeepKeyArray<TKey extends string> = TKey extends `${infer key}.${infer rest}`
     ? [key, ...DeepKeyArray<rest>]

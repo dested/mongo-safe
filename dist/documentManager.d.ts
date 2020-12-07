@@ -10,6 +10,7 @@ export declare class DocumentManager<T extends {
     getCollection<TOverride = T>(): Promise<import("mongodb").Collection<TOverride>>;
     insertDocuments(documents: OptionalId<T>[]): Promise<WithId<T>[]>;
     updateOne(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void>;
+    updateOneGet(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<T | undefined>;
     updateMany(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void>;
     updateDocument(document: T): Promise<T>;
     getOneProject<TOverride extends {
@@ -23,7 +24,7 @@ export declare class DocumentManager<T extends {
     }, TKeys extends keyof TProjection & keyof TOverride = keyof T>(query: FilterQuery<T>, projection: TProjection): Promise<{
         [key in TKeys]: TOverride[key];
     }>;
-    getOne(query: FilterQuery<T>, projection?: any): Promise<T | null>;
+    getOne(query: FilterQuery<T>, projection?: any): Promise<T | undefined>;
     getAllProject<TOverride extends {
         [key in keyof T]: T[key];
     } = {
@@ -37,7 +38,7 @@ export declare class DocumentManager<T extends {
     }[]>;
     aggregate<TAgg>(query: any): Promise<TAgg[]>;
     aggregateCursor<TAgg>(query: any): Promise<AggregationCursor<TAgg>>;
-    getById(id: string | ObjectID, projection?: any): Promise<T | null>;
+    getById(id: string | ObjectID, projection?: any): Promise<T | undefined>;
     deleteMany(query: FilterQuery<T>): Promise<void>;
     deleteOne(query: FilterQuery<T>): Promise<void>;
     getAll(query: FilterQuery<T>): Promise<T[]>;

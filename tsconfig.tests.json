@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "noEmitOnError": false,
+    "experimentalDecorators": true,
+    "allowUnreachableCode": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "inlineSourceMap": true,
+    "resolveJsonModule": true,
+    "pretty": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src",
+    "outDir": "./dist",
+    "declaration": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "exclude": [ "./dist"]
+}
