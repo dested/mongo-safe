@@ -394,7 +394,11 @@ export declare class Aggregator<T> {
         [cKey in TKey]: number;
     }>;
     $currentOp(): Aggregator<T>;
-    $facet(): Aggregator<T>;
+    $facet<TItem>(props: {
+        [key in keyof TItem]: (agg: Aggregator<T>) => Aggregator<TItem[key]>;
+    }): Aggregator<{
+        [key in keyof TItem]: TItem[key][];
+    }>;
     $geoNear<TDistanceField extends string>(props: {
         near: {
             type: 'Point';

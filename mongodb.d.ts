@@ -1801,8 +1801,7 @@ declare module 'mongodb' {
 
   export type Condition<T> = MongoAltQuery<T> | QuerySelector<MongoAltQuery<T>>;
 
-  export type FilterQuery<T> = FilterQueryImpl<T>;
-  export type FilterQueryImpl<T> = {
+  export type FilterQuery<T> = {
     [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
   } &
     RootQuerySelector<T>;
@@ -3179,16 +3178,19 @@ declare module 'mongodb' {
     : TDepth extends 4
     ? 5
     : never;
-
   export type DeepKeys<T extends {}, TDepth extends Depths = 1> = TDepth extends 5
     ? ''
     : {
-        [key in keyof T]-?: DeepKeeyLookup<NotAny<Exclude<T[key], undefined>>, key>;
+        [key in keyof T]-?: DeepKeyLookup<
+          NotAny<Exclude<T[key], undefined>>,
+          `${key extends string ? key : never}`,
+          TDepth
+        >;
       }[keyof T];
 
-  type DeepKeyLookup<T, key> = Exclude<T, undefined> extends SafeTypes
+  type DeepKeyLookup<T, key extends string, TDepth extends Depths> = T extends SafeTypes
     ? `${key}`
-    : Exclude<T, undefined> extends Array<infer D>
+    : T extends Array<infer D>
     ? D extends SafeTypes
       ? `${key}` | `${key}.${AllowedArrayIndexes}`
       :
@@ -3196,8 +3198,8 @@ declare module 'mongodb' {
           | `${key}.${DeepKeys<D, NextDepth<TDepth>>}`
           | `${key}.${AllowedArrayIndexes}.${DeepKeys<D, NextDepth<TDepth>>}`
           | `${key}.${AllowedArrayIndexes}`
-    : Exclude<T, undefined> extends {}
-    ? `${key}` | `${key}.${DeepKeys<Exclude<T, undefined>, NextDepth<TDepth>>}`
+    : T extends {}
+    ? `${key}` | `${key}.${DeepKeys<T, NextDepth<TDepth>>}`
     : never;
 
   type NotAny<T> = any extends T ? never : T;

@@ -766,8 +766,16 @@ export class Aggregator<T> {
   $currentOp(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $facet(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $facet<TItem>(
+    props: {[key in keyof TItem]: (agg: Aggregator<T>) => Aggregator<TItem[key]>}
+  ): Aggregator<{[key in keyof TItem]: TItem[key][]}> {
+    this.currentPipeline = {$facet: {}};
+
+    for (const safeKey of safeKeys(props)) {
+      (this.currentPipeline as any).$facet[safeKey] = props[safeKey](new Aggregator<T>()).query();
+    }
+
+    return new Aggregator<{[key in keyof TItem]: TItem[key][]}>(this);
   }
   $geoNear<TDistanceField extends string>(props: {
     near: {
@@ -928,4 +936,7 @@ export class Aggregator<T> {
     // console.log(JSON.stringify(q, null, 2));
     return collection.aggregate<T>(query);
   }
+}
+function safeKeys<T>(model: T): (keyof T)[] {
+  return Object.keys(model) as (keyof T)[];
 }

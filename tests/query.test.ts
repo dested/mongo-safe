@@ -96,14 +96,14 @@ test('deepField', () => {
 test('any', () => {
   type Thing = {a: any; b: number; c: number};
 
-  query<Thing>({a: 'a'});
+  query<Thing>({b: 12});
   assert(true);
 });
 
 test('optional any', () => {
   type Thing = {a?: any; b: number; c: number};
 
-  query<Thing>({a: 'a'});
+  query<Thing>({b: 45});
   assert(true);
 });
 
