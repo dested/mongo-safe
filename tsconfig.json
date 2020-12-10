@@ -14,8 +14,7 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src",
     "outDir": "./dist",
-    "declaration": true,
-    "skipLibCheck": true
+    "declaration": true
   },
   "exclude": [ "./tests", "./dist"]
 }

@@ -1,4 +1,5 @@
-import { DeepKeys, DeepKeysResult, DeepKeysValue, FilterQuery, NumericTypes, Collection, ObjectID, ObjectId, DeepKeyArray, AggregationCursor, QuerySelector, RootQuerySelector, MongoAltQuery } from 'mongodb';
+import { DeepKeys, DeepKeysResult, NumericTypes, Collection, ObjectID, ObjectId, DeepKeyArray, AggregationCursor } from 'mongodb';
+import { FilterQueryMatch } from './filterQueryMatch';
 declare type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 declare type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
 declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
@@ -378,9 +379,6 @@ export declare type GraphDeep<TOther, TAs extends string, TDepthField extends st
         [oKey in TDepthField]: number;
     } & GraphDeep<TOther, TAs, TDepthField>)[];
 };
-declare type FilterQueryReimpl<T> = {
-    [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
-} & RootQuerySelector<T>;
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
@@ -404,7 +402,7 @@ export declare class Aggregator<T> {
             type: 'Point';
             coordinates: [number, number];
         };
-        query?: FilterQueryReimpl<T>;
+        query?: FilterQueryMatch<T, `$${DeepKeys<T>}`>;
         spherical?: boolean;
         maxDistance?: number;
         minDistance?: number;
@@ -435,7 +433,7 @@ export declare class Aggregator<T> {
     }): Aggregator<T & {
         [key in TAs]: TLookupTable[];
     }>;
-    $match(query: FilterQuery<T>): Aggregator<T>;
+    $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T>;
     $merge(): Aggregator<T>;
     $out(tableName: string): Aggregator<void>;
     $planCacheStats(): Aggregator<T>;

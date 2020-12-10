@@ -12,7 +12,9 @@ import {
   QuerySelector,
   RootQuerySelector,
   MongoAltQuery,
+  BSONType,
 } from 'mongodb';
+import {FilterQueryMatch} from './filterQueryMatch';
 
 type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
@@ -731,11 +733,6 @@ export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = 
   [key in TAs]: (TOther & {[oKey in TDepthField]: number} & GraphDeep<TOther, TAs, TDepthField>)[];
 };
 
-type FilterQueryReimpl<T> = {
-  [key in DeepKeys<T>]?: MongoAltQuery<DeepKeysValue<T, key>> | QuerySelector<DeepKeysValue<T, key>>;
-} &
-  RootQuerySelector<T>;
-
 export class Aggregator<T> {
   private currentPipeline?: {};
 
@@ -782,7 +779,7 @@ export class Aggregator<T> {
       type: 'Point';
       coordinates: [number, number];
     };
-    query?: FilterQueryReimpl<T>;
+    query?: FilterQueryMatch<T, `$${DeepKeys<T>}`>;
     spherical?: boolean;
     maxDistance?: number;
     minDistance?: number;
@@ -844,7 +841,7 @@ export class Aggregator<T> {
     return new Aggregator<T & {[key in TAs]: TLookupTable[]}>(this);
   }
 
-  $match(query: FilterQuery<T>): Aggregator<T> {
+  $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T> {
     this.currentPipeline = {$match: query};
     return new Aggregator<T>(this);
   }
