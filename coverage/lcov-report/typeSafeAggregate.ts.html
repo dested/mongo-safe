@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">65.08% </span>
+                <span class="strong">67.19% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>41/63</span>
+                <span class='fraction'>43/64</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">52.78% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>18/36</span>
+                <span class='fraction'>19/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">65.08% </span>
+                <span class="strong">67.19% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>41/63</span>
+                <span class='fraction'>43/64</span>
             </div>
         
             
@@ -991,19 +991,7 @@
 <a name='L932'></a><a href='#L932'>932</a>
 <a name='L933'></a><a href='#L933'>933</a>
 <a name='L934'></a><a href='#L934'>934</a>
-<a name='L935'></a><a href='#L935'>935</a>
-<a name='L936'></a><a href='#L936'>936</a>
-<a name='L937'></a><a href='#L937'>937</a>
-<a name='L938'></a><a href='#L938'>938</a>
-<a name='L939'></a><a href='#L939'>939</a>
-<a name='L940'></a><a href='#L940'>940</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L935'></a><a href='#L935'>935</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1734,10 +1722,10 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">190x</span>
+<span class="cline-any cline-yes">192x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">70x</span>
+<span class="cline-any cline-yes">71x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
@@ -1893,7 +1881,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1908,22 +1898,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">139x</span>
-<span class="cline-any cline-yes">139x</span>
+<span class="cline-any cline-yes">141x</span>
+<span class="cline-any cline-yes">141x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">139x</span>
-<span class="cline-any cline-yes">139x</span>
-<span class="cline-any cline-yes">202x</span>
-<span class="cline-any cline-yes">202x</span>
+<span class="cline-any cline-yes">141x</span>
+<span class="cline-any cline-yes">141x</span>
+<span class="cline-any cline-yes">204x</span>
+<span class="cline-any cline-yes">204x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">139x</span>
+<span class="cline-any cline-yes">141x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">70x</span>
+<span class="cline-any cline-yes">71x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">70x</span>
+<span class="cline-any cline-yes">71x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1964,6 +1954,10 @@ type DeepExcludeNever&lt;T&gt; = T extends NonObjectValues
   : {
       [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever&lt;T[key]&gt;;
     };
+&nbsp;
+export type ExcludeNever&lt;T&gt; = {
+  [key in keyof T as T[key] extends never ? never : key]: T[key];
+};
 type OnlyArrayFieldsKeys&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;any&gt; ? key : never}[keyof T];
 type OnlyArrayFields&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;infer J&gt; ? key : never}[keyof T];
 &nbsp;
@@ -2119,19 +2113,19 @@ type ExpressionOrAny&lt;TTest, TRootValue, TForceValue = any&gt; = TTest extends
 */
 &nbsp;
 type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
-  $abs?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$abs'&gt;&gt;;
+  $abs?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $acos?: NotImplementedYet;
   $acosh?: NotImplementedYet;
-  $add?: LookupKey&lt;TValue, '$add'&gt; extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TAdds&gt;&gt;
+  $add?: TValue extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TAdds&gt;&gt;
     ? InterpretProjectExpression&lt;TRootValue, TAdds&gt;[]
     : never;
-  $addToSet?: LookupKey&lt;TValue, '$addToSet'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TAddToSet&gt;
+  $addToSet?: TValue extends InterpretProjectExpression&lt;TRootValue, infer TAddToSet&gt;
     ? InterpretProjectExpression&lt;TRootValue, TAddToSet&gt;
     : never;
   $allElementsTrue?: NotImplementedYet;
   $and?: NotImplementedYet;
   $anyElementTrue?: NotImplementedYet;
-  $arrayElemAt?: LookupKey&lt;TValue, '$arrayElemAt'&gt; extends [
+  $arrayElemAt?: TValue extends [
     InterpretProjectExpression&lt;TRootValue, infer TArray&gt;,
     InterpretProjectExpression&lt;TRootValue, infer TIndex&gt;
   ]
@@ -2146,20 +2140,20 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
   $avg?: NotImplementedYet;
   $ceil?: NotImplementedYet;
   $cmp?: NotImplementedYet;
-  $concat?: LookupKey&lt;TValue, '$concat'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TConcat&gt;[]
+  $concat?: TValue extends InterpretProjectExpression&lt;TRootValue, infer TConcat&gt;[]
     ? InterpretProjectExpression&lt;TRootValue, TConcat&gt;[]
     : never;
   $concatArrays?: NotImplementedYet;
   $cond?:
     | [
-        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 0&gt;&gt;,
-        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 1&gt;&gt;,
-        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$cond'&gt;, 2&gt;&gt;
+        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, 0&gt;&gt;,
+        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, 1&gt;&gt;,
+        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, 2&gt;&gt;
       ]
     | {
-        else: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'else'&gt;&gt;;
-        if: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'if'&gt;&gt;;
-        then: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$cond'&gt;, 'then'&gt;&gt;;
+        else: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, 'else'&gt;&gt;;
+        if: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, 'if'&gt;&gt;;
+        then: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, 'then'&gt;&gt;;
       };
   $convert?: NotImplementedYet;
   $cos?: NotImplementedYet;
@@ -2167,18 +2161,18 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
   $dateFromString?: NotImplementedYet;
   $dateToParts?: NotImplementedYet;
   $dateToString?: {
-    date: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$dateToString'&gt;, 'date'&gt;&gt;;
+    date: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, 'date'&gt;&gt;;
     format?: string;
   };
   $dayOfMonth?: NotImplementedYet;
   $dayOfWeek?: NotImplementedYet;
   $dayOfYear?: NotImplementedYet;
   $degreesToRadians?: NotImplementedYet;
-  $divide?: LookupKey&lt;TValue, '$divide'&gt; extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TDivide&gt;&gt;
+  $divide?: TValue extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TDivide&gt;&gt;
     ? InterpretProjectExpression&lt;TRootValue, TDivide&gt;[]
     : never;
 &nbsp;
-  $eq?: LookupKey&lt;TValue, '$eq'&gt; extends [
+  $eq?: TValue extends [
     InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
     InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
   ]
@@ -2186,28 +2180,28 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
     : never;
   $exp?: NotImplementedYet;
   $filter?: NotImplementedYet;
-  $first?: LookupKey&lt;TValue, '$first'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TFirst&gt;
+  $first?: TValue extends InterpretProjectExpression&lt;TRootValue, infer TFirst&gt;
     ? InterpretProjectExpression&lt;TRootValue, TFirst&gt;
     : never;
 &nbsp;
   $floor?: NotImplementedYet;
-  $gt?: LookupKey&lt;TValue, '$gt'&gt; extends [
+  $gt?: TValue extends [
     InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
     InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
   ]
     ? [InterpretProjectExpression&lt;TRootValue, TLeft&gt;, InterpretProjectExpression&lt;TRootValue, TRight&gt;]
     : never;
-  $gte?: LookupKey&lt;TValue, '$gte'&gt; extends [
+  $gte?: TValue extends [
     InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
     InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
   ]
     ? [InterpretProjectExpression&lt;TRootValue, TLeft&gt;, InterpretProjectExpression&lt;TRootValue, TRight&gt;]
     : never;
   $hour?: NotImplementedYet;
-  $ifNull?: LookupKey&lt;TValue, '$ifNull'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TIfNull&gt;[]
+  $ifNull?: TValue extends InterpretProjectExpression&lt;TRootValue, infer TIfNull&gt;[]
     ? InterpretProjectExpression&lt;TRootValue, TIfNull&gt;[]
     : never;
-  $in?: LookupKey&lt;TValue, '$in'&gt; extends InterpretProjectExpression&lt;TRootValue, infer TIn&gt;
+  $in?: TValue extends InterpretProjectExpression&lt;TRootValue, infer TIn&gt;
     ? InterpretProjectExpression&lt;TRootValue, TIn&gt;
     : never;
   $indexOfArray?: NotImplementedYet;
@@ -2223,57 +2217,54 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
   $ln?: NotImplementedYet;
   $log?: NotImplementedYet;
   $log10?: NotImplementedYet;
-  $lt?: LookupKey&lt;TValue, '$lt'&gt; extends [
+  $lt?: TValue extends [
     InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
     InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
   ]
     ? [InterpretProjectExpression&lt;TRootValue, TLeft&gt;, InterpretProjectExpression&lt;TRootValue, TRight&gt;]
     : never;
-  $lte?: LookupKey&lt;TValue, '$lte'&gt; extends [
+  $lte?: TValue extends [
     InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
     InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
   ]
     ? [InterpretProjectExpression&lt;TRootValue, TLeft&gt;, InterpretProjectExpression&lt;TRootValue, TRight&gt;]
     : never;
   $ltrim?: NotImplementedYet;
-  $map?: LookupKey&lt;TValue, '$map'&gt; extends {
+  $map?: TValue extends {
     as: string;
     in: infer TIn;
     input: ExpressionStringReferenceKey&lt;TRootValue&gt;;
   }
     ? {
-        as: LookupKey&lt;LookupKey&lt;TValue, '$map'&gt;, 'as'&gt;;
+        as: LookupKey&lt;TValue, 'as'&gt;;
         in: ProjectObject&lt;
           TRootValue &amp;
             {
-              [key in `$${LookupKey&lt;LookupKey&lt;TValue, '$map'&gt;, 'as'&gt;}`]: DeReferenceExpression&lt;
-                TRootValue,
-                LookupKey&lt;LookupKey&lt;TValue, '$map'&gt;, 'input'&gt;
-              &gt;;
+              [key in `$${LookupKey&lt;TValue, 'as'&gt;}`]: DeReferenceExpression&lt;TRootValue, LookupKey&lt;TValue, 'input'&gt;&gt;;
             },
           TIn
         &gt;;
         input: ExpressionStringReferenceKey&lt;TRootValue&gt;;
       }
     : never;
-  $max?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$max'&gt;&gt;;
+  $max?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $mergeObjects?: NotImplementedYet;
   $meta?: NotImplementedYet;
   $millisecond?: NotImplementedYet;
-  $min?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$min'&gt;&gt;;
+  $min?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $minute?: NotImplementedYet;
   $mod?: NotImplementedYet;
   $month?: NotImplementedYet;
-  $multiply?: LookupKey&lt;TValue, '$multiply'&gt; extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TMultiply&gt;&gt;
+  $multiply?: TValue extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TMultiply&gt;&gt;
     ? InterpretProjectExpression&lt;TRootValue, TMultiply&gt;[]
     : never;
 &nbsp;
   $ne?: NotImplementedYet;
-  $not?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$not'&gt;&gt;;
+  $not?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $objectToArray?: NotImplementedYet;
   $or?: NotImplementedYet;
   $pow?: NotImplementedYet;
-  $push?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$push'&gt;&gt;;
+  $push?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $radiansToDegrees?: NotImplementedYet;
   $range?: NotImplementedYet;
   $reduce?: NotImplementedYet;
@@ -2286,14 +2277,11 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
   $second?: NotImplementedYet;
   $setDifference?: NotImplementedYet;
   $setEquals?: NotImplementedYet;
-  $setIntersection?: InterpretProjectExpression&lt;
-    TRootValue,
-    LookupArray&lt;LookupKey&lt;TValue, '$setIntersection'&gt;, number&gt;
-  &gt;[];
+  $setIntersection?: InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, number&gt;&gt;[];
   $setIsSubset?: NotImplementedYet;
   $setUnion?: NotImplementedYet;
   $sin?: NotImplementedYet;
-  $size?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$size'&gt;&gt;;
+  $size?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $slice?: NotImplementedYet;
   $split?: NotImplementedYet;
   $sqrt?: NotImplementedYet;
@@ -2305,12 +2293,12 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
   $substr?: NotImplementedYet;
   $substrBytes?: NotImplementedYet;
   $substrCP?: NotImplementedYet;
-  $subtract?: LookupKey&lt;TValue, '$subtract'&gt; extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TSubtract&gt;&gt;
+  $subtract?: TValue extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TSubtract&gt;&gt;
     ? InterpretProjectExpression&lt;TRootValue, TSubtract&gt;[]
     : never;
-  $sum?: InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$sum'&gt;&gt;;
+  $sum?: InterpretProjectExpression&lt;TRootValue, TValue&gt;;
 &nbsp;
-  $switch?: LookupKey&lt;TValue, '$switch'&gt; extends {
+  $switch?: TValue extends {
     branches: {
       case: InterpretProjectExpression&lt;TRootValue, infer TBranchCase&gt;;
       then: InterpretProjectExpression&lt;TRootValue, infer TBranchThen&gt;;
@@ -2339,12 +2327,12 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; = {
   $toUpper?: NotImplementedYet;
   $trim?: NotImplementedYet;
   $trunc?:
-    | [InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$trunc'&gt;, 0&gt;&gt;]
+    | [InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, 0&gt;&gt;]
     | [
-        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$trunc'&gt;, 0&gt;&gt;,
-        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$trunc'&gt;, 1&gt;&gt;
+        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, 0&gt;&gt;,
+        InterpretProjectExpression&lt;TRootValue, LookupArray&lt;TValue, 1&gt;&gt;
       ]
-    | InterpretProjectExpression&lt;TRootValue, LookupKey&lt;TValue, '$trunc'&gt;&gt;;
+    | InterpretProjectExpression&lt;TRootValue, TValue&gt;;
   $type?: NotImplementedYet;
   $week?: NotImplementedYet;
   $year?: NotImplementedYet;
@@ -2367,13 +2355,6 @@ type InterpretAccumulateOperator&lt;TRootValue, TValue&gt; = {
 };
 &nbsp;
 export type ExpressionStringReferenceKey&lt;T&gt; = `$${DeepKeys&lt;T&gt; | '$CURRENT'}`;
-/*export type ExpressionStringReferenceKey&lt;T, ForceValue = any&gt; = keyof {
-  [key in DeepKeys&lt;T&gt; as DeepKeysValue&lt;T, key&gt; extends ForceValue
-    ? DeepKeysValue&lt;T, key&gt; extends never
-      ? never
-      : `$${key}`
-    : never]: 1;
-};*/
 &nbsp;
 export type InterpretProjectExpression&lt;TRootValue, TValue&gt; = /* // you cant add one more here lol
  */ TValue extends `$${string}`
@@ -2381,7 +2362,7 @@ export type InterpretProjectExpression&lt;TRootValue, TValue&gt; = /* // you can
   : TValue extends RawTypes
   ? TValue
   : keyof TValue extends AllOperators
-  ? InterpretProjectOperator&lt;TRootValue, TValue&gt;
+  ? InterpretProjectOperator&lt;TRootValue, TValue[keyof TValue]&gt;
   : TValue extends Array&lt;infer TValueArr&gt;
   ? Array&lt;ProjectObject&lt;TRootValue, TValueArr&gt;&gt;
   : TValue extends {}
@@ -2667,8 +2648,10 @@ type AccumulateResultObject&lt;TRootValue, TObj&gt; = TObj extends infer T
   : never;
 &nbsp;
 export type GraphDeep&lt;TOther, TAs extends string, TDepthField extends string&gt; = {
-  [key in TAs]: (TOther &amp; {[oKey in TDepthField]: number} &amp; GraphDeep&lt;TOther, TAs, TDepthField&gt;)[];
+  [key in TAs]: (TOther &amp; {[oKey in TDepthField]: number})[];
 };
+&nbsp;
+type Simplify&lt;T&gt; = T extends object | any[] ? {[K in keyof T]: T[K]} : T;
 &nbsp;
 export class Aggregator&lt;T&gt; {
   private currentPipeline?: {};
@@ -2831,8 +2814,10 @@ export class Aggregator&lt;T&gt; {
 <span class="fstat-no" title="function not covered" >  $sortByCount(</span>): Aggregator&lt;T&gt; {
 <span class="cstat-no" title="statement not covered" >    throw new Error('Not Implemented');</span>
   }
-<span class="fstat-no" title="function not covered" >  $unset(</span>): Aggregator&lt;T&gt; {
-<span class="cstat-no" title="statement not covered" >    throw new Error('Not Implemented');</span>
+&nbsp;
+  $unset&lt;TDeepKey extends DeepKeys&lt;T&gt;&gt;(key: TDeepKey): Aggregator&lt;ExcludeNever&lt;T &amp; {[k in typeof key]: never}&gt;&gt; {
+    this.currentPipeline = {$unset: key};
+    return new Aggregator&lt;ExcludeNever&lt;T &amp; {[k in typeof key]: never}&gt;&gt;(this);
   }
 &nbsp;
   $unwind&lt;TKey extends DeepKeys&lt;T&gt;, TArrayIndexField extends string = never&gt;(
@@ -2859,10 +2844,10 @@ export class Aggregator&lt;T&gt; {
     return pipelines.reverse();
   }
 &nbsp;
-  async result&lt;TDoc extends {_id: ObjectId}&gt;(collection: Collection&lt;TDoc&gt;): Promise&lt;T[]&gt; {
+  async result&lt;TDoc extends {_id: ObjectId}&gt;(collection: Collection&lt;TDoc&gt;): Promise&lt;Simplify&lt;T&gt;[]&gt; {
     const query = this.query();
     // console.log(JSON.stringify(q, null, 2));
-    return collection.aggregate&lt;T&gt;(query).toArray();
+    return collection.aggregate&lt;Simplify&lt;T&gt;&gt;(query).toArray();
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  async </span>resultCursor&lt;TDoc extends {_id: ObjectId}&gt;(collection: Collection&lt;TDoc&gt;): Promise&lt;AggregationCursor&lt;T&gt;&gt; {
@@ -2881,7 +2866,7 @@ function safeKeys&lt;T&gt;(model: T): (keyof T)[] {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Thu Dec 10 2020 10:48:43 GMT-0700 (Mountain Standard Time)
+                at Fri Dec 11 2020 23:00:54 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>

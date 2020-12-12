@@ -27,6 +27,10 @@ type DeepExcludeNever<T> = T extends NonObjectValues
   : {
       [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;
     };
+
+export type ExcludeNever<T> = {
+  [key in keyof T as T[key] extends never ? never : key]: T[key];
+};
 type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
 type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
@@ -430,13 +434,6 @@ type InterpretAccumulateOperator<TRootValue, TValue> = {
 };
 
 export type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
-/*export type ExpressionStringReferenceKey<T, ForceValue = any> = keyof {
-  [key in DeepKeys<T> as DeepKeysValue<T, key> extends ForceValue
-    ? DeepKeysValue<T, key> extends never
-      ? never
-      : `$${key}`
-    : never]: 1;
-};*/
 
 export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add one more here lol
  */ TValue extends `$${string}`
@@ -730,8 +727,10 @@ type AccumulateResultObject<TRootValue, TObj> = TObj extends infer T
   : never;
 
 export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
-  [key in TAs]: (TOther & {[oKey in TDepthField]: number} & GraphDeep<TOther, TAs, TDepthField>)[];
+  [key in TAs]: (TOther & {[oKey in TDepthField]: number})[];
 };
+
+type Simplify<T> = T extends object | any[] ? {[K in keyof T]: T[K]} : T;
 
 export class Aggregator<T> {
   private currentPipeline?: {};
@@ -894,8 +893,10 @@ export class Aggregator<T> {
   $sortByCount(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $unset(): Aggregator<T> {
-    throw new Error('Not Implemented');
+
+  $unset<TDeepKey extends DeepKeys<T>>(key: TDeepKey): Aggregator<ExcludeNever<T & {[k in typeof key]: never}>> {
+    this.currentPipeline = {$unset: key};
+    return new Aggregator<ExcludeNever<T & {[k in typeof key]: never}>>(this);
   }
 
   $unwind<TKey extends DeepKeys<T>, TArrayIndexField extends string = never>(
@@ -922,10 +923,10 @@ export class Aggregator<T> {
     return pipelines.reverse();
   }
 
-  async result<TDoc extends {_id: ObjectId}>(collection: Collection<TDoc>): Promise<T[]> {
+  async result<TDoc extends {_id: ObjectId}>(collection: Collection<TDoc>): Promise<Simplify<T>[]> {
     const query = this.query();
     // console.log(JSON.stringify(q, null, 2));
-    return collection.aggregate<T>(query).toArray();
+    return collection.aggregate<Simplify<T>>(query).toArray();
   }
 
   async resultCursor<TDoc extends {_id: ObjectId}>(collection: Collection<TDoc>): Promise<AggregationCursor<T>> {

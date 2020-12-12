@@ -6,6 +6,9 @@ declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number e
 declare type DeepExcludeNever<T> = T extends NonObjectValues ? T : T extends Array<infer TArr> ? Array<DeepExcludeNever<T[number]>> : {
     [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;
 };
+export declare type ExcludeNever<T> = {
+    [key in keyof T as T[key] extends never ? never : key]: T[key];
+};
 export declare type UnArray<T> = T extends Array<infer U> ? U : T;
 declare type ReplaceKey<T, TKey, TValue> = {
     [key in keyof T]: key extends TKey ? TValue : T[key];
@@ -377,8 +380,11 @@ declare type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T
 export declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
     [key in TAs]: (TOther & {
         [oKey in TDepthField]: number;
-    } & GraphDeep<TOther, TAs, TDepthField>)[];
+    })[];
 };
+declare type Simplify<T> = T extends object | any[] ? {
+    [K in keyof T]: T[K];
+} : T;
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
@@ -450,7 +456,9 @@ export declare class Aggregator<T> {
         [key in DeepKeys<T>]?: 1 | -1;
     }): Aggregator<T>;
     $sortByCount(): Aggregator<T>;
-    $unset(): Aggregator<T>;
+    $unset<TDeepKey extends DeepKeys<T>>(key: TDeepKey): Aggregator<ExcludeNever<T & {
+        [k in typeof key]: never;
+    }>>;
     $unwind<TKey extends DeepKeys<T>, TArrayIndexField extends string = never>(key: `$${TKey}` | {
         path: `$${TKey}`;
         preserveNullAndEmptyArrays?: boolean;
@@ -461,7 +469,7 @@ export declare class Aggregator<T> {
     query(): {}[];
     result<TDoc extends {
         _id: ObjectId;
-    }>(collection: Collection<TDoc>): Promise<T[]>;
+    }>(collection: Collection<TDoc>): Promise<Simplify<T>[]>;
     resultCursor<TDoc extends {
         _id: ObjectId;
     }>(collection: Collection<TDoc>): Promise<AggregationCursor<T>>;

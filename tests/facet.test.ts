@@ -1,5 +1,5 @@
 /// <reference path="../mongodb.d.ts"/>
-import {Aggregator} from '../src/typeSafeAggregate';
+import {Aggregator, ExcludeNever} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, IsExact, NotHas} from 'conditional-type-checks';
 import {ObjectId} from 'bson';
@@ -38,4 +38,12 @@ test('project.none', async () => {
   assert<
     Has<{thing1: {_id: 'left' | 'right'; count: number}[]; thing2: {_id: Date; counter: number}[]}, typeof result>
   >(true);
+});
+
+test('unset', async () => {
+  const aggregator = Aggregator.start<DBCar>().$unset('carburetor');
+  expect(aggregator.query()).toEqual([{$unset: 'carburetor'}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<ExcludeNever<DBCar & {['carburetor']: never}>, typeof result>>(true);
 });
