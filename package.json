@@ -1,6 +1,6 @@
 {
   "name": "mongo-safe",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "author": "Salvatore <dested@gmail.com>",
   "homepage": "https://github.com/dested/mongo-safe",
   "license": "MIT",
@@ -20,6 +20,7 @@
     "@types/jest": "^22.2.3",
     "@types/bson": "^4.0.3",
     "mongodb": "^3.5.8",
+    "bson": "^4.2.2",
     "conditional-type-checks": "^1.0.5",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",

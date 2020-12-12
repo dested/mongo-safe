@@ -3181,8 +3181,8 @@ declare module 'mongodb' {
   export type DeepKeys<T extends {}, TDepth extends Depths = 1> = TDepth extends 5
     ? ''
     : {
-        [key in keyof T]-?: DeepKeyLookup<
-          NotAny<Exclude<T[key], undefined>>,
+        [key in keyof T]: DeepKeyLookup<
+          Exclude<NotAny<T[key]>, undefined>,
           `${key extends string ? key : never}`,
           TDepth
         >;
