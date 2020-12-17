@@ -720,3 +720,102 @@ test('$bucket.noDefault', async () => {
     >
   >(true);
 });
+
+test('bucketAuto', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$bucketAuto({
+    groupBy: '$price',
+    buckets: 4,
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $bucketAuto: {
+        groupBy: '$price',
+        buckets: 4,
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: {min: number; max: number}; count: number}, typeof result>>(true);
+});
+test('bucketAuto.output', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$bucketAuto({
+    groupBy: '$price',
+    buckets: 4,
+    output: {
+      count: {$sum: 1},
+      shoes: '$year_born',
+    },
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $bucketAuto: {
+        groupBy: '$price',
+        buckets: 4,
+        output: {
+          count: {$sum: 1},
+          shoes: '$year_born',
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: {min: number; max: number}; count: number; shoes: number}, typeof result>>(true);
+});
+test('bucketAuto.outputNoCount', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$bucketAuto({
+    groupBy: '$price',
+    buckets: 4,
+    output: {
+      shoes: '$year_born',
+    },
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $bucketAuto: {
+        groupBy: '$price',
+        buckets: 4,
+        output: {
+          shoes: '$year_born',
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: {min: number; max: number}; shoes: number}, typeof result>>(true);
+});

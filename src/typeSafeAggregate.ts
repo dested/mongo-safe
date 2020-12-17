@@ -770,6 +770,24 @@ type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer T
       [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
     } & {_id: TId}
   : never;
+type AutoBucketRootResultObject<TRootValue, TObj> = [TObj] extends [never]
+  ? {
+      _id: {
+        min: number;
+        max: number;
+      };
+      count: number;
+    }
+  : TObj extends infer T
+  ? {
+      [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
+    } & {
+      _id: {
+        min: number;
+        max: number;
+      };
+    }
+  : never;
 
 export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
   [key in TAs]: (TOther & {[oKey in TDepthField]: number})[];
@@ -807,9 +825,30 @@ export class Aggregator<T> {
     this.currentPipeline = {$bucket: props};
     return new Aggregator<BucketRootResultObject<T, TAccumulator, TBoundaries | TDefault>>(this);
   }
-  $bucketAuto(): Aggregator<T> {
-    throw new Error('Not Implemented');
+
+  $bucketAuto<TGroupBy, TAccumulator = never>(props: {
+    groupBy: InterpretProjectExpression<T, TGroupBy>;
+    buckets: number;
+    output?: BucketRootObject<T, TAccumulator>;
+    granularity?:
+      | 'R5'
+      | 'R10'
+      | 'R20'
+      | 'R40'
+      | 'R80'
+      | '1-2-5'
+      | 'E6'
+      | 'E12'
+      | 'E24'
+      | 'E48'
+      | 'E96'
+      | 'E192'
+      | 'POWERSOF2';
+  }): Aggregator<AutoBucketRootResultObject<T, TAccumulator>> {
+    this.currentPipeline = {$bucketAuto: props};
+    return new Aggregator<AutoBucketRootResultObject<T, TAccumulator>>(this);
   }
+
   $collStats(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
@@ -889,6 +928,8 @@ export class Aggregator<T> {
     let?: ProjectObject<TLookupTable, TLet>;
     pipeline?: (
       // somehow you overcame deep nested with this again. it defers testing of the types until its sure that its ary, and not just thinks it is
+      // THIS DOES NOT WORK WHEN T IS NEVER
+
       agg: Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>
     ) => Aggregator<TPipeline>;
   }): Aggregator<

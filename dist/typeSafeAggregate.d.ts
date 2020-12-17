@@ -506,6 +506,20 @@ declare type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer 
 } & {
     _id: TId;
 } : never;
+declare type AutoBucketRootResultObject<TRootValue, TObj> = [TObj] extends [never] ? {
+    _id: {
+        min: number;
+        max: number;
+    };
+    count: number;
+} : TObj extends infer T ? {
+    [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
+} & {
+    _id: {
+        min: number;
+        max: number;
+    };
+} : never;
 export declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
     [key in TAs]: (TOther & {
         [oKey in TDepthField]: number;
@@ -533,7 +547,12 @@ export declare class Aggregator<T> {
         default?: TDefault;
         output: BucketRootObject<T, TAccumulator>;
     }): Aggregator<BucketRootResultObject<T, TAccumulator, TBoundaries | TDefault>>;
-    $bucketAuto(): Aggregator<T>;
+    $bucketAuto<TGroupBy, TAccumulator = never>(props: {
+        groupBy: InterpretProjectExpression<T, TGroupBy>;
+        buckets: number;
+        output?: BucketRootObject<T, TAccumulator>;
+        granularity?: 'R5' | 'R10' | 'R20' | 'R40' | 'R80' | '1-2-5' | 'E6' | 'E12' | 'E24' | 'E48' | 'E96' | 'E192' | 'POWERSOF2';
+    }): Aggregator<AutoBucketRootResultObject<T, TAccumulator>>;
     $collStats(): Aggregator<T>;
     $count<TKey extends string>(key: TKey): Aggregator<{
         [cKey in TKey]: number;
