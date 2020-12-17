@@ -181,6 +181,47 @@ test('project.$eq', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: boolean}, typeof result>>(true);
 });
+test('project.$concatArray', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: {
+      $concatArrays: [
+        ['hello', ' '],
+        [['world'], 'again'],
+      ],
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        shoes: {
+          $concatArrays: [
+            ['hello', ' '],
+            [['world'], 'again'],
+          ],
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{shoes: ('hello' | ' ' | 'again' | 'world')[]}, typeof result>>(true);
+});
+
+test('project.$cmp', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    cmpTo250: {$cmp: ['$someRootNumber', 250]},
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        cmpTo250: {$cmp: ['$someRootNumber', 250]},
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{cmpTo250: number}, typeof result>>(true);
+});
 
 test('project.$eq.ref', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({

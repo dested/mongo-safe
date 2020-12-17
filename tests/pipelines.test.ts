@@ -819,3 +819,127 @@ test('bucketAuto.outputNoCount', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{_id: {min: number; max: number}; shoes: number}, typeof result>>(true);
 });
+test('$sortByCount', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$sortByCount('$price');
+
+  expect(aggregator.query()).toEqual([
+    {
+      $sortByCount: '$price',
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: number; count: number}, typeof result>>(true);
+});
+
+test('$sortByCount.obj', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$sortByCount({$concat: ['$last_name', '$first_name']});
+
+  expect(aggregator.query()).toEqual([
+    {
+      $sortByCount: {$concat: ['$last_name', '$first_name']},
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{_id: string; count: number}, typeof result>>(true);
+});
+
+test('$unionWith', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$unionWith(tableName<Artist2>('artist2'));
+
+  expect(aggregator.query()).toEqual([
+    {
+      $unionWith: 'artist2',
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<Artist | Artist2, typeof result>>(true);
+});
+
+test('$unionWith.pipeline', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$unionWith({
+    coll: tableName<Artist2>('artist2'),
+    pipeline: (agg) =>
+      agg.$project({
+        shoes: '$first_name2',
+      }),
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $unionWith: {
+        coll: 'artist2',
+        pipeline: [
+          {
+            $project: {
+              shoes: '$first_name2',
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<Artist | {shoes: string}, typeof result>>(true);
+});
