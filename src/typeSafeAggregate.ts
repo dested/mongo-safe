@@ -849,17 +849,11 @@ export class Aggregator<T> {
     return new Aggregator<AutoBucketRootResultObject<T, TAccumulator>>(this);
   }
 
-  $collStats(): Aggregator<T> {
-    throw new Error('Not Implemented');
-  }
   $count<TKey extends string>(key: TKey): Aggregator<{[cKey in TKey]: number}> {
     this.currentPipeline = {$count: key};
     return new Aggregator<{[cKey in TKey]: number}>(this);
   }
 
-  $currentOp(): Aggregator<T> {
-    throw new Error('Not Implemented');
-  }
   $facet<TItem>(
     props: {[key in keyof TItem]: (agg: Aggregator<T>) => Aggregator<TItem[key]>}
   ): Aggregator<{[key in keyof TItem]: TItem[key][]}> {
@@ -906,20 +900,11 @@ export class Aggregator<T> {
     return new Aggregator<AccumulateRootResultObject<T, TAccumulator>>(this);
   }
 
-  $indexStats(): Aggregator<T> {
-    throw new Error('Not Implemented');
-  }
   $limit(limit: number): Aggregator<T> {
     this.currentPipeline = {$limit: limit};
     return new Aggregator<T>(this);
   }
 
-  $listLocalSessions(): Aggregator<T> {
-    throw new Error('Not Implemented');
-  }
-  $listSessions(): Aggregator<T> {
-    throw new Error('Not Implemented');
-  }
   $lookup<TLookupTable, TAs extends string, TLet extends {} = never, TPipeline extends {} = never>(props: {
     from: TableName<TLookupTable>;
     localField: DeepKeys<T>;
@@ -979,10 +964,6 @@ export class Aggregator<T> {
     return new Aggregator<void>(this);
   }
 
-  $planCacheStats(): Aggregator<T> {
-    throw new Error('Not Implemented');
-  }
-
   $project<TProject>(
     query: ProjectObject<T, TProject>
   ): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>> {
@@ -1006,8 +987,14 @@ export class Aggregator<T> {
     this.currentPipeline = {$sample: props};
     return new Aggregator<T>(this);
   }
-  $set(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $sampleRate(props: number): Aggregator<T> {
+    this.currentPipeline = {$sampleRate: props};
+    return new Aggregator<T>(this);
+  }
+
+  $set<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>> {
+    this.currentPipeline = {$set: fields};
+    return new Aggregator<T & ProjectResultObject<T, TProject>>(this);
   }
   $skip(skip: number): Aggregator<T> {
     this.currentPipeline = {$skip: skip};
@@ -1019,6 +1006,10 @@ export class Aggregator<T> {
   }
 
   $sortByCount(): Aggregator<T> {
+    throw new Error('Not Implemented');
+  }
+
+  $unionWith(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
 
