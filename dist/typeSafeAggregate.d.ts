@@ -2,7 +2,7 @@ import { DeepKeys, DeepKeysResult, NumericTypes, Collection, ObjectID, ObjectId,
 import { FilterQueryMatch } from './filterQueryMatch';
 declare type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 declare type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
-declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
+declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
 declare type DeepExcludeNever<T> = T extends NonObjectValues ? T : T extends Array<infer TArr> ? Array<DeepExcludeNever<T[number]>> : {
     [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;
 };
@@ -495,8 +495,16 @@ declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends 
 declare type AccumulateRootObject<TRootValue, TAccumulateObject> = {
     [key in keyof TAccumulateObject]: key extends '_id' ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]> : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
+declare type BucketRootObject<TRootValue, TAccumulateObject> = {
+    [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
+};
 declare type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T ? {
     [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue, T[key]> : AccumulateResult<TRootValue, T[key]>;
+} : never;
+declare type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer T ? {
+    [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
+} & {
+    _id: TId;
 } : never;
 export declare type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
     [key in TAs]: (TOther & {
@@ -519,7 +527,12 @@ export declare class Aggregator<T> {
     private constructor();
     static start<T>(): Aggregator<T>;
     $addFields<TProject>(fields: ProjectObject<T, TProject>): Aggregator<T & ProjectResultObject<T, TProject>>;
-    $bucket(): Aggregator<T>;
+    $bucket<TGroupBy, TBoundaries, TAccumulator, TDefault extends string = never>(props: {
+        groupBy: InterpretProjectExpression<T, TGroupBy>;
+        boundaries: InterpretProjectExpression<T, TBoundaries>[];
+        default?: TDefault;
+        output: BucketRootObject<T, TAccumulator>;
+    }): Aggregator<BucketRootResultObject<T, TAccumulator, TBoundaries | TDefault>>;
     $bucketAuto(): Aggregator<T>;
     $collStats(): Aggregator<T>;
     $count<TKey extends string>(key: TKey): Aggregator<{

@@ -19,7 +19,7 @@ import {FilterQueryMatch} from './filterQueryMatch';
 type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
 
-type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? (number extends TValue ? number : TValue) : never;
+type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
 type DeepExcludeNever<T> = T extends NonObjectValues
   ? T
   : T extends Array<infer TArr>
@@ -747,19 +747,28 @@ type AccumulateRootObject<TRootValue, TAccumulateObject> = {
     ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]>
     : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
+
+type BucketRootObject<TRootValue, TAccumulateObject> = {
+  [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
+};
 type AccumulateObject<TRootValue, TAccumulateObject> = {
   [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
 
+type AccumulateResultObject<TRootValue, TObj> = TObj extends infer T
+  ? {
+      [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
+    }
+  : never;
 type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T
   ? {
       [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue, T[key]> : AccumulateResult<TRootValue, T[key]>;
     }
   : never;
-type AccumulateResultObject<TRootValue, TObj> = TObj extends infer T
+type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer T
   ? {
       [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
-    }
+    } & {_id: TId}
   : never;
 
 export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
@@ -789,8 +798,14 @@ export class Aggregator<T> {
     return new Aggregator<T & ProjectResultObject<T, TProject>>(this);
   }
 
-  $bucket(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $bucket<TGroupBy, TBoundaries, TAccumulator, TDefault extends string = never>(props: {
+    groupBy: InterpretProjectExpression<T, TGroupBy>;
+    boundaries: InterpretProjectExpression<T, TBoundaries>[];
+    default?: TDefault;
+    output: BucketRootObject<T, TAccumulator>;
+  }): Aggregator<BucketRootResultObject<T, TAccumulator, TBoundaries | TDefault>> {
+    this.currentPipeline = {$bucket: props};
+    return new Aggregator<BucketRootResultObject<T, TAccumulator, TBoundaries | TDefault>>(this);
   }
   $bucketAuto(): Aggregator<T> {
     throw new Error('Not Implemented');

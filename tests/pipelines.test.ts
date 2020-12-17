@@ -606,3 +606,117 @@ test('$replaceRoot.complex', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: Date}, typeof result>>(true);
 });
+
+test('$bucket', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>()
+    .$bucket({
+      groupBy: '$year_born', // Field to group by
+      boundaries: [1840, 1850, 1860, 1870, 1880], // Boundaries for the buckets
+      default: 'Other', // Bucket id for documents which do not fall into a bucket
+      output: {
+        // Output for each bucket
+        count: {$sum: 1},
+        artists: {
+          $push: {
+            name: {$concat: ['$first_name', ' ', '$last_name']},
+            year_born: '$year_born',
+          },
+        },
+      },
+    })
+    .$match({count: {$gt: 3}});
+
+  expect(aggregator.query()).toEqual([
+    {
+      $bucket: {
+        groupBy: '$year_born', // Field to group by
+        boundaries: [1840, 1850, 1860, 1870, 1880], // Boundaries for the buckets
+        default: 'Other', // Bucket id for documents which do not fall into a bucket
+        output: {
+          // Output for each bucket
+          count: {$sum: 1},
+          artists: {
+            $push: {
+              name: {$concat: ['$first_name', ' ', '$last_name']},
+              year_born: '$year_born',
+            },
+          },
+        },
+      },
+    },
+    {$match: {count: {$gt: 3}}},
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {_id: 1840 | 1850 | 1860 | 1870 | 1880 | 'Other'; count: number; artists: {name: string; year_born: number}[]},
+      typeof result
+    >
+  >(true);
+});
+
+test('$bucket.noDefault', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>()
+    .$bucket({
+      groupBy: '$year_born', // Field to group by
+      boundaries: [1840, 1850, 1860, 1870, 1880], // Boundaries for the buckets
+      output: {
+        // Output for each bucket
+        count: {$sum: 1},
+        artists: {
+          $push: {
+            name: {$concat: ['$first_name', ' ', '$last_name']},
+            year_born: '$year_born',
+          },
+        },
+      },
+    })
+    .$match({count: {$gt: 3}});
+
+  expect(aggregator.query()).toEqual([
+    {
+      $bucket: {
+        groupBy: '$year_born', // Field to group by
+        boundaries: [1840, 1850, 1860, 1870, 1880], // Boundaries for the buckets
+        output: {
+          // Output for each bucket
+          count: {$sum: 1},
+          artists: {
+            $push: {
+              name: {$concat: ['$first_name', ' ', '$last_name']},
+              year_born: '$year_born',
+            },
+          },
+        },
+      },
+    },
+    {$match: {count: {$gt: 3}}},
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {_id: 1840 | 1850 | 1860 | 1870 | 1880; count: number; artists: {name: string; year_born: number}[]},
+      typeof result
+    >
+  >(true);
+});
