@@ -3,7 +3,7 @@ import {Aggregator, GraphDeep, tableName} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, NotHas, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
-import {DeepKeys, ObjectID} from 'mongodb';
+import {AggregationCursor, DeepKeys, ObjectID} from 'mongodb';
 import {Combine, ReplaceKey} from './typeUtils';
 
 const mockCollection: any = {
@@ -1087,7 +1087,7 @@ test('$merge', async () => {
   expect(aggregator.query()).toEqual([{$merge: {into: 'artist2'}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<IsExact<void, typeof result>>(true);
+  assert<IsExact<never, typeof result>>(true);
 });
 
 test('$merge.on', async () => {
@@ -1118,7 +1118,7 @@ test('$merge.on', async () => {
   expect(aggregator.query()).toEqual([{$merge: {into: 'artist2', on: 'last_name'}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<IsExact<void, typeof result>>(true);
+  assert<IsExact<never, typeof result>>(true);
 });
 test('$merge.on', async () => {
   type Artist = {
@@ -1148,7 +1148,7 @@ test('$merge.on', async () => {
   expect(aggregator.query()).toEqual([{$merge: {into: 'artist2', on: ['_id', 'last_name']}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<IsExact<void, typeof result>>(true);
+  assert<IsExact<never, typeof result>>(true);
 });
 test('$merge.onWhenMatched', async () => {
   type Artist = {
@@ -1182,7 +1182,7 @@ test('$merge.onWhenMatched', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<IsExact<void, typeof result>>(true);
+  assert<IsExact<never, typeof result>>(true);
 });
 
 test('$merge.pipeline', async () => {
@@ -1235,7 +1235,7 @@ test('$merge.pipeline', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<IsExact<void, typeof result>>(true);
+  assert<IsExact<never, typeof result>>(true);
 });
 
 test('$merge.pipeline.new', async () => {
@@ -1267,7 +1267,6 @@ test('$merge.pipeline.new', async () => {
         thumbsdown: {$concat: ['$nationality', '$$new.first_name']},
       }),
   });
-
   expect(aggregator.query()).toEqual([
     {
       $merge: {
@@ -1286,5 +1285,45 @@ test('$merge.pipeline.new', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<IsExact<void, typeof result>>(true);
+  assert<IsExact<never, typeof result>>(true);
+});
+
+test('$out', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$out(tableName<Artist>('shoes'));
+  expect(aggregator.query()).toEqual([
+    {
+      $out: 'shoes',
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<never, typeof result>>(true);
+});
+
+test('resultCursor', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$project({shoes: '$last_name'});
+  expect(aggregator.query()).toEqual([{$project: {shoes: '$last_name'}}]);
+
+  const result = await aggregator.resultCursor(mockCollection);
+  assert<IsExact<AggregationCursor<{shoes: string}>, typeof result>>(true);
 });

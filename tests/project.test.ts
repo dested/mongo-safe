@@ -222,6 +222,228 @@ test('project.$cmp', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{cmpTo250: number}, typeof result>>(true);
 });
+test('project.$dateFromParts', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $dateFromParts: {
+        year: 12,
+        month: '$someRootNumber',
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $dateFromParts: {
+            year: 12,
+            month: '$someRootNumber',
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{date: Date}, typeof result>>(true);
+});
+test('project.$dateToParts', async () => {
+  let date1 = new Date();
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $dateToParts: {
+        date: date1,
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $dateToParts: {
+            date: date1,
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {
+        date: {
+          year: number;
+          month: number;
+          day: number;
+          hour: number;
+          minute: number;
+          second: number;
+          millisecond: number;
+        };
+      },
+      typeof result
+    >
+  >(true);
+});
+test('project.$dateToParts.iso', async () => {
+  let date1 = new Date();
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $dateToParts: {
+        date: date1,
+        iso8601: true,
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $dateToParts: {
+            date: date1,
+            iso8601: true,
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {
+        date: {
+          isoWeekYear: number;
+          isoWeek: number;
+          isoDayOfWeek: number;
+          hour: number;
+          minute: number;
+          second: number;
+          millisecond: number;
+        };
+      },
+      typeof result
+    >
+  >(true);
+});
+test('project.$dayOfYear.noTimezone', async () => {
+  let date1 = new Date();
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $dayOfYear: {
+        date: date1,
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $dayOfYear: {
+            date: date1,
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {
+        date: number;
+      },
+      typeof result
+    >
+  >(true);
+});
+test('project.$dayOfYear.timezone', async () => {
+  let date1 = new Date();
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $dayOfYear: {
+        date: date1,
+        timezone: 'timezone',
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $dayOfYear: {
+            date: date1,
+            timezone: 'timezone',
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {
+        date: number;
+      },
+      typeof result
+    >
+  >(true);
+});
+test('project.$dayOfYear', async () => {
+  let date1 = new Date();
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $dayOfYear: date1,
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $dayOfYear: date1,
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {
+        date: number;
+      },
+      typeof result
+    >
+  >(true);
+});
+test('project.$indexOfArray', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    date: {
+      $indexOfArray: [[1, 2, 3], 1],
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        date: {
+          $indexOfArray: [[1, 2, 3], 1],
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    Has<
+      {
+        date: number;
+      },
+      typeof result
+    >
+  >(true);
+});
 
 test('project.$eq.ref', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
