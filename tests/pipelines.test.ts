@@ -1059,3 +1059,232 @@ test('$redact', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<IsExact<Item, typeof result>>(true);
 });
+
+test('$merge', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$merge({
+    into: tableName<Artist2>('artist2'),
+  });
+
+  expect(aggregator.query()).toEqual([{$merge: {into: 'artist2'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<void, typeof result>>(true);
+});
+
+test('$merge.on', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$merge({
+    into: tableName<Artist2>('artist2'),
+    on: 'last_name',
+  });
+
+  expect(aggregator.query()).toEqual([{$merge: {into: 'artist2', on: 'last_name'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<void, typeof result>>(true);
+});
+test('$merge.on', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$merge({
+    into: tableName<Artist2>('artist2'),
+    on: ['_id', 'last_name'],
+  });
+
+  expect(aggregator.query()).toEqual([{$merge: {into: 'artist2', on: ['_id', 'last_name']}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<void, typeof result>>(true);
+});
+test('$merge.onWhenMatched', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$merge({
+    into: tableName<Artist2>('artist2'),
+    on: '_id',
+    whenMatched: 'replace',
+    whenNotMatched: 'discard',
+  });
+
+  expect(aggregator.query()).toEqual([
+    {$merge: {into: 'artist2', on: '_id', whenMatched: 'replace', whenNotMatched: 'discard'}},
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<void, typeof result>>(true);
+});
+
+test('$merge.pipeline', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$merge({
+    into: tableName<Artist2>('artist2'),
+    on: '_id',
+    let: {shoes: {test: '$nationality'}},
+    whenMatched: (agg) =>
+      agg.$addFields({
+        thumbsup: {$concat: ['$nationality', '$$shoes.test']},
+        thumbsdown: {$concat: ['$nationality', '$$shoes.test']},
+      }),
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $merge: {
+        into: 'artist2',
+        on: '_id',
+        let: {shoes: {test: '$nationality'}},
+        whenMatched: [
+          {
+            $addFields: {
+              thumbsup: {$concat: ['$nationality', '$$shoes.test']},
+              thumbsdown: {$concat: ['$nationality', '$$shoes.test']},
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<void, typeof result>>(true);
+});
+
+test('$merge.pipeline.new', async () => {
+  type Artist = {
+    _id: number;
+    last_name: string;
+    first_name: string;
+    year_born: number;
+    year_died: number;
+    price: number;
+    nationality: string;
+  };
+  type Artist2 = {
+    _id: number;
+    last_name: string;
+    first_name2: string;
+    year_born2: number;
+    year_died2: number;
+    price2: number;
+    nationality2: string;
+  };
+
+  const aggregator = Aggregator.start<Artist>().$merge({
+    into: tableName<Artist2>('artist2'),
+    on: '_id',
+    whenMatched: (agg) =>
+      agg.$addFields({
+        thumbsup: {$concat: ['$nationality', '$$new.first_name']},
+        thumbsdown: {$concat: ['$nationality', '$$new.first_name']},
+      }),
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $merge: {
+        into: 'artist2',
+        on: '_id',
+        whenMatched: [
+          {
+            $addFields: {
+              thumbsup: {$concat: ['$nationality', '$$new.first_name']},
+              thumbsdown: {$concat: ['$nationality', '$$new.first_name']},
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<void, typeof result>>(true);
+});

@@ -610,7 +610,18 @@ export declare class Aggregator<T> {
         [key in TAs]: TPipeline[];
     })>;
     $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T>;
-    $merge(): Aggregator<T>;
+    $merge<TOtherCollection, TOn, TLet extends {} = never, TPipeline extends {} = never>(props: {
+        into: TableName<TOtherCollection> | {
+            db: string;
+            coll: TableName<TOtherCollection>;
+        };
+        on?: (DeepKeys<T> & DeepKeys<TOtherCollection>) | (DeepKeys<T> & DeepKeys<TOtherCollection>)[];
+        let?: ProjectObject<T, TLet>;
+        whenMatched?: 'replace' | 'keepExisting' | 'merge' | 'fail' | ((agg: Aggregator<T & ([TLet] extends [never] ? Double$Keys<{
+            new: T;
+        }> : ProjectResult<T, TLet> extends infer R ? Double$Keys<R> : never)>) => Aggregator<TPipeline>);
+        whenNotMatched?: 'insert' | 'discard' | 'fail';
+    }): Aggregator<void>;
     $out(tableName: string): Aggregator<void>;
     $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>;
     $redact<TExpression>(expression: ProjectResult<T, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP' ? InterpretProjectExpression<T, TExpression> : never): Aggregator<T>;

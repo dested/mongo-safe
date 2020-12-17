@@ -1,18 +1,12 @@
 import {
   DeepKeys,
   DeepKeysResult,
-  DeepKeysValue,
-  FilterQuery,
   NumericTypes,
   Collection,
   ObjectID,
   ObjectId,
   DeepKeyArray,
   AggregationCursor,
-  QuerySelector,
-  RootQuerySelector,
-  MongoAltQuery,
-  BSONType,
 } from 'mongodb';
 import {FilterQueryMatch} from './filterQueryMatch';
 
@@ -986,8 +980,33 @@ export class Aggregator<T> {
     return new Aggregator<T>(this);
   }
 
-  $merge(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $merge<TOtherCollection, TOn, TLet extends {} = never, TPipeline extends {} = never>(props: {
+    into: TableName<TOtherCollection> | {db: string; coll: TableName<TOtherCollection>};
+    on?: (DeepKeys<T> & DeepKeys<TOtherCollection>) | (DeepKeys<T> & DeepKeys<TOtherCollection>)[];
+    let?: ProjectObject<T, TLet>;
+    whenMatched?:
+      | 'replace'
+      | 'keepExisting'
+      | 'merge'
+      | 'fail'
+      | ((
+          agg: Aggregator<
+            T &
+              ([TLet] extends [never]
+                ? Double$Keys<{new: T}>
+                : ProjectResult<T, TLet> extends infer R
+                ? Double$Keys<R>
+                : never)
+          >
+        ) => Aggregator<TPipeline>);
+    whenNotMatched?: 'insert' | 'discard' | 'fail';
+  }): Aggregator<void> {
+    if (props.whenMatched && typeof props.whenMatched === 'function') {
+      this.currentPipeline = {$merge: {...props, whenMatched: props.whenMatched(new Aggregator<any>()).query()}};
+    } else {
+      this.currentPipeline = {$merge: props};
+    }
+    return new Aggregator<void>(this);
   }
 
   $out(tableName: string): Aggregator<void> {
