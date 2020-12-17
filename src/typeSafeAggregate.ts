@@ -863,13 +863,14 @@ export class Aggregator<T> {
   $listSessions(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $lookup<TLookupTable, TAs extends string, TLet extends {} = never>(props: {
+  $lookup<TLookupTable, TAs extends string, TLet extends {} = never, TPipeline extends {} = never>(props: {
     //todo document this trick
     from: TableName<TLookupTable>;
     localField: DeepKeys<T>;
     foreignField: DeepKeys<TLookupTable>;
     as: TAs;
     let?: ProjectObject<T, TLet>;
+    pipeline?: ProjectObject<T, TPipeline>;
   }): Aggregator<
     //todo document this trick
     T & ([TLet] extends [never] ? {[key in TAs]: TLookupTable[]} : {[key in TAs]: ProjectResult<T, TLet>[]})
@@ -915,8 +916,11 @@ export class Aggregator<T> {
   $redact(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-  $replaceRoot(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $replaceRoot<TNewRootValue, TNewRoot extends {newRoot: TNewRootValue}>(params: {
+    newRoot: InterpretProjectExpression<T, TNewRootValue>;
+  }): Aggregator<ProjectResult<T, TNewRootValue>> {
+    this.currentPipeline = {$project: params};
+    return new Aggregator<ProjectResult<T, TNewRootValue>>(this);
   }
   $replaceWith(): Aggregator<T> {
     throw new Error('Not Implemented');

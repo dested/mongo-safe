@@ -533,11 +533,23 @@ test('$count', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{amount: number}, typeof result>>(true);
 });
-test('$lookup-let', async () => {
-  const aggregator = Aggregator.start<DBCar>().$count('amount');
+test('$replaceRoot.simple', async () => {
+  const aggregator = Aggregator.start<DBCar>().$replaceRoot({
+    newRoot: '$someDate',
+  });
 
-  expect(aggregator.query()).toEqual([{$count: 'amount'}]);
+  expect(aggregator.query()).toEqual([{$replaceRoot: {newRoot: '$someDate'}}]);
 
   const [result] = await aggregator.result(mockCollection);
-  assert<Has<{amount: number}, typeof result>>(true);
+  assert<Has<Date, typeof result>>(true);
+});
+test('$replaceRoot.complex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$replaceRoot({
+    newRoot: {shoes: '$doors.someDate'},
+  });
+
+  expect(aggregator.query()).toEqual([{$replaceRoot: {newRoot: {shoes: '$doors.someDate'}}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{shoes: Date}, typeof result>>(true);
 });

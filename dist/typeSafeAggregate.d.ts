@@ -556,12 +556,13 @@ export declare class Aggregator<T> {
     $limit(limit: number): Aggregator<T>;
     $listLocalSessions(): Aggregator<T>;
     $listSessions(): Aggregator<T>;
-    $lookup<TLookupTable, TAs extends string, TLet extends {} = never>(props: {
+    $lookup<TLookupTable, TAs extends string, TLet extends {} = never, TPipeline extends {} = never>(props: {
         from: TableName<TLookupTable>;
         localField: DeepKeys<T>;
         foreignField: DeepKeys<TLookupTable>;
         as: TAs;
         let?: ProjectObject<T, TLet>;
+        pipeline?: ProjectObject<T, TPipeline>;
     }): Aggregator<T & ([TLet] extends [never] ? {
         [key in TAs]: TLookupTable[];
     } : {
@@ -573,7 +574,11 @@ export declare class Aggregator<T> {
     $planCacheStats(): Aggregator<T>;
     $project<TProject>(query: ProjectObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>;
     $redact(): Aggregator<T>;
-    $replaceRoot(): Aggregator<T>;
+    $replaceRoot<TNewRootValue, TNewRoot extends {
+        newRoot: TNewRootValue;
+    }>(params: {
+        newRoot: InterpretProjectExpression<T, TNewRootValue>;
+    }): Aggregator<ProjectResult<T, TNewRootValue>>;
     $replaceWith(): Aggregator<T>;
     $sample(props: {
         size: number;
