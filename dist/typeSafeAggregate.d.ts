@@ -510,6 +510,9 @@ declare type TableName<TTable> = string & {
     __table: TTable;
 };
 export declare function tableName<TTable extends {}>(tableName: string): TableName<TTable>;
+declare type Double$Keys<T> = {
+    [key in keyof T as `$${key extends string ? key : never}`]: T[key];
+};
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
@@ -561,12 +564,14 @@ export declare class Aggregator<T> {
         localField: DeepKeys<T>;
         foreignField: DeepKeys<TLookupTable>;
         as: TAs;
-        let?: ProjectObject<T, TLet>;
-        pipeline?: ProjectObject<T, TPipeline>;
-    }): Aggregator<T & ([TLet] extends [never] ? {
+        let?: ProjectObject<TLookupTable, TLet>;
+        pipeline?: (agg: Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>) => Aggregator<TPipeline>;
+    }): Aggregator<T & ([TPipeline] extends [never] ? [TLet] extends [never] ? {
         [key in TAs]: TLookupTable[];
     } : {
-        [key in TAs]: ProjectResult<T, TLet>[];
+        [key in TAs]: ProjectResult<TLookupTable, TLet>[];
+    } : {
+        [key in TAs]: TPipeline[];
     })>;
     $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T>;
     $merge(): Aggregator<T>;

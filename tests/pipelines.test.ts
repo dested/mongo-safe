@@ -155,12 +155,63 @@ test('$lookup.let', async () => {
         localField: '_id',
         foreignField: 'carId',
         as: 'windows',
+        let: {a: 12},
       },
     },
   ]);
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar & {windows: {a: 12}[]}, typeof result>>(true);
+});
+test('$lookup.letComplex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$lookup({
+    from: tableName<DBWindow>('window'),
+    localField: '_id',
+    foreignField: 'carId',
+    as: 'windows',
+    let: {a: '$carId'},
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $lookup: {
+        from: 'window',
+        localField: '_id',
+        foreignField: 'carId',
+        as: 'windows',
+        let: {a: '$carId'},
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<DBCar & {windows: {a: ObjectID}[]}, typeof result>>(true);
+});
+test('$lookup.pipeline.let', async () => {
+  const aggregator = Aggregator.start<DBCar>().$lookup({
+    from: tableName<DBWindow>('window'),
+    localField: '_id',
+    foreignField: 'carId',
+    as: 'windows',
+    let: {a: '$carId'},
+    pipeline: (agg) => agg.$project({shoes: '$$a'}),
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $lookup: {
+        from: 'window',
+        localField: '_id',
+        foreignField: 'carId',
+        as: 'windows',
+        let: {a: '$carId'},
+        pipeline: [{$project: {shoes: '$$a'}}],
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<DBCar & {windows: {shoes: ObjectID}[]}, typeof result>>(true);
 });
 
 test('$addField.simple', async () => {
@@ -533,6 +584,7 @@ test('$count', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{amount: number}, typeof result>>(true);
 });
+
 test('$replaceRoot.simple', async () => {
   const aggregator = Aggregator.start<DBCar>().$replaceRoot({
     newRoot: '$someDate',
@@ -543,6 +595,7 @@ test('$replaceRoot.simple', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<Date, typeof result>>(true);
 });
+
 test('$replaceRoot.complex', async () => {
   const aggregator = Aggregator.start<DBCar>().$replaceRoot({
     newRoot: {shoes: '$doors.someDate'},

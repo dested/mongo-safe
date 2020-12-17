@@ -768,10 +768,13 @@ export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = 
 
 type Simplify<T> = T extends object | any[] ? {[K in keyof T]: T[K]} : T;
 
+//todo document this trick
 type TableName<TTable> = string & {__table: TTable};
 export function tableName<TTable extends {}>(tableName: string): TableName<TTable> {
   return tableName as TableName<TTable>;
 }
+
+type Double$Keys<T> = {[key in keyof T as `$${key extends string ? key : never}`]: T[key]};
 
 export class Aggregator<T> {
   private currentPipeline?: {};
@@ -864,16 +867,23 @@ export class Aggregator<T> {
     throw new Error('Not Implemented');
   }
   $lookup<TLookupTable, TAs extends string, TLet extends {} = never, TPipeline extends {} = never>(props: {
-    //todo document this trick
     from: TableName<TLookupTable>;
     localField: DeepKeys<T>;
     foreignField: DeepKeys<TLookupTable>;
     as: TAs;
-    let?: ProjectObject<T, TLet>;
-    pipeline?: ProjectObject<T, TPipeline>;
+    let?: ProjectObject<TLookupTable, TLet>;
+    pipeline?: (
+      // somehow you overcame deep nested with this again. it defers testing of the types until its sure that its ary, and not just thinks it is
+      agg: Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>
+    ) => Aggregator<TPipeline>;
   }): Aggregator<
-    //todo document this trick
-    T & ([TLet] extends [never] ? {[key in TAs]: TLookupTable[]} : {[key in TAs]: ProjectResult<T, TLet>[]})
+    T &
+      //todo document this [never]
+      ([TPipeline] extends [never]
+        ? [TLet] extends [never]
+          ? {[key in TAs]: TLookupTable[]}
+          : {[key in TAs]: ProjectResult<TLookupTable, TLet>[]}
+        : {[key in TAs]: TPipeline[]})
   > {
     this.currentPipeline = {
       $lookup: {
@@ -881,10 +891,21 @@ export class Aggregator<T> {
         localField: props.localField,
         foreignField: props.foreignField,
         as: props.as,
+        let: props.let,
+        pipeline: props.pipeline
+          ? props
+              .pipeline(new Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>())
+              .query()
+          : undefined,
       },
     };
     return new Aggregator<
-      T & ([TLet] extends [never] ? {[key in TAs]: TLookupTable[]} : {[key in TAs]: ProjectResult<T, TLet>[]})
+      T &
+        ([TPipeline] extends [never]
+          ? [TLet] extends [never]
+            ? {[key in TAs]: TLookupTable[]}
+            : {[key in TAs]: ProjectResult<TLookupTable, TLet>[]}
+          : {[key in TAs]: TPipeline[]})
     >(this);
   }
 
@@ -919,7 +940,7 @@ export class Aggregator<T> {
   $replaceRoot<TNewRootValue, TNewRoot extends {newRoot: TNewRootValue}>(params: {
     newRoot: InterpretProjectExpression<T, TNewRootValue>;
   }): Aggregator<ProjectResult<T, TNewRootValue>> {
-    this.currentPipeline = {$project: params};
+    this.currentPipeline = {$replaceRoot: params};
     return new Aggregator<ProjectResult<T, TNewRootValue>>(this);
   }
   $replaceWith(): Aggregator<T> {
