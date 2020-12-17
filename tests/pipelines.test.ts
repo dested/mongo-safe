@@ -1,9 +1,9 @@
 /// <reference path="../mongodb.d.ts"/>
-import {Aggregator, GraphDeep} from '../src/typeSafeAggregate';
+import {Aggregator, GraphDeep, tableName} from '../src/typeSafeAggregate';
 import {Bolt, Carburetor, CarburetorBase, Color, DBCar, Door} from './models/dbCar';
 import {assert, Has, NotHas, IsExact} from 'conditional-type-checks';
 import {DBWindow} from './models/dbWindow';
-import {ObjectID} from 'mongodb';
+import {DeepKeys, ObjectID} from 'mongodb';
 import {Combine, ReplaceKey} from './typeUtils';
 
 const mockCollection: any = {
@@ -117,8 +117,8 @@ test('$project.array', async () => {
 });
 
 test('$lookup', async () => {
-  const aggregator = Aggregator.start<DBCar>().$lookup<DBWindow, 'windows'>({
-    from: 'window',
+  const aggregator = Aggregator.start<DBCar>().$lookup({
+    from: tableName<DBWindow>('window'),
     localField: '_id',
     foreignField: 'carId',
     as: 'windows',
@@ -137,6 +137,30 @@ test('$lookup', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar & {windows: DBWindow[]}, typeof result>>(true);
+});
+
+test('$lookup.let', async () => {
+  const aggregator = Aggregator.start<DBCar>().$lookup({
+    from: tableName<DBWindow>('window'),
+    localField: '_id',
+    foreignField: 'carId',
+    as: 'windows',
+    let: {a: 12},
+  });
+
+  expect(aggregator.query()).toEqual([
+    {
+      $lookup: {
+        from: 'window',
+        localField: '_id',
+        foreignField: 'carId',
+        as: 'windows',
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<DBCar & {windows: {a: 12}[]}, typeof result>>(true);
 });
 
 test('$addField.simple', async () => {
@@ -201,8 +225,8 @@ test('$unwind.includeArrayIndex', async () => {
 });
 
 test('$graphLookup.otherTable', async () => {
-  const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes'>({
-    from: 'window',
+  const aggregator = Aggregator.start<DBCar>().$graphLookup({
+    from: tableName<DBWindow>('window'),
     startWith: '$doors',
     as: 'shoes',
     connectFromField: 'someDate',
@@ -226,8 +250,8 @@ test('$graphLookup.otherTable', async () => {
 });
 
 test('$graphLookup.sameTable', async () => {
-  const aggregator = Aggregator.start<DBCar>().$graphLookup<DBCar, 'shoes'>({
-    from: 'car',
+  const aggregator = Aggregator.start<DBCar>().$graphLookup({
+    from: tableName<DBCar>('car'),
     startWith: '$color',
     as: 'shoes',
     connectFromField: 'carburetor',
@@ -251,22 +275,22 @@ test('$graphLookup.sameTable', async () => {
 });
 test('$graphLookup.double', async () => {
   const aggregator = Aggregator.start<DBCar>()
-    .$graphLookup<DBCar, 'shoes'>({
-      from: 'car',
+    .$graphLookup({
+      from: tableName<DBCar>('car'),
       startWith: '$color',
       as: 'shoes',
       connectFromField: 'carburetor',
       connectToField: 'doors',
     })
-    .$graphLookup<DBCar, 'shoes2'>({
-      from: 'car',
+    .$graphLookup({
+      from: tableName<DBCar>('car'),
       startWith: '$color',
       as: 'shoes2',
       connectFromField: 'carburetor',
       connectToField: 'doors',
     })
-    .$graphLookup<DBCar, 'shoes3'>({
-      from: 'car',
+    .$graphLookup({
+      from: tableName<DBCar>('car'),
       startWith: '$color',
       as: 'shoes3',
       connectFromField: 'carburetor',
@@ -279,8 +303,8 @@ test('$graphLookup.double', async () => {
 });
 
 test('$graphLookup.depthField', async () => {
-  const aggregator = Aggregator.start<DBCar>().$graphLookup<DBWindow, 'shoes', 'numConnections'>({
-    from: 'window',
+  const aggregator = Aggregator.start<DBCar>().$graphLookup({
+    from: tableName<DBWindow>('window'),
     startWith: '$color',
     as: 'shoes',
     connectFromField: 'carburetor',
@@ -502,6 +526,14 @@ test('$project.$sum', async () => {
 });
 
 test('$count', async () => {
+  const aggregator = Aggregator.start<DBCar>().$count('amount');
+
+  expect(aggregator.query()).toEqual([{$count: 'amount'}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{amount: number}, typeof result>>(true);
+});
+test('$lookup-let', async () => {
   const aggregator = Aggregator.start<DBCar>().$count('amount');
 
   expect(aggregator.query()).toEqual([{$count: 'amount'}]);

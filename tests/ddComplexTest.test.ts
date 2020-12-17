@@ -1,6 +1,6 @@
 import {assert, Has} from 'conditional-type-checks';
 import {ObjectID} from 'bson';
-import {Aggregator} from '../src';
+import {Aggregator, tableName} from '../src';
 export class MongoDocument {
   _id!: ObjectID;
 }
@@ -93,32 +93,32 @@ test('complex1', async () => {
       otherUser1Id: 1,
       otherUser2Id: 2,
     })
-    .$lookup<DBRelationship, 'relationship'>({
-      from: 'relationship',
+    .$lookup({
+      from: tableName<DBRelationship>('relationship'),
       localField: 'relationshipId',
       foreignField: '_id',
       as: 'relationship',
     })
-    .$lookup<DBUser, 'user1'>({
-      from: 'user',
+    .$lookup({
+      from: tableName<DBUser>('user'),
       localField: 'user1Id',
       foreignField: '_id',
       as: 'user1',
     })
-    .$lookup<DBUser, 'user2'>({
-      from: 'user',
+    .$lookup({
+      from: tableName<DBUser>('user'),
       localField: 'user2Id',
       foreignField: '_id',
       as: 'user2',
     })
-    .$lookup<DBUser, 'otherUser1'>({
-      from: 'user',
+    .$lookup({
+      from: tableName<DBUser>('user'),
       localField: 'otherUser1Id',
       foreignField: '_id',
       as: 'otherUser1',
     })
-    .$lookup<DBUser, 'otherUser2'>({
-      from: 'user',
+    .$lookup({
+      from: tableName<DBUser>('user'),
       localField: 'otherUser2Id',
       foreignField: '_id',
       as: 'otherUser2',

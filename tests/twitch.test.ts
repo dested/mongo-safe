@@ -65,7 +65,7 @@ export type DbChannelModel = {
   twitchChannelId: string;
 };
 
-test('$group.notExcessive', async () => {
+test('notExcessive', async () => {
   const j: DeepKeys<DbChannelModel> = 'emoteSet.result.bits_badges.25000';
   assert(true);
 });

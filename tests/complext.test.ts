@@ -5,6 +5,7 @@ import {assert, AssertFalse, AssertTrue, Has, IsExact} from 'conditional-type-ch
 import {DBWindow} from './models/dbWindow';
 import {DBTire} from './models/dbTire';
 import {ObjectID} from 'mongodb';
+import {tableName} from '../src/typeSafeAggregate';
 
 const mockCollection: any = {
   aggregate: () => ({
@@ -14,14 +15,14 @@ const mockCollection: any = {
 
 test('complex1', async () => {
   const aggregator = Aggregator.start<DBCar>()
-    .$lookup<DBWindow, 'windows'>({
-      from: 'window',
+    .$lookup({
+      from: tableName<DBWindow>('window'),
       localField: '_id',
       foreignField: 'carId',
       as: 'windows',
     })
-    .$lookup<DBTire, 'tires'>({
-      from: 'tire',
+    .$lookup({
+      from: tableName<DBTire>('tire'),
       localField: '_id',
       foreignField: 'carId',
       as: 'tires',

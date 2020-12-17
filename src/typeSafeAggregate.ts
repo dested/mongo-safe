@@ -185,238 +185,274 @@ type ExpressionOrAny<TTest, TRootValue, TForceValue = any> = TTest extends `$${i
   : any;
 */
 
-type InterpretProjectOperator<TRootValue, TValue> = {
-  $abs?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$abs'>>;
-  $acos?: NotImplementedYet;
-  $acosh?: NotImplementedYet;
-  $add?: LookupKey<TValue, '$add'> extends Array<InterpretProjectExpression<TRootValue, infer TAdds>>
-    ? InterpretProjectExpression<TRootValue, TAdds>[]
-    : never;
-  $addToSet?: LookupKey<TValue, '$addToSet'> extends InterpretProjectExpression<TRootValue, infer TAddToSet>
-    ? InterpretProjectExpression<TRootValue, TAddToSet>
-    : never;
-  $allElementsTrue?: NotImplementedYet;
-  $and?: NotImplementedYet;
-  $anyElementTrue?: NotImplementedYet;
-  $arrayElemAt?: LookupKey<TValue, '$arrayElemAt'> extends [
-    InterpretProjectExpression<TRootValue, infer TArray>,
-    InterpretProjectExpression<TRootValue, infer TIndex>
-  ]
-    ? [InterpretProjectExpression<TRootValue, TArray>, InterpretProjectExpression<TRootValue, TIndex>]
-    : never;
-  $arrayToObject?: NotImplementedYet;
-  $asin?: NotImplementedYet;
-  $asinh?: NotImplementedYet;
-  $atan?: NotImplementedYet;
-  $atan2?: NotImplementedYet;
-  $atanh?: NotImplementedYet;
-  $avg?: NotImplementedYet;
-  $ceil?: NotImplementedYet;
-  $cmp?: NotImplementedYet;
-  $concat?: LookupKey<TValue, '$concat'> extends InterpretProjectExpression<TRootValue, infer TConcat>[]
-    ? InterpretProjectExpression<TRootValue, TConcat>[]
-    : never;
-  $concatArrays?: NotImplementedYet;
-  $cond?:
-    | [
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 0>>,
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>>,
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>>
+type InterpretProjectOperator<TRootValue, TValue> =
+  | {$abs: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$abs'>>}
+  | {$acos: NotImplementedYet}
+  | {$acosh: NotImplementedYet}
+  | {
+      $add: LookupKey<TValue, '$add'> extends Array<InterpretProjectExpression<TRootValue, infer TAdds>>
+        ? InterpretProjectExpression<TRootValue, TAdds>[]
+        : never;
+    }
+  | {
+      $addToSet: LookupKey<TValue, '$addToSet'> extends InterpretProjectExpression<TRootValue, infer TAddToSet>
+        ? InterpretProjectExpression<TRootValue, TAddToSet>
+        : never;
+    }
+  | {$allElementsTrue: NotImplementedYet}
+  | {$and: NotImplementedYet}
+  | {$anyElementTrue: NotImplementedYet}
+  | {
+      $arrayElemAt: LookupKey<TValue, '$arrayElemAt'> extends [
+        InterpretProjectExpression<TRootValue, infer TArray>,
+        InterpretProjectExpression<TRootValue, infer TIndex>
       ]
-    | {
-        else: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
-        if: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'if'>>;
-        then: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>;
+        ? [InterpretProjectExpression<TRootValue, TArray>, InterpretProjectExpression<TRootValue, TIndex>]
+        : never;
+    }
+  | {$arrayToObject: NotImplementedYet}
+  | {$asin: NotImplementedYet}
+  | {$asinh: NotImplementedYet}
+  | {$atan: NotImplementedYet}
+  | {$atan2: NotImplementedYet}
+  | {$atanh: NotImplementedYet}
+  | {$avg: NotImplementedYet}
+  | {$ceil: NotImplementedYet}
+  | {$cmp: NotImplementedYet}
+  | {
+      $concat: LookupKey<TValue, '$concat'> extends InterpretProjectExpression<TRootValue, infer TConcat>[]
+        ? InterpretProjectExpression<TRootValue, TConcat>[]
+        : never;
+    }
+  | {$concatArrays: NotImplementedYet}
+  | {
+      $cond:
+        | [
+            InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 0>>,
+            InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 1>>,
+            InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$cond'>, 2>>
+          ]
+        | {
+            else: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+            if: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'if'>>;
+            then: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>;
+          };
+    }
+  | {$convert: NotImplementedYet}
+  | {$cos: NotImplementedYet}
+  | {$dateFromParts: NotImplementedYet}
+  | {$dateFromString: NotImplementedYet}
+  | {$dateToParts: NotImplementedYet}
+  | {
+      $dateToString: {
+        date: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$dateToString'>, 'date'>>;
+        format?: string;
       };
-  $convert?: NotImplementedYet;
-  $cos?: NotImplementedYet;
-  $dateFromParts?: NotImplementedYet;
-  $dateFromString?: NotImplementedYet;
-  $dateToParts?: NotImplementedYet;
-  $dateToString?: {
-    date: InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$dateToString'>, 'date'>>;
-    format?: string;
-  };
-  $dayOfMonth?: NotImplementedYet;
-  $dayOfWeek?: NotImplementedYet;
-  $dayOfYear?: NotImplementedYet;
-  $degreesToRadians?: NotImplementedYet;
-  $divide?: LookupKey<TValue, '$divide'> extends Array<InterpretProjectExpression<TRootValue, infer TDivide>>
-    ? InterpretProjectExpression<TRootValue, TDivide>[]
-    : never;
-
-  $eq?: LookupKey<TValue, '$eq'> extends [
-    InterpretProjectExpression<TRootValue, infer TLeft>,
-    InterpretProjectExpression<TRootValue, infer TRight>
-  ]
-    ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
-    : never;
-  $exp?: NotImplementedYet;
-  $filter?: NotImplementedYet;
-  $first?: LookupKey<TValue, '$first'> extends InterpretProjectExpression<TRootValue, infer TFirst>
-    ? InterpretProjectExpression<TRootValue, TFirst>
-    : never;
-
-  $floor?: NotImplementedYet;
-  $gt?: LookupKey<TValue, '$gt'> extends [
-    InterpretProjectExpression<TRootValue, infer TLeft>,
-    InterpretProjectExpression<TRootValue, infer TRight>
-  ]
-    ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
-    : never;
-  $gte?: LookupKey<TValue, '$gte'> extends [
-    InterpretProjectExpression<TRootValue, infer TLeft>,
-    InterpretProjectExpression<TRootValue, infer TRight>
-  ]
-    ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
-    : never;
-  $hour?: NotImplementedYet;
-  $ifNull?: LookupKey<TValue, '$ifNull'> extends InterpretProjectExpression<TRootValue, infer TIfNull>[]
-    ? InterpretProjectExpression<TRootValue, TIfNull>[]
-    : never;
-  $in?: LookupKey<TValue, '$in'> extends InterpretProjectExpression<TRootValue, infer TIn>
-    ? InterpretProjectExpression<TRootValue, TIn>
-    : never;
-  $indexOfArray?: NotImplementedYet;
-  $indexOfBytes?: NotImplementedYet;
-  $indexOfCP?: NotImplementedYet;
-  $isArray?: NotImplementedYet;
-  $isoDayOfWeek?: NotImplementedYet;
-  $isoWeek?: NotImplementedYet;
-  $isoWeekYear?: NotImplementedYet;
-  $last?: NotImplementedYet;
-  $let?: NotImplementedYet;
-  $literal?: NotImplementedYet;
-  $ln?: NotImplementedYet;
-  $log?: NotImplementedYet;
-  $log10?: NotImplementedYet;
-  $lt?: LookupKey<TValue, '$lt'> extends [
-    InterpretProjectExpression<TRootValue, infer TLeft>,
-    InterpretProjectExpression<TRootValue, infer TRight>
-  ]
-    ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
-    : never;
-  $lte?: LookupKey<TValue, '$lte'> extends [
-    InterpretProjectExpression<TRootValue, infer TLeft>,
-    InterpretProjectExpression<TRootValue, infer TRight>
-  ]
-    ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
-    : never;
-  $ltrim?: NotImplementedYet;
-  $map?: LookupKey<TValue, '$map'> extends {
-    as: string;
-    in: infer TIn;
-    input: ExpressionStringReferenceKey<TRootValue>;
-  }
-    ? {
-        as: LookupKey<LookupKey<TValue, '$map'>, 'as'>;
-        in: ProjectObject<
-          TRootValue &
-            {
-              [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<
-                TRootValue,
-                LookupKey<LookupKey<TValue, '$map'>, 'input'>
-              >;
-            },
-          TIn
-        >;
+    }
+  | {$dayOfMonth: NotImplementedYet}
+  | {$dayOfWeek: NotImplementedYet}
+  | {$dayOfYear: NotImplementedYet}
+  | {$degreesToRadians: NotImplementedYet}
+  | {
+      $divide: LookupKey<TValue, '$divide'> extends Array<InterpretProjectExpression<TRootValue, infer TDivide>>
+        ? InterpretProjectExpression<TRootValue, TDivide>[]
+        : never;
+    }
+  | {
+      $eq: LookupKey<TValue, '$eq'> extends [
+        InterpretProjectExpression<TRootValue, infer TLeft>,
+        InterpretProjectExpression<TRootValue, infer TRight>
+      ]
+        ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
+        : never;
+    }
+  | {$exp: NotImplementedYet}
+  | {$filter: NotImplementedYet}
+  | {
+      $first: LookupKey<TValue, '$first'> extends InterpretProjectExpression<TRootValue, infer TFirst>
+        ? InterpretProjectExpression<TRootValue, TFirst>
+        : never;
+    }
+  | {$floor: NotImplementedYet}
+  | {
+      $gt: LookupKey<TValue, '$gt'> extends [
+        InterpretProjectExpression<TRootValue, infer TLeft>,
+        InterpretProjectExpression<TRootValue, infer TRight>
+      ]
+        ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
+        : never;
+    }
+  | {
+      $gte: LookupKey<TValue, '$gte'> extends [
+        InterpretProjectExpression<TRootValue, infer TLeft>,
+        InterpretProjectExpression<TRootValue, infer TRight>
+      ]
+        ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
+        : never;
+    }
+  | {$hour: NotImplementedYet}
+  | {
+      $ifNull: LookupKey<TValue, '$ifNull'> extends InterpretProjectExpression<TRootValue, infer TIfNull>[]
+        ? InterpretProjectExpression<TRootValue, TIfNull>[]
+        : never;
+    }
+  | {
+      $in: LookupKey<TValue, '$in'> extends InterpretProjectExpression<TRootValue, infer TIn>
+        ? InterpretProjectExpression<TRootValue, TIn>
+        : never;
+    }
+  | {$indexOfArray: NotImplementedYet}
+  | {$indexOfBytes: NotImplementedYet}
+  | {$indexOfCP: NotImplementedYet}
+  | {$isArray: NotImplementedYet}
+  | {$isoDayOfWeek: NotImplementedYet}
+  | {$isoWeek: NotImplementedYet}
+  | {$isoWeekYear: NotImplementedYet}
+  | {$last: NotImplementedYet}
+  | {$let: NotImplementedYet}
+  | {$literal: NotImplementedYet}
+  | {$ln: NotImplementedYet}
+  | {$log: NotImplementedYet}
+  | {$log10: NotImplementedYet}
+  | {
+      $lt: LookupKey<TValue, '$lt'> extends [
+        InterpretProjectExpression<TRootValue, infer TLeft>,
+        InterpretProjectExpression<TRootValue, infer TRight>
+      ]
+        ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
+        : never;
+    }
+  | {
+      $lte: LookupKey<TValue, '$lte'> extends [
+        InterpretProjectExpression<TRootValue, infer TLeft>,
+        InterpretProjectExpression<TRootValue, infer TRight>
+      ]
+        ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
+        : never;
+    }
+  | {$ltrim: NotImplementedYet}
+  | {
+      $map: LookupKey<TValue, '$map'> extends {
+        as: string;
+        in: infer TIn;
         input: ExpressionStringReferenceKey<TRootValue>;
       }
-    : never;
-  $max?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$max'>>;
-  $mergeObjects?: NotImplementedYet;
-  $meta?: NotImplementedYet;
-  $millisecond?: NotImplementedYet;
-  $min?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$min'>>;
-  $minute?: NotImplementedYet;
-  $mod?: NotImplementedYet;
-  $month?: NotImplementedYet;
-  $multiply?: LookupKey<TValue, '$multiply'> extends Array<InterpretProjectExpression<TRootValue, infer TMultiply>>
-    ? InterpretProjectExpression<TRootValue, TMultiply>[]
-    : never;
-
-  $ne?: NotImplementedYet;
-  $not?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$not'>>;
-  $objectToArray?: NotImplementedYet;
-  $or?: NotImplementedYet;
-  $pow?: NotImplementedYet;
-  $push?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$push'>>;
-  $radiansToDegrees?: NotImplementedYet;
-  $range?: NotImplementedYet;
-  $reduce?: NotImplementedYet;
-  $regexFind?: NotImplementedYet;
-  $regexFindAll?: NotImplementedYet;
-  $regexMatch?: NotImplementedYet;
-  $reverseArray?: NotImplementedYet;
-  $round?: NotImplementedYet;
-  $rtrim?: NotImplementedYet;
-  $second?: NotImplementedYet;
-  $setDifference?: NotImplementedYet;
-  $setEquals?: NotImplementedYet;
-  $setIntersection?: InterpretProjectExpression<
-    TRootValue,
-    LookupArray<LookupKey<TValue, '$setIntersection'>, number>
-  >[];
-  $setIsSubset?: NotImplementedYet;
-  $setUnion?: NotImplementedYet;
-  $sin?: NotImplementedYet;
-  $size?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$size'>>;
-  $slice?: NotImplementedYet;
-  $split?: NotImplementedYet;
-  $sqrt?: NotImplementedYet;
-  $stdDevPop?: NotImplementedYet;
-  $stdDevSamp?: NotImplementedYet;
-  $strcasecmp?: NotImplementedYet;
-  $strLenBytes?: NotImplementedYet;
-  $strLenCP?: NotImplementedYet;
-  $substr?: NotImplementedYet;
-  $substrBytes?: NotImplementedYet;
-  $substrCP?: NotImplementedYet;
-  $subtract?: LookupKey<TValue, '$subtract'> extends Array<InterpretProjectExpression<TRootValue, infer TSubtract>>
-    ? InterpretProjectExpression<TRootValue, TSubtract>[]
-    : never;
-  $sum?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$sum'>>;
-
-  $switch?: LookupKey<TValue, '$switch'> extends {
-    branches: {
-      case: InterpretProjectExpression<TRootValue, infer TBranchCase>;
-      then: InterpretProjectExpression<TRootValue, infer TBranchThen>;
-    }[];
-    default?: InterpretProjectExpression<TRootValue, infer TDefault>;
-  }
-    ? {
+        ? {
+            as: LookupKey<LookupKey<TValue, '$map'>, 'as'>;
+            in: ProjectObject<
+              TRootValue &
+                {
+                  [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<
+                    TRootValue,
+                    LookupKey<LookupKey<TValue, '$map'>, 'input'>
+                  >;
+                },
+              TIn
+            >;
+            input: ExpressionStringReferenceKey<TRootValue>;
+          }
+        : never;
+    }
+  | {$max: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$max'>>}
+  | {$mergeObjects: NotImplementedYet}
+  | {$meta: NotImplementedYet}
+  | {$millisecond: NotImplementedYet}
+  | {$min: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$min'>>}
+  | {$minute: NotImplementedYet}
+  | {$mod: NotImplementedYet}
+  | {$month: NotImplementedYet}
+  | {
+      $multiply: LookupKey<TValue, '$multiply'> extends Array<InterpretProjectExpression<TRootValue, infer TMultiply>>
+        ? InterpretProjectExpression<TRootValue, TMultiply>[]
+        : never;
+    }
+  | {$ne: NotImplementedYet}
+  | {$not: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$not'>>}
+  | {$objectToArray: NotImplementedYet}
+  | {$or: NotImplementedYet}
+  | {$pow: NotImplementedYet}
+  | {$push: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$push'>>}
+  | {$radiansToDegrees: NotImplementedYet}
+  | {$range: NotImplementedYet}
+  | {$reduce: NotImplementedYet}
+  | {$regexFind: NotImplementedYet}
+  | {$regexFindAll: NotImplementedYet}
+  | {$regexMatch: NotImplementedYet}
+  | {$reverseArray: NotImplementedYet}
+  | {$round: NotImplementedYet}
+  | {$rtrim: NotImplementedYet}
+  | {$second: NotImplementedYet}
+  | {$setDifference: NotImplementedYet}
+  | {$setEquals: NotImplementedYet}
+  | {
+      $setIntersection: InterpretProjectExpression<
+        TRootValue,
+        LookupArray<LookupKey<TValue, '$setIntersection'>, number>
+      >[];
+    }
+  | {$setIsSubset: NotImplementedYet}
+  | {$setUnion: NotImplementedYet}
+  | {$sin: NotImplementedYet}
+  | {$size: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$size'>>}
+  | {$slice: NotImplementedYet}
+  | {$split: NotImplementedYet}
+  | {$sqrt: NotImplementedYet}
+  | {$stdDevPop: NotImplementedYet}
+  | {$stdDevSamp: NotImplementedYet}
+  | {$strcasecmp: NotImplementedYet}
+  | {$strLenBytes: NotImplementedYet}
+  | {$strLenCP: NotImplementedYet}
+  | {$substr: NotImplementedYet}
+  | {$substrBytes: NotImplementedYet}
+  | {$substrCP: NotImplementedYet}
+  | {
+      $subtract: LookupKey<TValue, '$subtract'> extends Array<InterpretProjectExpression<TRootValue, infer TSubtract>>
+        ? InterpretProjectExpression<TRootValue, TSubtract>[]
+        : never;
+    }
+  | {$sum: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$sum'>>}
+  | {
+      $switch: LookupKey<TValue, '$switch'> extends {
         branches: {
-          case: InterpretProjectExpression<TRootValue, TBranchCase>;
-          then: InterpretProjectExpression<TRootValue, TBranchThen>;
+          case: InterpretProjectExpression<TRootValue, infer TBranchCase>;
+          then: InterpretProjectExpression<TRootValue, infer TBranchThen>;
         }[];
-        default: InterpretProjectExpression<TRootValue, TDefault>;
+        default?: InterpretProjectExpression<TRootValue, infer TDefault>;
       }
-    : never;
-
-  $tan?: NotImplementedYet;
-  $toBool?: NotImplementedYet;
-  $toDate?: NotImplementedYet;
-  $toDecimal?: NotImplementedYet;
-  $toDouble?: NotImplementedYet;
-  $toInt?: NotImplementedYet;
-  $toLong?: NotImplementedYet;
-  $toLower?: NotImplementedYet;
-  $toObjectId?: NotImplementedYet;
-  $toString?: NotImplementedYet;
-  $toUpper?: NotImplementedYet;
-  $trim?: NotImplementedYet;
-  $trunc?:
-    | [InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>]
-    | [
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>,
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 1>>
-      ]
-    | InterpretProjectExpression<TRootValue, LookupKey<TValue, '$trunc'>>;
-  $type?: NotImplementedYet;
-  $week?: NotImplementedYet;
-  $year?: NotImplementedYet;
-  $zip?: NotImplementedYet;
-};
+        ? {
+            branches: {
+              case: InterpretProjectExpression<TRootValue, TBranchCase>;
+              then: InterpretProjectExpression<TRootValue, TBranchThen>;
+            }[];
+            default: InterpretProjectExpression<TRootValue, TDefault>;
+          }
+        : never;
+    }
+  | {$tan: NotImplementedYet}
+  | {$toBool: NotImplementedYet}
+  | {$toDate: NotImplementedYet}
+  | {$toDecimal: NotImplementedYet}
+  | {$toDouble: NotImplementedYet}
+  | {$toInt: NotImplementedYet}
+  | {$toLong: NotImplementedYet}
+  | {$toLower: NotImplementedYet}
+  | {$toObjectId: NotImplementedYet}
+  | {$toString: NotImplementedYet}
+  | {$toUpper: NotImplementedYet}
+  | {$trim: NotImplementedYet}
+  | {
+      $trunc:
+        | [InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>]
+        | [
+            InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>,
+            InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 1>>
+          ]
+        | InterpretProjectExpression<TRootValue, LookupKey<TValue, '$trunc'>>;
+    }
+  | {$type: NotImplementedYet}
+  | {$week: NotImplementedYet}
+  | {$year: NotImplementedYet}
+  | {$zip: NotImplementedYet};
 
 type InterpretAccumulateOperator<TRootValue, TValue> = {
   $avg?: InterpretProjectExpression<TRootValue, LookupKey<TValue, '$avg'>>;
@@ -732,6 +768,11 @@ export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = 
 
 type Simplify<T> = T extends object | any[] ? {[K in keyof T]: T[K]} : T;
 
+type TableName<TTable> = string & {__table: TTable};
+export function tableName<TTable extends {}>(tableName: string): TableName<TTable> {
+  return tableName as TableName<TTable>;
+}
+
 export class Aggregator<T> {
   private currentPipeline?: {};
 
@@ -790,7 +831,7 @@ export class Aggregator<T> {
   }
   $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
     as: TAs;
-    from: string;
+    from: TableName<TOther>;
     connectFromField: DeepKeys<T>;
     connectToField: DeepKeys<TOther>;
     depthField?: TDepthField;
@@ -822,13 +863,17 @@ export class Aggregator<T> {
   $listSessions(): Aggregator<T> {
     throw new Error('Not Implemented');
   }
-
-  $lookup<TLookupTable, TAs extends string>(props: {
-    from: string;
+  $lookup<TLookupTable, TAs extends string, TLet extends {} = never>(props: {
+    //todo document this trick
+    from: TableName<TLookupTable>;
     localField: DeepKeys<T>;
     foreignField: DeepKeys<TLookupTable>;
     as: TAs;
-  }): Aggregator<T & {[key in TAs]: TLookupTable[]}> {
+    let?: ProjectObject<T, TLet>;
+  }): Aggregator<
+    //todo document this trick
+    T & ([TLet] extends [never] ? {[key in TAs]: TLookupTable[]} : {[key in TAs]: ProjectResult<T, TLet>[]})
+  > {
     this.currentPipeline = {
       $lookup: {
         from: props.from,
@@ -837,7 +882,9 @@ export class Aggregator<T> {
         as: props.as,
       },
     };
-    return new Aggregator<T & {[key in TAs]: TLookupTable[]}>(this);
+    return new Aggregator<
+      T & ([TLet] extends [never] ? {[key in TAs]: TLookupTable[]} : {[key in TAs]: ProjectResult<T, TLet>[]})
+    >(this);
   }
 
   $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T> {

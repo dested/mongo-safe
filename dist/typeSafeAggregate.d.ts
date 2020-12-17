@@ -506,6 +506,10 @@ export declare type GraphDeep<TOther, TAs extends string, TDepthField extends st
 declare type Simplify<T> = T extends object | any[] ? {
     [K in keyof T]: T[K];
 } : T;
+declare type TableName<TTable> = string & {
+    __table: TTable;
+};
+export declare function tableName<TTable extends {}>(tableName: string): TableName<TTable>;
 export declare class Aggregator<T> {
     private parent?;
     private currentPipeline?;
@@ -540,7 +544,7 @@ export declare class Aggregator<T> {
     }>;
     $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
         as: TAs;
-        from: string;
+        from: TableName<TOther>;
         connectFromField: DeepKeys<T>;
         connectToField: DeepKeys<TOther>;
         depthField?: TDepthField;
@@ -552,14 +556,17 @@ export declare class Aggregator<T> {
     $limit(limit: number): Aggregator<T>;
     $listLocalSessions(): Aggregator<T>;
     $listSessions(): Aggregator<T>;
-    $lookup<TLookupTable, TAs extends string>(props: {
-        from: string;
+    $lookup<TLookupTable, TAs extends string, TLet extends {} = never>(props: {
+        from: TableName<TLookupTable>;
         localField: DeepKeys<T>;
         foreignField: DeepKeys<TLookupTable>;
         as: TAs;
-    }): Aggregator<T & {
+        let?: ProjectObject<T, TLet>;
+    }): Aggregator<T & ([TLet] extends [never] ? {
         [key in TAs]: TLookupTable[];
-    }>;
+    } : {
+        [key in TAs]: ProjectResult<T, TLet>[];
+    })>;
     $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T>;
     $merge(): Aggregator<T>;
     $out(tableName: string): Aggregator<void>;
