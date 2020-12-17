@@ -235,6 +235,27 @@ test('$addField.complex', async () => {
   assert<Has<DBCar & {shoes: Bolt[]}, typeof result>>(true);
   assert<NotHas<DBCar & {shoes: Bolt}, typeof result>>(true);
 });
+test('$set.simple', async () => {
+  const aggregator = Aggregator.start<DBCar>().$set({
+    shoes: 'hi',
+  });
+
+  expect(aggregator.query()).toEqual([{$set: {shoes: 'hi'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<DBCar & {shoes: 'hi'}, typeof result>>(true);
+});
+
+test('$set.complex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$set({shoes: '$doors.bolts'});
+
+  expect(aggregator.query()).toEqual([{$set: {shoes: '$doors.bolts'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<Bolt['type'], typeof result.shoes[0]['type']>>(true);
+  assert<Has<DBCar & {shoes: Bolt[]}, typeof result>>(true);
+  assert<NotHas<DBCar & {shoes: Bolt}, typeof result>>(true);
+});
 
 test('$unwind.simple', async () => {
   const aggregator = Aggregator.start<DBCar>().$unwind('$doors');
@@ -606,6 +627,43 @@ test('$replaceRoot.complex', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: Date}, typeof result>>(true);
 });
+test('$replaceWith.simple', async () => {
+  const aggregator = Aggregator.start<DBCar>().$replaceWith({
+    newRoot: '$someDate',
+  });
+
+  expect(aggregator.query()).toEqual([{$replaceWith: {newRoot: '$someDate'}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<Date, typeof result>>(true);
+});
+
+test('$replaceWith.complex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$replaceWith({
+    newRoot: {shoes: '$doors.someDate'},
+  });
+
+  expect(aggregator.query()).toEqual([{$replaceWith: {newRoot: {shoes: '$doors.someDate'}}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{shoes: Date}, typeof result>>(true);
+});
+test('$sample', async () => {
+  const aggregator = Aggregator.start<DBCar>().$sample({size: 3});
+
+  expect(aggregator.query()).toEqual([{$sample: {size: 3}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<DBCar, typeof result>>(true);
+});
+test('$sample', async () => {
+  const aggregator = Aggregator.start<DBCar>().$sampleRate(0.33);
+
+  expect(aggregator.query()).toEqual([{$sampleRate: 0.33}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<DBCar, typeof result>>(true);
+});
 
 test('$bucket', async () => {
   type Artist = {
@@ -942,4 +1000,62 @@ test('$unionWith.pipeline', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<IsExact<Artist | {shoes: string}, typeof result>>(true);
+});
+
+test('$redact', async () => {
+  const item = {
+    _id: 1,
+    title: '123 Department Report',
+    tags: ['G', 'STLW'],
+    year: 2014,
+    subsections: [
+      {
+        subtitle: 'Section 1: Overview',
+        tags: ['SI', 'G'],
+        content: 'Section 1: This is the content of section 1.',
+      },
+      {
+        subtitle: 'Section 2: Analysis',
+        tags: ['STLW'],
+        content: 'Section 2: This is the content of section 2.',
+      },
+      {
+        subtitle: 'Section 3: Budgeting',
+        tags: ['TK'],
+        content: {
+          text: 'Section 3: This is the content of section3.',
+          tags: ['HCS'],
+        },
+      },
+    ],
+  };
+
+  type Item = typeof item;
+  var userAccess = ['STLW', 'G'];
+
+  const aggregator = Aggregator.start<Item>()
+    .$match({year: 2014})
+    .$redact({
+      $cond: {
+        if: {$gt: [{$size: {$setIntersection: ['$tags', userAccess]}}, 0]},
+        then: '$$DESCEND',
+        else: '$$PRUNE',
+      },
+    });
+
+  expect(aggregator.query()).toEqual([
+    {$match: {year: 2014}},
+    {
+      $redact: {
+        $cond: {
+          if: {$gt: [{$size: {$setIntersection: ['$tags', userAccess]}}, 0]},
+          then: '$$DESCEND',
+          else: '$$PRUNE',
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<Item, typeof result>>(true);
 });

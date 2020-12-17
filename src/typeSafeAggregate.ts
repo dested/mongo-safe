@@ -493,8 +493,10 @@ type InterpretAccumulateOperator<TRootValue, TValue> = {
 
 export type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
 
-export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add one more here lol
- */ TValue extends `$${string}`
+export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add one more here without overflow lol
+ */ TValue extends '$$DESCEND' | '$$PRUNE' | '$$KEEP' // maybe pass "allowed types" so you can force this in $redact and not here
+  ? TValue
+  : TValue extends `$${string}`
   ? ExpressionStringReferenceKey<TRootValue>
   : TValue extends RawTypes
   ? TValue
@@ -532,6 +534,8 @@ type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue
 
 type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT`
   ? TRootValue
+  : TValue extends '$$DESCEND' | '$$PRUNE' | '$$KEEP'
+  ? TValue
   : TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
   : TValue extends RawTypes
@@ -998,8 +1002,13 @@ export class Aggregator<T> {
     return new Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>(this);
   }
 
-  $redact(): Aggregator<T> {
-    throw new Error('Not Implemented');
+  $redact<TExpression>(
+    expression: ProjectResult<T, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP'
+      ? InterpretProjectExpression<T, TExpression>
+      : never
+  ): Aggregator<T> {
+    this.currentPipeline = {$redact: expression};
+    return new Aggregator<T>(this);
   }
   $replaceRoot<TNewRootValue, TNewRoot extends {newRoot: TNewRootValue}>(params: {
     newRoot: InterpretProjectExpression<T, TNewRootValue>;
@@ -1013,6 +1022,7 @@ export class Aggregator<T> {
     this.currentPipeline = {$replaceWith: params};
     return new Aggregator<ProjectResult<T, TNewRootValue>>(this);
   }
+
   $sample(props: {size: number}): Aggregator<T> {
     this.currentPipeline = {$sample: props};
     return new Aggregator<T>(this);
@@ -1082,9 +1092,6 @@ export class Aggregator<T> {
 
   query(): {}[] {
     const pipelines = [];
-    if (this.currentPipeline) {
-      pipelines.push(this.currentPipeline!);
-    }
     let parent = this.parent;
     while (parent) {
       pipelines.push(parent.currentPipeline!);
