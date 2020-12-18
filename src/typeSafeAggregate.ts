@@ -14,6 +14,7 @@ import {Decimal128} from 'bson';
 type KEY = string | number | Symbol;
 type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
+type Impossible = never;
 
 type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
 type DeepExcludeNever<T> = T extends NonObjectValues
@@ -27,8 +28,6 @@ type DeepExcludeNever<T> = T extends NonObjectValues
 export type ExcludeNever<T> = {
   [key in keyof T as T[key] extends never ? never : key]: T[key];
 };
-type OnlyArrayFieldsKeys<T> = {[key in keyof T]: T[key] extends Array<any> ? key : never}[keyof T];
-type OnlyArrayFields<T> = {[key in keyof T]: T[key] extends Array<infer J> ? key : never}[keyof T];
 
 export type UnArray<T> = T extends Array<infer U> ? U : T;
 export type DeepUnArray<T> = T extends Array<infer U> ? DeepUnArray<U> : T;
@@ -40,16 +39,13 @@ type DeepReplaceKey<T, TKeys extends Array<any>, TValue> = TKeys extends [infer 
     : {
         [key in keyof T]: key extends TCurrentKey ? DeepReplaceKey<T[key], TRestKeys, TValue> : T[key];
       }
-  : never;
+  : Impossible;
 
 export type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
   : TRef extends {}
   ? {[key in keyof TRef]: DeReferenceExpression<TRootValue, TRef[key]>}
   : TRef;
-
-type NotImplementedYet = never;
-type NotImplementedProjectedYet = never;
 
 type AllOperators =
   | '$dateToString'
@@ -394,7 +390,7 @@ type InterpretProjectOperator<TRootValue, TValue> =
                   '$let',
                   'in'
                 >
-              : never;
+              : Impossible;
           }
         : never;
     }
@@ -467,7 +463,7 @@ type InterpretProjectOperator<TRootValue, TValue> =
                   '$reduce',
                   'in'
                 >
-              : never;
+              : Impossible;
           }
         : never;
     }
@@ -569,7 +565,16 @@ type InterpretProjectOperator<TRootValue, TValue> =
   | {$type: ProjectOperatorHelperExpression<TRootValue, TValue, '$type'>}
   | {$week: ProjectOperatorHelperDate<TRootValue, TValue, '$week'>}
   | {$year: ProjectOperatorHelperDate<TRootValue, TValue, '$year'>}
-  | {$zip: NotImplementedProjectedYet};
+  | {
+      $zip:
+        | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$zip', {inputs: 1; useLongestLength: 0}>
+        | ProjectOperatorHelperExpressionObject<
+            TRootValue,
+            TValue,
+            '$zip',
+            {inputs: 1; useLongestLength: 1; defaults: 1}
+          >;
+    };
 
 type InterpretAccumulateOperator<TRootValue, TValue> = {
   $avg?: ProjectOperatorHelperExpression<TRootValue, TValue, '$avg'>;
@@ -598,7 +603,7 @@ export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add 
   ? Array<InterpretProjectExpression<TRootValue, TValueArr>>
   : TValue extends {}
   ? ProjectObject<TRootValue, TValue>
-  : never;
+  : Impossible;
 
 type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
@@ -637,7 +642,7 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? Array<ProjectResultObject<TRootValue, TValueArray>>
   : TValue extends {}
   ? ProjectResultObject<TRootValue, TValue>
-  : never;
+  : Impossible;
 
 type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
@@ -653,7 +658,7 @@ type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue
   ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>>
   : TValue extends {}
   ? ProjectResultRootObject<TRootValue, TValue, TKey>
-  : never;
+  : Impossible;
 
 type ProjectResultExpression<TRootValue, TValue, TKey extends KEY> = ProjectResult<TRootValue, LookupKey<TValue, TKey>>;
 type ProjectResultExpressionInner<TRootValue, TValue, TKey extends KEY, TKey2 extends KEY> = ProjectResult<
@@ -672,7 +677,9 @@ type NumberProjectResultExpressionUnArray<TRootValue, TValue, TKey extends KEY> 
   ProjectResult<TRootValue, UnArray<LookupKey<TValue, TKey>>>
 >;
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : Impossible) extends (k: infer I) => void
+  ? I
+  : Impossible;
 type FlattenUnion<T> = {
   [K in keyof UnionToIntersection<T>]: K extends keyof T
     ? T[K] extends any[]
@@ -919,7 +926,11 @@ type ProjectResultOperators<TRootValue, TValue> = {
     | 'maxKey';
   $week: number;
   $year: number;
-  $zip: ProjectResult<TRootValue, LookupArray<LookupKey<LookupKey<TValue, '$zip'>, 'input'>, number>>;
+  $zip: UnArray<UnArray<ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$zip'>, 'inputs'>>>> extends infer TInput
+    ? [LookupKey<LookupKey<TValue, '$zip'>, 'defaults'>] extends [never]
+      ? Array<Array<TInput>>
+      : Array<Array<TInput | UnArray<ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$zip'>, 'defaults'>>>>>
+    : never;
 };
 
 type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
@@ -941,7 +952,7 @@ type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
       $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>>;
       $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
     }[keyof TValue]
-  : never;
+  : Impossible;
 
 type GetProjectDeepKey<TDeepProjectKey extends string, key> = TDeepProjectKey extends never
   ? never
@@ -955,7 +966,7 @@ export type ProjectResultObject<TRootValue, TObj> = TObj extends infer T
   ? {
       [key in keyof T]: ProjectResult<TRootValue, T[key]>;
     }
-  : never;
+  : Impossible;
 
 export type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T
   ? {
@@ -965,7 +976,7 @@ export type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends st
         GetProjectDeepKey<TDeepProjectKey, key>
       >;
     }
-  : never;
+  : Impossible;
 
 export type LookupKey<T, TKey extends string | number | Symbol> = TKey extends keyof T ? T[TKey] : never;
 export type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
@@ -979,7 +990,7 @@ type InterpretAccumulateExpression<TRootValue, TValue> = /*
   ? TValue
   : keyof TValue extends AllAccumulateOperators
   ? InterpretAccumulateOperator<TRootValue, TValue>
-  : never;
+  : Impossible;
 
 type AccumulateRootObject<TRootValue, TAccumulateObject> = {
   [key in keyof TAccumulateObject]: key extends '_id'
@@ -1000,12 +1011,12 @@ type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T
         ? ProjectResult<TRootValue & CurrentAggregate<TRootValue>, T[key]>
         : AccumulateResult<TRootValue & CurrentAggregate<TRootValue>, T[key]>;
     }
-  : never;
+  : Impossible;
 type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer T
   ? {
       [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
     } & {_id: TId}
-  : never;
+  : Impossible;
 type AutoBucketRootResultObject<TRootValue, TObj> = [TObj] extends [never]
   ? {
       _id: {
@@ -1023,7 +1034,7 @@ type AutoBucketRootResultObject<TRootValue, TObj> = [TObj] extends [never]
         max: number;
       };
     }
-  : never;
+  : Impossible;
 
 export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = {
   [key in TAs]: (TOther & {[oKey in TDepthField]: number})[];

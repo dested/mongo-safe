@@ -1131,3 +1131,46 @@ test('project.$reduceComplex', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<IsExact<{doors: {sum: number; product: number}}, typeof result>>(true);
 });
+
+test('project.$zip', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {$zip: {inputs: [['a'], ['b'], ['c']]}},
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {$zip: {inputs: [['a'], ['b'], ['c']]}},
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{doors: ('a' | 'b' | 'c')[][]}, typeof result>>(true);
+});
+test('project.$zip', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $zip: {
+        inputs: [[1], [2, 3], [4]],
+        useLongestLength: true,
+        defaults: ['a', 'b', 'c'],
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $zip: {
+            inputs: [[1], [2, 3], [4]],
+            useLongestLength: true,
+            defaults: ['a', 'b', 'c'],
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{doors: (1 | 2 | 3 | 4 | 'a' | 'b' | 'c')[][]}, typeof result>>(true);
+});

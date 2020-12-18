@@ -1411,7 +1411,29 @@
 <a name='L1352'></a><a href='#L1352'>1352</a>
 <a name='L1353'></a><a href='#L1353'>1353</a>
 <a name='L1354'></a><a href='#L1354'>1354</a>
-<a name='L1355'></a><a href='#L1355'>1355</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L1355'></a><a href='#L1355'>1355</a>
+<a name='L1356'></a><a href='#L1356'>1356</a>
+<a name='L1357'></a><a href='#L1357'>1357</a>
+<a name='L1358'></a><a href='#L1358'>1358</a>
+<a name='L1359'></a><a href='#L1359'>1359</a>
+<a name='L1360'></a><a href='#L1360'>1360</a>
+<a name='L1361'></a><a href='#L1361'>1361</a>
+<a name='L1362'></a><a href='#L1362'>1362</a>
+<a name='L1363'></a><a href='#L1363'>1363</a>
+<a name='L1364'></a><a href='#L1364'>1364</a>
+<a name='L1365'></a><a href='#L1365'>1365</a>
+<a name='L1366'></a><a href='#L1366'>1366</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2459,10 +2481,10 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">306x</span>
+<span class="cline-any cline-yes">310x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">122x</span>
+<span class="cline-any cline-yes">124x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
@@ -2644,8 +2666,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">69x</span>
-<span class="cline-any cline-yes">69x</span>
+<span class="cline-any cline-yes">71x</span>
+<span class="cline-any cline-yes">71x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2741,19 +2763,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">247x</span>
-<span class="cline-any cline-yes">247x</span>
-<span class="cline-any cline-yes">247x</span>
-<span class="cline-any cline-yes">318x</span>
-<span class="cline-any cline-yes">318x</span>
+<span class="cline-any cline-yes">251x</span>
+<span class="cline-any cline-yes">251x</span>
+<span class="cline-any cline-yes">251x</span>
+<span class="cline-any cline-yes">322x</span>
+<span class="cline-any cline-yes">322x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">247x</span>
+<span class="cline-any cline-yes">251x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">121x</span>
+<span class="cline-any cline-yes">123x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">121x</span>
+<span class="cline-any cline-yes">123x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2781,6 +2803,7 @@ import {Decimal128} from 'bson';
 type KEY = string | number | Symbol;
 type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
+type Impossible = never;
 &nbsp;
 type NumberTypeOrNever&lt;TValue&gt; = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
 type DeepExcludeNever&lt;T&gt; = T extends NonObjectValues
@@ -2794,8 +2817,6 @@ type DeepExcludeNever&lt;T&gt; = T extends NonObjectValues
 export type ExcludeNever&lt;T&gt; = {
   [key in keyof T as T[key] extends never ? never : key]: T[key];
 };
-type OnlyArrayFieldsKeys&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;any&gt; ? key : never}[keyof T];
-type OnlyArrayFields&lt;T&gt; = {[key in keyof T]: T[key] extends Array&lt;infer J&gt; ? key : never}[keyof T];
 &nbsp;
 export type UnArray&lt;T&gt; = T extends Array&lt;infer U&gt; ? U : T;
 export type DeepUnArray&lt;T&gt; = T extends Array&lt;infer U&gt; ? DeepUnArray&lt;U&gt; : T;
@@ -2807,16 +2828,13 @@ type DeepReplaceKey&lt;T, TKeys extends Array&lt;any&gt;, TValue&gt; = TKeys ext
     : {
         [key in keyof T]: key extends TCurrentKey ? DeepReplaceKey&lt;T[key], TRestKeys, TValue&gt; : T[key];
       }
-  : never;
+  : Impossible;
 &nbsp;
 export type DeReferenceExpression&lt;TRootValue, TRef&gt; = TRef extends `$${infer TRawKey}`
   ? DeepKeysResult&lt;TRootValue, TRawKey&gt;
   : TRef extends {}
   ? {[key in keyof TRef]: DeReferenceExpression&lt;TRootValue, TRef[key]&gt;}
   : TRef;
-&nbsp;
-type NotImplementedYet = never;
-type NotImplementedProjectedYet = never;
 &nbsp;
 type AllOperators =
   | '$dateToString'
@@ -3161,7 +3179,7 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; =
                   '$let',
                   'in'
                 &gt;
-              : never;
+              : Impossible;
           }
         : never;
     }
@@ -3234,7 +3252,7 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; =
                   '$reduce',
                   'in'
                 &gt;
-              : never;
+              : Impossible;
           }
         : never;
     }
@@ -3336,7 +3354,16 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; =
   | {$type: ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$type'&gt;}
   | {$week: ProjectOperatorHelperDate&lt;TRootValue, TValue, '$week'&gt;}
   | {$year: ProjectOperatorHelperDate&lt;TRootValue, TValue, '$year'&gt;}
-  | {$zip: NotImplementedProjectedYet};
+  | {
+      $zip:
+        | ProjectOperatorHelperExpressionObject&lt;TRootValue, TValue, '$zip', {inputs: 1; useLongestLength: 0}&gt;
+        | ProjectOperatorHelperExpressionObject&lt;
+            TRootValue,
+            TValue,
+            '$zip',
+            {inputs: 1; useLongestLength: 1; defaults: 1}
+          &gt;;
+    };
 &nbsp;
 type InterpretAccumulateOperator&lt;TRootValue, TValue&gt; = {
   $avg?: ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$avg'&gt;;
@@ -3365,7 +3392,7 @@ export type InterpretProjectExpression&lt;TRootValue, TValue&gt; = /* // you can
   ? Array&lt;InterpretProjectExpression&lt;TRootValue, TValueArr&gt;&gt;
   : TValue extends {}
   ? ProjectObject&lt;TRootValue, TValue&gt;
-  : never;
+  : Impossible;
 &nbsp;
 type ProjectObject&lt;TRootValue, TProject&gt; = {
   [key in keyof TProject]: InterpretProjectExpression&lt;TRootValue, TProject[key]&gt;;
@@ -3404,7 +3431,7 @@ type ProjectResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}
   ? Array&lt;ProjectResultObject&lt;TRootValue, TValueArray&gt;&gt;
   : TValue extends {}
   ? ProjectResultObject&lt;TRootValue, TValue&gt;
-  : never;
+  : Impossible;
 &nbsp;
 type ProjectResultRoot&lt;TRootValue, TValue, TKey extends string = never&gt; = TValue extends `$${infer TRawKey}`
   ? DeepKeysResult&lt;TRootValue, TRawKey&gt;
@@ -3420,7 +3447,7 @@ type ProjectResultRoot&lt;TRootValue, TValue, TKey extends string = never&gt; = 
   ? Array&lt;ProjectResultRootObject&lt;TRootValue, TValueArray, TKey&gt;&gt;
   : TValue extends {}
   ? ProjectResultRootObject&lt;TRootValue, TValue, TKey&gt;
-  : never;
+  : Impossible;
 &nbsp;
 type ProjectResultExpression&lt;TRootValue, TValue, TKey extends KEY&gt; = ProjectResult&lt;TRootValue, LookupKey&lt;TValue, TKey&gt;&gt;;
 type ProjectResultExpressionInner&lt;TRootValue, TValue, TKey extends KEY, TKey2 extends KEY&gt; = ProjectResult&lt;
@@ -3439,7 +3466,9 @@ type NumberProjectResultExpressionUnArray&lt;TRootValue, TValue, TKey extends KE
   ProjectResult&lt;TRootValue, UnArray&lt;LookupKey&lt;TValue, TKey&gt;&gt;&gt;
 &gt;;
 &nbsp;
-type UnionToIntersection&lt;U&gt; = (U extends any ? (k: U) =&gt; void : never) extends (k: infer I) =&gt; void ? I : never;
+type UnionToIntersection&lt;U&gt; = (U extends any ? (k: U) =&gt; void : Impossible) extends (k: infer I) =&gt; void
+  ? I
+  : Impossible;
 type FlattenUnion&lt;T&gt; = {
   [K in keyof UnionToIntersection&lt;T&gt;]: K extends keyof T
     ? T[K] extends any[]
@@ -3686,7 +3715,11 @@ type ProjectResultOperators&lt;TRootValue, TValue&gt; = {
     | 'maxKey';
   $week: number;
   $year: number;
-  $zip: ProjectResult&lt;TRootValue, LookupArray&lt;LookupKey&lt;LookupKey&lt;TValue, '$zip'&gt;, 'input'&gt;, number&gt;&gt;;
+  $zip: UnArray&lt;UnArray&lt;ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$zip'&gt;, 'inputs'&gt;&gt;&gt;&gt; extends infer TInput
+    ? [LookupKey&lt;LookupKey&lt;TValue, '$zip'&gt;, 'defaults'&gt;] extends [never]
+      ? Array&lt;Array&lt;TInput&gt;&gt;
+      : Array&lt;Array&lt;TInput | UnArray&lt;ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$zip'&gt;, 'defaults'&gt;&gt;&gt;&gt;&gt;
+    : never;
 };
 &nbsp;
 type AccumulateResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawKey}`
@@ -3708,7 +3741,7 @@ type AccumulateResult&lt;TRootValue, TValue&gt; = TValue extends `$${infer TRawK
       $max: NumberTypeOrNever&lt;UnArray&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$max'&gt;&gt;&gt;&gt;;
       $push: ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$push'&gt;&gt;[];
     }[keyof TValue]
-  : never;
+  : Impossible;
 &nbsp;
 type GetProjectDeepKey&lt;TDeepProjectKey extends string, key&gt; = TDeepProjectKey extends never
   ? never
@@ -3722,7 +3755,7 @@ export type ProjectResultObject&lt;TRootValue, TObj&gt; = TObj extends infer T
   ? {
       [key in keyof T]: ProjectResult&lt;TRootValue, T[key]&gt;;
     }
-  : never;
+  : Impossible;
 &nbsp;
 export type ProjectResultRootObject&lt;TRootValue, TObj, TDeepProjectKey extends string = never&gt; = TObj extends infer T
   ? {
@@ -3732,7 +3765,7 @@ export type ProjectResultRootObject&lt;TRootValue, TObj, TDeepProjectKey extends
         GetProjectDeepKey&lt;TDeepProjectKey, key&gt;
       &gt;;
     }
-  : never;
+  : Impossible;
 &nbsp;
 export type LookupKey&lt;T, TKey extends string | number | Symbol&gt; = TKey extends keyof T ? T[TKey] : never;
 export type LookupArray&lt;T, TIndex extends number&gt; = T extends Array&lt;any&gt; ? T[TIndex] : never;
@@ -3746,7 +3779,7 @@ type InterpretAccumulateExpression&lt;TRootValue, TValue&gt; = /*
   ? TValue
   : keyof TValue extends AllAccumulateOperators
   ? InterpretAccumulateOperator&lt;TRootValue, TValue&gt;
-  : never;
+  : Impossible;
 &nbsp;
 type AccumulateRootObject&lt;TRootValue, TAccumulateObject&gt; = {
   [key in keyof TAccumulateObject]: key extends '_id'
@@ -3767,12 +3800,12 @@ type AccumulateRootResultObject&lt;TRootValue, TObj&gt; = TObj extends infer T
         ? ProjectResult&lt;TRootValue &amp; CurrentAggregate&lt;TRootValue&gt;, T[key]&gt;
         : AccumulateResult&lt;TRootValue &amp; CurrentAggregate&lt;TRootValue&gt;, T[key]&gt;;
     }
-  : never;
+  : Impossible;
 type BucketRootResultObject&lt;TRootValue, TObj, TId&gt; = TObj extends infer T
   ? {
       [key in keyof T]: AccumulateResult&lt;TRootValue, T[key]&gt;;
     } &amp; {_id: TId}
-  : never;
+  : Impossible;
 type AutoBucketRootResultObject&lt;TRootValue, TObj&gt; = [TObj] extends [never]
   ? {
       _id: {
@@ -3790,7 +3823,7 @@ type AutoBucketRootResultObject&lt;TRootValue, TObj&gt; = [TObj] extends [never]
         max: number;
       };
     }
-  : never;
+  : Impossible;
 &nbsp;
 export type GraphDeep&lt;TOther, TAs extends string, TDepthField extends string&gt; = {
   [key in TAs]: (TOther &amp; {[oKey in TDepthField]: number})[];
@@ -4126,7 +4159,7 @@ function safeKeys&lt;T&gt;(model: T): (keyof T)[] {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Thu Dec 17 2020 22:01:52 GMT-0700 (Mountain Standard Time)
+                at Thu Dec 17 2020 22:20:13 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>
