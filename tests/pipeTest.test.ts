@@ -39,7 +39,14 @@ test('simple', async () => {
 
   assert<
     IsExact<
-      {readonly _id: 1; readonly side: number; readonly ff: Door[]; foo: Bolt[]; windows: DBWindow[]},
+      {
+        readonly _id: 1;
+        readonly side: number;
+        readonly ff: Door[];
+        foo: Bolt[];
+        windows: DBWindow[];
+        windows2: {b: 'a'}[];
+      },
       typeof aggregator
     >
   >(true);

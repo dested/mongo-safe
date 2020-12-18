@@ -1394,16 +1394,30 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
         $addFields: LookupKey<TFirst, '$addFields'> extends infer R
           ? readonly [{$addFields: ProjectRootObject<T, R>}, ...Pipeline<T & ProjectResultRootObject<T, R>, TRest>]
           : never;
-        $bucket: never;
-        $bucketAuto: never;
-        $count: never;
-        $facet: never;
-        $geoNear: never;
-        $graphLookup: never;
+        $bucket: LookupKey<TFirst, '$bucket'> extends infer R
+          ? readonly [{$bucket: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $bucketAuto: LookupKey<TFirst, '$bucketAuto'> extends infer R
+          ? readonly [{$bucketAuto: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $count: LookupKey<TFirst, '$count'> extends infer R
+          ? readonly [{$count: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $facet: LookupKey<TFirst, '$facet'> extends infer R
+          ? readonly [{$facet: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $geoNear: LookupKey<TFirst, '$geoNear'> extends infer R
+          ? readonly [{$geoNear: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $graphLookup: LookupKey<TFirst, '$graphLookup'> extends infer R
+          ? readonly [{$graphLookup: never}, ...Pipeline<T & {}, TRest>]
+          : never;
         $group: LookupKey<TFirst, '$group'> extends infer R
           ? readonly [{$group: AccumulateRootObject<T, R>}, ...Pipeline<AccumulateRootResultObject<T, R>, TRest>]
           : never;
-        $limit: never;
+        $limit: LookupKey<TFirst, '$limit'> extends infer R
+          ? readonly [{$limit: never}, ...Pipeline<T & {}, TRest>]
+          : never;
         $lookup: LookupKey<TFirst, '$lookup'> extends infer R
           ? LookupKey<R, 'from'> extends TableName<infer TFromTable>
             ? [LookupKey<R, 'let'>] extends [never]
@@ -1478,24 +1492,50 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
             : never
           : never;
 
-        $match: never;
-        $merge: never;
-        $out: never;
+        $match: LookupKey<TFirst, '$match'> extends infer R
+          ? readonly [{$match: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $merge: LookupKey<TFirst, '$merge'> extends infer R
+          ? readonly [{$match: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $out: LookupKey<TFirst, '$out'> extends infer R ? readonly [{$out: never}, ...Pipeline<T & {}, TRest>] : never;
         $project: LookupKey<TFirst, '$project'> extends infer R
           ? readonly [{$project: ProjectRootObject<T, R>}, ...Pipeline<ProjectResultRootObject<T, R>, TRest>]
           : never;
-        $redact: never;
-        $replaceRoot: never;
-        $replaceWith: never;
-        $sample: never;
-        $sampleRate: never;
-        $set: never;
-        $skip: never;
-        $sort: never;
-        $sortByCount: never;
-        $unionWith: never;
-        $unset: never;
-        $unwind: never;
+        $redact: LookupKey<TFirst, '$redact'> extends infer R
+          ? readonly [{$redact: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $replaceRoot: LookupKey<TFirst, '$replaceRoot'> extends infer R
+          ? readonly [{$replaceRoot: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $replaceWith: LookupKey<TFirst, '$replaceWith'> extends infer R
+          ? readonly [{$replaceWith: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $sample: LookupKey<TFirst, '$sample'> extends infer R
+          ? readonly [{$sample: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $sampleRate: LookupKey<TFirst, '$sampleRate'> extends infer R
+          ? readonly [{$sampleRate: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $set: LookupKey<TFirst, '$set'> extends infer R ? readonly [{$set: never}, ...Pipeline<T & {}, TRest>] : never;
+        $skip: LookupKey<TFirst, '$skip'> extends infer R
+          ? readonly [{$skip: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $sort: LookupKey<TFirst, '$sort'> extends infer R
+          ? readonly [{$sort: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $sortByCount: LookupKey<TFirst, '$sortByCount'> extends infer R
+          ? readonly [{$sortByCount: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $unionWith: LookupKey<TFirst, '$unionWith'> extends infer R
+          ? readonly [{$unionWith: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $unset: LookupKey<TFirst, '$unset'> extends infer R
+          ? readonly [{$unset: never}, ...Pipeline<T & {}, TRest>]
+          : never;
+        $unwind: LookupKey<TFirst, '$unwind'> extends infer R
+          ? readonly [{$unwind: never}, ...Pipeline<T & {}, TRest>]
+          : never;
       }[keyof TFirst]
     : never
   : TPipe;
@@ -1503,15 +1543,22 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
 export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
   ? keyof TFirst extends PipelineSteps
     ? {
-        $addFields: PipelineResult<Simplify<T & ProjectResultRootObject<T, LookupKey<TFirst, '$addFields'>>>, TRest>;
-        $bucket: never;
-        $bucketAuto: never;
-        $count: never;
-        $facet: never;
-        $geoNear: never;
-        $graphLookup: never;
+        $addFields: LookupKey<TFirst, '$addFields'> extends infer R
+          ? PipelineResult<Simplify<T & ProjectResultRootObject<T, R>>, TRest>
+          : never;
+        $bucket: LookupKey<TFirst, '$bucket'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $bucketAuto: LookupKey<TFirst, '$bucketAuto'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
+        $count: LookupKey<TFirst, '$count'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $facet: LookupKey<TFirst, '$facet'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $geoNear: LookupKey<TFirst, '$geoNear'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $graphLookup: LookupKey<TFirst, '$graphLookup'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
         $group: PipelineResult<Simplify<AccumulateRootResultObject<T, LookupKey<TFirst, '$group'>>>, TRest>;
-        $limit: never;
+        $limit: LookupKey<TFirst, '$limit'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+
         $lookup: LookupKey<TFirst, '$lookup'> extends infer R
           ? LookupKey<R, 'from'> extends TableName<infer TFromTable>
             ? [LookupKey<R, 'let'>] extends [never]
@@ -1550,22 +1597,32 @@ export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...
             : never
           : never;
 
-        $match: never;
-        $merge: never;
-        $out: never;
+        $match: LookupKey<TFirst, '$match'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $merge: LookupKey<TFirst, '$merge'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $out: LookupKey<TFirst, '$out'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
         $project: PipelineResult<Simplify<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>>, TRest>;
-        $redact: never;
-        $replaceRoot: never;
-        $replaceWith: never;
-        $sample: never;
-        $sampleRate: never;
-        $set: never;
-        $skip: never;
-        $sort: never;
-        $sortByCount: never;
-        $unionWith: never;
-        $unset: never;
-        $unwind: never;
+        $redact: LookupKey<TFirst, '$redact'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $replaceRoot: LookupKey<TFirst, '$replaceRoot'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
+        $replaceWith: LookupKey<TFirst, '$replaceWith'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
+        $sample: LookupKey<TFirst, '$sample'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $sampleRate: LookupKey<TFirst, '$sampleRate'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
+        $set: LookupKey<TFirst, '$set'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $skip: LookupKey<TFirst, '$skip'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $sort: LookupKey<TFirst, '$sort'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $sortByCount: LookupKey<TFirst, '$sortByCount'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
+        $unionWith: LookupKey<TFirst, '$unionWith'> extends infer R
+          ? PipelineResult<Simplify<T & never>, TRest>
+          : never;
+        $unset: LookupKey<TFirst, '$unset'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $unwind: LookupKey<TFirst, '$unwind'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
       }[keyof TFirst]
     : never
   : T;
