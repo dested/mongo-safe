@@ -19,7 +19,7 @@ type Impossible = never;
 type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
 type DeepExcludeNever<T> = T extends NonObjectValues
   ? T
-  : T extends Array<infer TArr>
+  : T extends ReadonlyArray<infer TArr>
   ? Array<DeepExcludeNever<T[number]>>
   : {
       [key in keyof T as T[key] extends never ? never : key]: DeepExcludeNever<T[key]>;
@@ -29,11 +29,11 @@ export type ExcludeNever<T> = {
   [key in keyof T as T[key] extends never ? never : key]: T[key];
 };
 
-export type UnArray<T> = T extends Array<infer U> ? U : T;
-export type DeepUnArray<T> = T extends Array<infer U> ? DeepUnArray<U> : T;
+export type UnArray<T> = T extends ReadonlyArray<infer U> ? U : T;
+export type DeepUnArray<T> = T extends ReadonlyArray<infer U> ? DeepUnArray<U> : T;
 type ReplaceKey<T, TKey, TValue> = {[key in keyof T]: key extends TKey ? TValue : T[key]};
 
-type DeepReplaceKey<T, TKeys extends Array<any>, TValue> = TKeys extends [infer TCurrentKey, ...infer TRestKeys]
+type DeepReplaceKey<T, TKeys extends ReadonlyArray<any>, TValue> = TKeys extends [infer TCurrentKey, ...infer TRestKeys]
   ? TRestKeys extends []
     ? ReplaceKey<T, TKeys[0], TValue>
     : {
@@ -171,17 +171,17 @@ type AllOperators =
   | '$year'
   | '$zip';
 
-type ProjectOperatorHelperCondition<TRootValue, TValue, TKey extends KEY> = LookupKey<TValue, TKey> extends [
+type ProjectOperatorHelperCondition<TRootValue, TValue, TKey extends KEY> = LookupKey<TValue, TKey> extends readonly [
   InterpretProjectExpression<TRootValue, infer TLeft>,
   InterpretProjectExpression<TRootValue, infer TRight>
 ]
-  ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
+  ? readonly [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>]
   : never;
 
 type ProjectOperatorHelperArray<TRootValue, TValue, TKey extends KEY> =
   //without this infer the array lookup doesnt work right
-  LookupKey<TValue, TKey> extends Array<InterpretProjectExpression<TRootValue, infer TArr>>
-    ? InterpretProjectExpression<TRootValue, TArr>[]
+  LookupKey<TValue, TKey> extends ReadonlyArray<InterpretProjectExpression<TRootValue, infer TArr>>
+    ? readonly InterpretProjectExpression<TRootValue, TArr>[]
     : never;
 
 type ProjectOperatorHelperDate<TRootValue, TValue, TKey extends KEY> =
@@ -222,19 +222,19 @@ type ProjectOperatorHelperExpressionObject<TRootValue, TValue, TKey extends KEY,
       key
     >;
   };
-type ProjectOperatorHelperOneTuple<TRootValue, TValue, TKey extends KEY> = [
+type ProjectOperatorHelperOneTuple<TRootValue, TValue, TKey extends KEY> = readonly [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>
 ];
-type ProjectOperatorHelperTwoTuple<TRootValue, TValue, TKey extends KEY> = [
+type ProjectOperatorHelperTwoTuple<TRootValue, TValue, TKey extends KEY> = readonly [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>
 ];
-type ProjectOperatorHelperThreeTuple<TRootValue, TValue, TKey extends KEY> = [
+type ProjectOperatorHelperThreeTuple<TRootValue, TValue, TKey extends KEY> = readonly [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>,
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 2>>
 ];
-type ProjectOperatorHelperFourTuple<TRootValue, TValue, TKey extends KEY> = [
+type ProjectOperatorHelperFourTuple<TRootValue, TValue, TKey extends KEY> = readonly [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>,
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 2>>,
@@ -599,8 +599,8 @@ export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add 
   ? TValue
   : keyof TValue extends AllOperators
   ? InterpretProjectOperator<TRootValue, TValue>
-  : TValue extends Array<infer TValueArr>
-  ? Array<InterpretProjectExpression<TRootValue, TValueArr>>
+  : TValue extends ReadonlyArray<infer TValueArr>
+  ? ReadonlyArray<InterpretProjectExpression<TRootValue, TValueArr>>
   : TValue extends {}
   ? ProjectObject<TRootValue, TValue>
   : Impossible;
@@ -609,7 +609,7 @@ type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 type ProjectRootObject<TRootValue, TProject> = {
-  [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
+  readonly [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 
 type AllAccumulateOperators =
@@ -640,8 +640,8 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT`
   ? TValue
   : keyof TValue extends AllOperators
   ? ProjectResultOperators<TRootValue, TValue>[keyof TValue]
-  : TValue extends Array<infer TValueArray>
-  ? Array<ProjectResultObject<TRootValue, TValueArray>>
+  : TValue extends ReadonlyArray<infer TValueArray>
+  ? ReadonlyArray<ProjectResultObject<TRootValue, TValueArray>>
   : TValue extends {}
   ? ProjectResultObject<TRootValue, TValue>
   : Impossible;
@@ -658,8 +658,8 @@ type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue
   ? TValue
   : keyof TValue extends AllOperators
   ? ProjectResultOperators<TRootValue, TValue>[keyof TValue]
-  : TValue extends Array<infer TValueArray>
-  ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>>
+  : TValue extends ReadonlyArray<infer TValueArray>
+  ? ReadonlyArray<ProjectResultRootObject<TRootValue, TValueArray, TKey>>
   : TValue extends {}
   ? ProjectResultRootObject<TRootValue, TValue, TKey>
   : Impossible;
@@ -744,7 +744,7 @@ type ProjectResultOperators<TRootValue, TValue> = {
   $cmp: NumberTypeOrNever<ProjectResultArrayIndex<TRootValue, TValue, '$cmp', 0>>;
   $concat: string;
   $concatArrays: DeepUnArray<ProjectResultArrayIndex<TRootValue, TValue, '$concatArrays', 0>>[];
-  $cond: LookupKey<TValue, '$cond'> extends Array<any>
+  $cond: LookupKey<TValue, '$cond'> extends ReadonlyArray<any>
     ? ProjectResultArrayIndex<TRootValue, TValue, '$cond', 1> | ProjectResultArrayIndex<TRootValue, TValue, '$cond', 2>
     :
         | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>>
@@ -907,7 +907,7 @@ type ProjectResultOperators<TRootValue, TValue> = {
   $toString: string;
   $toUpper: string;
   $trim: string;
-  $trunc: LookupKey<TValue, '$trunc'> extends Array<any>
+  $trunc: LookupKey<TValue, '$trunc'> extends ReadonlyArray<any>
     ? NumberTypeOrNever<ProjectResultArrayIndex<TRootValue, TValue, '$trunc', 0>>
     : NumberProjectResultExpression<TRootValue, TValue, '$trunc'>;
   $type:
@@ -979,7 +979,7 @@ export type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends st
   : Impossible;
 
 export type LookupKey<T, TKey extends string | number | Symbol> = TKey extends keyof T ? T[TKey] : never;
-export type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
+export type LookupArray<T, TIndex extends number> = T extends ReadonlyArray<any> ? T[TIndex] : never;
 
 type InterpretAccumulateExpression<TRootValue, TValue> = /*
  */ TValue extends `$${infer TRawKey}`
@@ -1388,6 +1388,8 @@ type PipelineSteps =
   | '$unset'
   | '$unwind';
 
+type Cast<TLeft, TRight> = TLeft extends TRight ? TRight : never;
+
 export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
   ? keyof TFirst extends PipelineSteps
     ? {
@@ -1499,7 +1501,10 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
           : never;
         $out: LookupKey<TFirst, '$out'> extends infer R ? readonly [{$out: never}, ...Pipeline<T & {}, TRest>] : never;
         $project: LookupKey<TFirst, '$project'> extends infer R
-          ? readonly [{$project: ProjectRootObject<T, R>}, ...Pipeline<ProjectResultRootObject<T, R>, TRest>]
+          ? readonly [
+              {$project: ProjectRootObject<T, R>},
+              ...Pipeline<DeepExcludeNever<ProjectResultRootObject<T, R, ''>>, TRest>
+            ]
           : never;
         $redact: LookupKey<TFirst, '$redact'> extends infer R
           ? readonly [{$redact: never}, ...Pipeline<T & {}, TRest>]
@@ -1540,23 +1545,42 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
                 },
                 ...Pipeline<DeepReplaceKey<T, DeepKeyArray<R>, UnArray<DeepKeysResult<T, R>>>, TRest>
               ]
-            : readonly [
-                {
-                  $unwind: {
-                    path: `$${DeepKeys<T>}`;
-                    preserveNullAndEmptyArrays?: boolean;
-                    includeArrayIndex?: TArrayIndexField;
-                  };
-                },
-                ...Pipeline<
-                  DeepReplaceKey<
-                    T & {[key in TArrayIndexField]: number},
-                    DeepKeyArray<LookupKey<R, 'path'>>,
-                    UnArray<DeepKeysResult<T, TKey>>
-                  >,
-                  TRest
-                >
-              ]
+            : LookupKey<R, 'path'> extends string
+            ? [LookupKey<R, 'includeArrayIndex'>] extends [never]
+              ? readonly [
+                  {
+                    $unwind: {
+                      path: `$${DeepKeys<T>}`;
+                      preserveNullAndEmptyArrays?: boolean;
+                    };
+                  },
+                  ...Pipeline<
+                    DeepReplaceKey<
+                      T,
+                      DeepKeyArray<LookupKey<R, 'path'>>,
+                      UnArray<DeepKeysResult<T, LookupKey<R, 'path'>>>
+                    >,
+                    TRest
+                  >
+                ]
+              : readonly [
+                  {
+                    $unwind: {
+                      path: `$${DeepKeys<T>}`;
+                      preserveNullAndEmptyArrays?: boolean;
+                      includeArrayIndex?: LookupKey<R, 'includeArrayIndex'>;
+                    };
+                  },
+                  ...Pipeline<
+                    DeepReplaceKey<
+                      T & {[key in Cast<LookupKey<R, 'includeArrayIndex'>, string>]: number},
+                      DeepKeyArray<LookupKey<R, 'path'>>,
+                      UnArray<DeepKeysResult<T, LookupKey<R, 'path'>>>
+                    >,
+                    TRest
+                  >
+                ]
+            : never
           : never;
       }[keyof TFirst]
     : never
@@ -1622,7 +1646,10 @@ export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...
         $match: LookupKey<TFirst, '$match'> extends infer R ? PipelineResult<T, TRest> : never;
         $merge: LookupKey<TFirst, '$merge'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
         $out: LookupKey<TFirst, '$out'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
-        $project: PipelineResult<Simplify<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>>, TRest>;
+        $project: PipelineResult<
+          Simplify<DeepExcludeNever<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>>>,
+          TRest
+        >;
         $redact: LookupKey<TFirst, '$redact'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
         $replaceRoot: LookupKey<TFirst, '$replaceRoot'> extends infer R
           ? PipelineResult<Simplify<T & never>, TRest>
@@ -1644,7 +1671,24 @@ export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...
           ? PipelineResult<Simplify<T & never>, TRest>
           : never;
         $unset: LookupKey<TFirst, '$unset'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
-        $unwind: LookupKey<TFirst, '$unwind'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $unwind: LookupKey<TFirst, '$unwind'> extends infer R
+          ? R extends `$${infer TPath}`
+            ? PipelineResult<DeepReplaceKey<T, DeepKeyArray<R>, UnArray<DeepKeysResult<T, TPath>>>, TRest>
+            : LookupKey<R, 'path'> extends `$${infer TPath}`
+            ? [LookupKey<R, 'includeArrayIndex'>] extends [never]
+              ? PipelineResult<DeepReplaceKey<T, DeepKeyArray<TPath>, UnArray<DeepKeysResult<T, TPath>>>, TRest>
+              : LookupKey<R, 'includeArrayIndex'> extends `${infer TArrayIndexField}`
+              ? PipelineResult<
+                  DeepReplaceKey<
+                    T & {[key in TArrayIndexField]: number},
+                    DeepKeyArray<TPath>,
+                    UnArray<DeepKeysResult<T, TPath>>
+                  >,
+                  TRest
+                >
+              : never
+            : never
+          : never;
       }[keyof TFirst]
     : never
   : T;
