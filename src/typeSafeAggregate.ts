@@ -1055,11 +1055,9 @@ export class Aggregator<T> {
   static start<T>(): Aggregator<T> {
     return new Aggregator<T>();
   }
-  /*
   pipe<TPipes>(pipe: Pipeline<T, TPipes>): PipelineResult<T, TPipes> {
     return null!;
   }
-*/
 
   $addFields<TProject>(fields: ProjectRootObject<T, TProject>): Aggregator<T & ProjectResultRootObject<T, TProject>> {
     this.currentPipeline = {$addFields: fields};
@@ -1393,29 +1391,26 @@ type PipelineSteps =
 export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
   ? keyof TFirst extends PipelineSteps
     ? {
-        $addFields: readonly [
-          {$addFields: ProjectRootObject<T, LookupKey<TFirst, '$addFields'>>},
-          ...Pipeline<T & ProjectResultRootObject<T, LookupKey<TFirst, '$addFields'>>, TRest>
-        ];
+        $addFields: LookupKey<TFirst, '$addFields'> extends infer R
+          ? readonly [{$addFields: ProjectRootObject<T, R>}, ...Pipeline<T & ProjectResultRootObject<T, R>, TRest>]
+          : never;
         $bucket: never;
         $bucketAuto: never;
         $count: never;
         $facet: never;
         $geoNear: never;
         $graphLookup: never;
-        $group: readonly [
-          {$group: AccumulateRootObject<T, LookupKey<TFirst, '$group'>>},
-          ...Pipeline<AccumulateRootResultObject<T, LookupKey<TFirst, '$group'>>, TRest>
-        ];
+        $group: LookupKey<TFirst, '$group'> extends infer R
+          ? readonly [{$group: AccumulateRootObject<T, R>}, ...Pipeline<AccumulateRootResultObject<T, R>, TRest>]
+          : never;
         $limit: never;
         $lookup: never;
         $match: never;
         $merge: never;
         $out: never;
-        $project: readonly [
-          {$project: ProjectRootObject<T, LookupKey<TFirst, '$project'>>},
-          ...Pipeline<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>, TRest>
-        ];
+        $project: LookupKey<TFirst, '$project'> extends infer R
+          ? readonly [{$project: ProjectRootObject<T, R>}, ...Pipeline<ProjectResultRootObject<T, R>, TRest>]
+          : never;
         $redact: never;
         $replaceRoot: never;
         $replaceWith: never;

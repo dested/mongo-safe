@@ -15,7 +15,8 @@ test('simple', async () => {
   const aggregator = dbCarAggregator.pipe([
     {$project: {shoes: '$doors'}},
     {$group: {_id: 1, side: {$sum: 1}, ff: {$first: '$shoes'}}},
+    {$addFields: {foo: '$ff.bolts'}},
   ] as const);
 
-  assert<IsExact<{readonly _id: 1; readonly side: number; readonly ff: Door[]}, typeof aggregator>>(true);
+  assert<IsExact<{readonly _id: 1; readonly side: number; readonly ff: Door[]; foo: Bolt[]}, typeof aggregator>>(true);
 });
