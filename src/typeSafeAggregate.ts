@@ -1175,12 +1175,14 @@ export class Aggregator<T> {
         localField: props.localField,
         foreignField: props.foreignField,
         as: props.as,
-        let: props.let,
-        pipeline: props.pipeline
-          ? props
-              .pipeline(new Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>())
-              .query()
-          : undefined,
+        ...(props.let ? {let: props.let} : {}),
+        ...(props.pipeline
+          ? {
+              pipeline: props
+                .pipeline(new Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>())
+                .query(),
+            }
+          : {}),
       },
     };
     return new Aggregator<

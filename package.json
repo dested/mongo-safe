@@ -1,6 +1,6 @@
 {
   "name": "mongo-safe",
-  "version": "2.2.0",
+  "version": "2.3.1",
   "author": "Salvatore <dested@gmail.com>",
   "homepage": "https://github.com/dested/mongo-safe",
   "license": "MIT",

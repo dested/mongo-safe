@@ -442,19 +442,19 @@ declare type InterpretAccumulateOperator<TRootValue, TValue> = {
     $push?: ProjectOperatorHelperExpression<TRootValue, TValue, '$push'>;
     $sum?: ProjectOperatorHelperExpression<TRootValue, TValue, '$sum'>;
 };
-export declare type ExpressionStringReferenceKey<T> = `$${DeepKeys<T>}`;
+export declare type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
 export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends `$${string}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretProjectOperator<TRootValue, TValue> : TValue extends Array<infer TValueArr> ? Array<InterpretProjectExpression<TRootValue, TValueArr>> : TValue extends {} ? ProjectObject<TRootValue, TValue> : Impossible;
 declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 declare type ProjectRootObject<TRootValue, TProject> = {
-    [key in keyof TProject]: InterpretProjectExpression<TRootValue & CurrentAggregate<TRootValue>, TProject[key]>;
+    [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
 declare type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
 declare type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue extends 0 | false ? [TKey] extends ['_id'] ? 1 : 0 : 0;
-declare type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultObject<TRootValue, TValueArray>> : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : Impossible;
-declare type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>> : TValue extends {} ? ProjectResultRootObject<TRootValue, TValue, TKey> : Impossible;
+declare type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultObject<TRootValue, TValueArray>> : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : Impossible;
+declare type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>> : TValue extends {} ? ProjectResultRootObject<TRootValue, TValue, TKey> : Impossible;
 declare type ProjectResultExpression<TRootValue, TValue, TKey extends KEY> = ProjectResult<TRootValue, LookupKey<TValue, TKey>>;
 declare type ProjectResultExpressionInner<TRootValue, TValue, TKey extends KEY, TKey2 extends KEY> = ProjectResult<TRootValue, LookupKey<LookupKey<TValue, TKey>, TKey2>>;
 declare type ProjectResultArrayIndex<TRootValue, TValue, TKey extends KEY, TIndex extends number> = ProjectResult<TRootValue, LookupArray<LookupKey<TValue, TKey>, TIndex>>;
@@ -656,22 +656,19 @@ export declare type ProjectResultObject<TRootValue, TObj> = TObj extends infer T
     [key in keyof T]: ProjectResult<TRootValue, T[key]>;
 } : Impossible;
 export declare type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T ? {
-    [key in keyof T]: ProjectResultRoot<TRootValue & CurrentAggregate<TRootValue>, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
+    [key in keyof T]: ProjectResultRoot<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
 } : Impossible;
 export declare type LookupKey<T, TKey extends string | number | Symbol> = TKey extends keyof T ? T[TKey] : never;
 export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
-export declare type CurrentAggregate<TRootValue> = {
-    $CURRENT: TRootValue;
-};
 declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : Impossible;
 declare type AccumulateRootObject<TRootValue, TAccumulateObject> = {
-    [key in keyof TAccumulateObject]: key extends '_id' ? InterpretProjectExpression<TRootValue & CurrentAggregate<TRootValue>, TAccumulateObject[key]> : InterpretAccumulateExpression<TRootValue & CurrentAggregate<TRootValue>, TAccumulateObject[key]>;
+    [key in keyof TAccumulateObject]: key extends '_id' ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]> : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
 declare type BucketRootObject<TRootValue, TAccumulateObject> = {
-    [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue & CurrentAggregate<TRootValue>, TAccumulateObject[key]>;
+    [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
 declare type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T ? {
-    [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue & CurrentAggregate<TRootValue>, T[key]> : AccumulateResult<TRootValue & CurrentAggregate<TRootValue>, T[key]>;
+    [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue, T[key]> : AccumulateResult<TRootValue, T[key]>;
 } : Impossible;
 declare type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer T ? {
     [key in keyof T]: AccumulateResult<TRootValue, T[key]>;
@@ -793,17 +790,17 @@ export declare class Aggregator<T> {
     }): Aggregator<never>;
     $out<TOutTable>(tableName: TableName<TOutTable>): Aggregator<never>;
     $project<TProject>(query: ProjectRootObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>;
-    $redact<TExpression>(expression: ProjectResult<T & CurrentAggregate<T> & MongoRedactTypes, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP' ? InterpretProjectExpression<T & MongoRedactTypes, TExpression> : never): Aggregator<T>;
+    $redact<TExpression>(expression: ProjectResult<T & MongoRedactTypes, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP' ? InterpretProjectExpression<T & MongoRedactTypes, TExpression> : never): Aggregator<T>;
     $replaceRoot<TNewRootValue, TNewRoot extends {
         newRoot: TNewRootValue;
     }>(params: {
-        newRoot: InterpretProjectExpression<T & CurrentAggregate<T>, TNewRootValue>;
-    }): Aggregator<ProjectResult<T & CurrentAggregate<T>, TNewRootValue>>;
+        newRoot: InterpretProjectExpression<T, TNewRootValue>;
+    }): Aggregator<ProjectResult<T, TNewRootValue>>;
     $replaceWith<TNewRootValue, TNewRoot extends {
         newRoot: TNewRootValue;
     }>(params: {
-        newRoot: InterpretProjectExpression<T & CurrentAggregate<T>, TNewRootValue>;
-    }): Aggregator<ProjectResult<T & CurrentAggregate<T>, TNewRootValue>>;
+        newRoot: InterpretProjectExpression<T, TNewRootValue>;
+    }): Aggregator<ProjectResult<T, TNewRootValue>>;
     $sample(props: {
         size: number;
     }): Aggregator<T>;
@@ -813,8 +810,8 @@ export declare class Aggregator<T> {
     $sort(sorts: {
         [key in DeepKeys<T>]?: 1 | -1;
     }): Aggregator<T>;
-    $sortByCount<TExpression>(expression: InterpretProjectExpression<T & CurrentAggregate<T>, TExpression>): Aggregator<{
-        _id: ProjectResult<T & CurrentAggregate<T>, TExpression>;
+    $sortByCount<TExpression>(expression: InterpretProjectExpression<T, TExpression>): Aggregator<{
+        _id: ProjectResult<T, TExpression>;
         count: number;
     }>;
     $unionWith<TOtherTable, TPipeline = never>(props: TableName<TOtherTable> | {
