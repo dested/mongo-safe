@@ -156,6 +156,16 @@ test('unroll', async () => {
     {$match: {gameId}},
     {$match: {gameId}},
     {$match: {gameId}},
+  ] as const);
+  const aggregator2 = dbCarAggregator.pipe([
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
     {$match: {gameId}},
   ] as const);
 

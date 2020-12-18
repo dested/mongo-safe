@@ -1055,7 +1055,7 @@ export class Aggregator<T> {
   static start<T>(): Aggregator<T> {
     return new Aggregator<T>();
   }
-  pipe<TPipes>(pipe: Pipeline<T, TPipes>): PipelineResult<T, TPipes> {
+  pipe<TPipes>(pipe: Pipeline<T, TPipes> extends 11111 ? TPipes : never): void {
     return null!;
   }
 
@@ -1494,7 +1494,9 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
             : never
           : never;
         $match: LookupKey<TFirst, '$match'> extends infer R
-          ? readonly [{$match: FilterQueryMatch<T, `$${DeepKeys<T>}`>}, ...Pipeline<T, TRest>]
+          ? TFirst extends {$match: FilterQueryMatch<T, `$${DeepKeys<T>}`>}
+            ? Pipeline<T, TRest>
+            : never
           : never;
         $merge: LookupKey<TFirst, '$merge'> extends infer R
           ? readonly [{$merge: never}, ...Pipeline<T & {}, TRest>]
@@ -1587,7 +1589,7 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
           : never;
       }[keyof TFirst]
     : never
-  : TPipe;
+  : 11111;
 
 export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
   ? keyof TFirst extends PipelineSteps
