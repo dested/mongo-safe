@@ -1228,7 +1228,29 @@
 <a name='L1169'></a><a href='#L1169'>1169</a>
 <a name='L1170'></a><a href='#L1170'>1170</a>
 <a name='L1171'></a><a href='#L1171'>1171</a>
-<a name='L1172'></a><a href='#L1172'>1172</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L1172'></a><a href='#L1172'>1172</a>
+<a name='L1173'></a><a href='#L1173'>1173</a>
+<a name='L1174'></a><a href='#L1174'>1174</a>
+<a name='L1175'></a><a href='#L1175'>1175</a>
+<a name='L1176'></a><a href='#L1176'>1176</a>
+<a name='L1177'></a><a href='#L1177'>1177</a>
+<a name='L1178'></a><a href='#L1178'>1178</a>
+<a name='L1179'></a><a href='#L1179'>1179</a>
+<a name='L1180'></a><a href='#L1180'>1180</a>
+<a name='L1181'></a><a href='#L1181'>1181</a>
+<a name='L1182'></a><a href='#L1182'>1182</a>
+<a name='L1183'></a><a href='#L1183'>1183</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2097,10 +2119,10 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">279x</span>
+<span class="cline-any cline-yes">281x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">109x</span>
+<span class="cline-any cline-yes">110x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
@@ -2282,8 +2304,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">56x</span>
-<span class="cline-any cline-yes">56x</span>
+<span class="cline-any cline-yes">57x</span>
+<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2375,19 +2397,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">221x</span>
-<span class="cline-any cline-yes">221x</span>
-<span class="cline-any cline-yes">221x</span>
-<span class="cline-any cline-yes">290x</span>
-<span class="cline-any cline-yes">290x</span>
+<span class="cline-any cline-yes">223x</span>
+<span class="cline-any cline-yes">223x</span>
+<span class="cline-any cline-yes">223x</span>
+<span class="cline-any cline-yes">292x</span>
+<span class="cline-any cline-yes">292x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">221x</span>
+<span class="cline-any cline-yes">223x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">108x</span>
+<span class="cline-any cline-yes">109x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">108x</span>
+<span class="cline-any cline-yes">109x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2626,6 +2648,9 @@ type ProjectOperatorHelperExpressionObject&lt;TRootValue, TValue, TKey extends K
       key
     &gt;;
   };
+type ProjectOperatorHelperOneTuple&lt;TRootValue, TValue, TKey extends KEY&gt; = [
+  InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, TKey&gt;, 0&gt;&gt;
+];
 type ProjectOperatorHelperTwoTuple&lt;TRootValue, TValue, TKey extends KEY&gt; = [
   InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, TKey&gt;, 0&gt;&gt;,
   InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, TKey&gt;, 1&gt;&gt;
@@ -2742,32 +2767,35 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; =
         | ProjectOperatorHelperThreeTuple&lt;TRootValue, TValue, '$indexOfCP'&gt;
         | ProjectOperatorHelperFourTuple&lt;TRootValue, TValue, '$indexOfCP'&gt;;
     }
-  | {$isArray: NotImplementedProjectedYet}
+  | {$isArray: ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$isArray'&gt;}
   | {$isoDayOfWeek: ProjectOperatorHelperDate&lt;TRootValue, TValue, '$isoDayOfWeek'&gt;}
   | {$isoWeek: ProjectOperatorHelperDate&lt;TRootValue, TValue, '$isoWeek'&gt;}
   | {$isoWeekYear: ProjectOperatorHelperDate&lt;TRootValue, TValue, '$isoWeekYear'&gt;}
   | {$last: ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$last'&gt;}
-  | {$let: NotImplementedProjectedYet}
+  | {
+      $let: ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$let'&gt; extends {
+        vars: InterpretProjectExpression&lt;TRootValue, infer TVars&gt;;
+      }
+        ? {
+            vars: ProjectOperatorHelperExpressionInner&lt;TRootValue, TValue, '$let', 'vars'&gt;;
+            in: ProjectResultObject&lt;TRootValue, TVars&gt; extends infer R
+              ? // todo document let is a little sketchy, the values that come from vars are not super typesafe, which doesnt matter because we dont check them yet, but maybe someday
+                ProjectOperatorHelperExpressionInner&lt;
+                  TRootValue &amp; Double$Keys&lt;{[key in keyof R]: 1}&gt;,
+                  TValue,
+                  '$let',
+                  'in'
+                &gt;
+              : never;
+          }
+        : never;
+    }
   | {$literal: NotImplementedProjectedYet}
   | {$ln: NotImplementedProjectedYet}
   | {$log: NotImplementedProjectedYet}
   | {$log10: NotImplementedProjectedYet}
-  | {
-      $lt: LookupKey&lt;TValue, '$lt'&gt; extends [
-        InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
-        InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
-      ]
-        ? [InterpretProjectExpression&lt;TRootValue, TLeft&gt;, InterpretProjectExpression&lt;TRootValue, TRight&gt;]
-        : never;
-    }
-  | {
-      $lte: LookupKey&lt;TValue, '$lte'&gt; extends [
-        InterpretProjectExpression&lt;TRootValue, infer TLeft&gt;,
-        InterpretProjectExpression&lt;TRootValue, infer TRight&gt;
-      ]
-        ? [InterpretProjectExpression&lt;TRootValue, TLeft&gt;, InterpretProjectExpression&lt;TRootValue, TRight&gt;]
-        : never;
-    }
+  | {$lt: ProjectOperatorHelperCondition&lt;TRootValue, TValue, '$lt'&gt;}
+  | {$lte: ProjectOperatorHelperCondition&lt;TRootValue, TValue, '$lte'&gt;}
   | {$ltrim: NotImplementedProjectedYet}
   | {
       $map: LookupKey&lt;TValue, '$map'&gt; extends {
@@ -2839,11 +2867,7 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; =
   | {$substr: NotImplementedProjectedYet}
   | {$substrBytes: NotImplementedProjectedYet}
   | {$substrCP: NotImplementedProjectedYet}
-  | {
-      $subtract: LookupKey&lt;TValue, '$subtract'&gt; extends Array&lt;InterpretProjectExpression&lt;TRootValue, infer TSubtract&gt;&gt;
-        ? InterpretProjectExpression&lt;TRootValue, TSubtract&gt;[]
-        : never;
-    }
+  | {$subtract: ProjectOperatorHelperArray&lt;TRootValue, TValue, '$subtract'&gt;}
   | {$sum: ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$sum'&gt;}
   | {
       $switch: LookupKey&lt;TValue, '$switch'&gt; extends {
@@ -2876,11 +2900,8 @@ type InterpretProjectOperator&lt;TRootValue, TValue&gt; =
   | {$trim: NotImplementedProjectedYet}
   | {
       $trunc:
-        | [InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$trunc'&gt;, 0&gt;&gt;]
-        | [
-            InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$trunc'&gt;, 0&gt;&gt;,
-            InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TValue, '$trunc'&gt;, 1&gt;&gt;
-          ]
+        | ProjectOperatorHelperOneTuple&lt;TRootValue, TValue, '$trunc'&gt;
+        | ProjectOperatorHelperTwoTuple&lt;TRootValue, TValue, '$trunc'&gt;
         | ProjectOperatorHelperExpression&lt;TRootValue, TValue, '$trunc'&gt;;
     }
   | {$type: NotImplementedProjectedYet}
@@ -3056,7 +3077,19 @@ type ProjectResultOperators&lt;TRootValue, TValue&gt; = {
   $isoWeek: number;
   $isoWeekYear: number;
   $last: UnArray&lt;ProjectResult&lt;TRootValue, LookupKey&lt;TValue, '$last'&gt;&gt;&gt;;
-  $let: NotImplementedYet;
+  $let: ProjectResult&lt;
+    TRootValue &amp;
+      Double$Keys&lt;
+        {
+          [key in keyof ProjectResultObject&lt;
+            TRootValue,
+            ProjectResult&lt;TRootValue, LookupKey&lt;LookupKey&lt;TValue, '$let'&gt;, 'vars'&gt;&gt;
+          &gt;]: 1;
+        }
+      &gt;,
+    LookupKey&lt;LookupKey&lt;TValue, '$let'&gt;, 'in'&gt;
+  &gt;;
+&nbsp;
   $literal: NotImplementedYet;
   $ln: NotImplementedYet;
   $log: NotImplementedYet;
@@ -3577,7 +3610,7 @@ function safeKeys&lt;T&gt;(model: T): (keyof T)[] {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Thu Dec 17 2020 14:32:40 GMT-0700 (Mountain Standard Time)
+                at Thu Dec 17 2020 18:00:46 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>

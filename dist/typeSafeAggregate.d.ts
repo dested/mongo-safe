@@ -41,6 +41,9 @@ declare type ProjectOperatorHelperExpressionObject<TRootValue, TValue, TKey exte
 } & {
     [key in keyof TObj as key extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<TRootValue, TValue, TKey, key>;
 };
+declare type ProjectOperatorHelperOneTuple<TRootValue, TValue, TKey extends KEY> = [
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>
+];
 declare type ProjectOperatorHelperTwoTuple<TRootValue, TValue, TKey extends KEY> = [
     InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
     InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>
@@ -189,7 +192,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $indexOfCP: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$indexOfCP'> | ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$indexOfCP'> | ProjectOperatorHelperFourTuple<TRootValue, TValue, '$indexOfCP'>;
 } | {
-    $isArray: NotImplementedProjectedYet;
+    $isArray: ProjectOperatorHelperExpression<TRootValue, TValue, '$isArray'>;
 } | {
     $isoDayOfWeek: ProjectOperatorHelperDate<TRootValue, TValue, '$isoDayOfWeek'>;
 } | {
@@ -199,7 +202,14 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $last: ProjectOperatorHelperExpression<TRootValue, TValue, '$last'>;
 } | {
-    $let: NotImplementedProjectedYet;
+    $let: ProjectOperatorHelperExpression<TRootValue, TValue, '$let'> extends {
+        vars: InterpretProjectExpression<TRootValue, infer TVars>;
+    } ? {
+        vars: ProjectOperatorHelperExpressionInner<TRootValue, TValue, '$let', 'vars'>;
+        in: ProjectResultObject<TRootValue, TVars> extends infer R ? ProjectOperatorHelperExpressionInner<TRootValue & Double$Keys<{
+            [key in keyof R]: 1;
+        }>, TValue, '$let', 'in'> : never;
+    } : never;
 } | {
     $literal: NotImplementedProjectedYet;
 } | {
@@ -209,15 +219,9 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $log10: NotImplementedProjectedYet;
 } | {
-    $lt: LookupKey<TValue, '$lt'> extends [
-        InterpretProjectExpression<TRootValue, infer TLeft>,
-        InterpretProjectExpression<TRootValue, infer TRight>
-    ] ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>] : never;
+    $lt: ProjectOperatorHelperCondition<TRootValue, TValue, '$lt'>;
 } | {
-    $lte: LookupKey<TValue, '$lte'> extends [
-        InterpretProjectExpression<TRootValue, infer TLeft>,
-        InterpretProjectExpression<TRootValue, infer TRight>
-    ] ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>] : never;
+    $lte: ProjectOperatorHelperCondition<TRootValue, TValue, '$lte'>;
 } | {
     $ltrim: NotImplementedProjectedYet;
 } | {
@@ -319,7 +323,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $substrCP: NotImplementedProjectedYet;
 } | {
-    $subtract: LookupKey<TValue, '$subtract'> extends Array<InterpretProjectExpression<TRootValue, infer TSubtract>> ? InterpretProjectExpression<TRootValue, TSubtract>[] : never;
+    $subtract: ProjectOperatorHelperArray<TRootValue, TValue, '$subtract'>;
 } | {
     $sum: ProjectOperatorHelperExpression<TRootValue, TValue, '$sum'>;
 } | {
@@ -361,10 +365,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $trim: NotImplementedProjectedYet;
 } | {
-    $trunc: [InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>] | [
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 0>>,
-        InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, '$trunc'>, 1>>
-    ] | ProjectOperatorHelperExpression<TRootValue, TValue, '$trunc'>;
+    $trunc: ProjectOperatorHelperOneTuple<TRootValue, TValue, '$trunc'> | ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$trunc'> | ProjectOperatorHelperExpression<TRootValue, TValue, '$trunc'>;
 } | {
     $type: NotImplementedProjectedYet;
 } | {
@@ -466,7 +467,9 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $isoWeek: number;
     $isoWeekYear: number;
     $last: UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$last'>>>;
-    $let: NotImplementedYet;
+    $let: ProjectResult<TRootValue & Double$Keys<{
+        [key in keyof ProjectResultObject<TRootValue, ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$let'>, 'vars'>>>]: 1;
+    }>, LookupKey<LookupKey<TValue, '$let'>, 'in'>>;
     $literal: NotImplementedYet;
     $ln: NotImplementedYet;
     $log: NotImplementedYet;

@@ -286,6 +286,38 @@ test('project.$dateToParts', async () => {
     >
   >(true);
 });
+test('project.$let', async () => {
+  const aggregator = Aggregator.start<{price: number; tax: number}>().$project({
+    finalTotal: {
+      $let: {
+        vars: {
+          total: {$add: ['$price', '$tax']},
+          discounted: {$cond: {if: '$applyDiscount', then: 0.9, else: 1}},
+        },
+        in: {$multiply: ['$$total', '$$discounted', '$price']},
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        finalTotal: {
+          $let: {
+            vars: {
+              total: {$add: ['$price', '$tax']},
+              discounted: {$cond: {if: '$applyDiscount', then: 0.9, else: 1}},
+            },
+            in: {$multiply: ['$$total', '$$discounted', '$price']},
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{finalTotal: number}, typeof result>>(true);
+});
+
 test('project.$dateToParts.iso', async () => {
   let date1 = new Date();
   const aggregator = Aggregator.start<DBCar>().$project({
