@@ -1404,7 +1404,80 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
           ? readonly [{$group: AccumulateRootObject<T, R>}, ...Pipeline<AccumulateRootResultObject<T, R>, TRest>]
           : never;
         $limit: never;
-        $lookup: never;
+        $lookup: LookupKey<TFirst, '$lookup'> extends infer R
+          ? LookupKey<R, 'from'> extends TableName<infer TFromTable>
+            ? [LookupKey<R, 'let'>] extends [never]
+              ? readonly [
+                  {
+                    $lookup: {
+                      from: LookupKey<R, 'from'>;
+                      localField: DeepKeys<T>;
+                      foreignField: DeepKeys<TFromTable>;
+                      as: LookupKey<R, 'as'>;
+                    };
+                  },
+                  ...Pipeline<
+                    Simplify<
+                      T & (LookupKey<R, 'as'> extends string ? {[key in LookupKey<R, 'as'>]: TFromTable[]} : never)
+                    >,
+                    TRest
+                  >
+                ]
+              : LookupKey<R, 'let'> extends ProjectObject<TFromTable, infer TLet>
+              ? [LookupKey<R, 'pipeline'>] extends [never]
+                ? readonly [
+                    {
+                      $lookup: {
+                        from: LookupKey<R, 'from'>;
+                        localField: DeepKeys<T>;
+                        foreignField: DeepKeys<TFromTable>;
+                        as: LookupKey<R, 'as'>;
+                        let: ProjectObject<TFromTable, TLet>;
+                      };
+                    },
+                    ...Pipeline<
+                      Simplify<
+                        T &
+                          (LookupKey<R, 'as'> extends string
+                            ? {[key in LookupKey<R, 'as'>]: ProjectResult<TFromTable, TLet>[]}
+                            : never)
+                      >,
+                      TRest
+                    >
+                  ]
+                : readonly [
+                    {
+                      $lookup: {
+                        from: LookupKey<R, 'from'>;
+                        localField: DeepKeys<T>;
+                        foreignField: DeepKeys<TFromTable>;
+                        as: LookupKey<R, 'as'>;
+                        let: ProjectObject<TFromTable, TLet>;
+                        pipeline: Pipeline<
+                          ProjectResult<TFromTable, TLet> extends infer R ? Double$Keys<R> : never,
+                          LookupKey<R, 'pipeline'>
+                        >;
+                      };
+                    },
+                    ...Pipeline<
+                      Simplify<
+                        T &
+                          (LookupKey<R, 'as'> extends string
+                            ? {
+                                [key in LookupKey<R, 'as'>]: PipelineResult<
+                                  ProjectResult<TFromTable, TLet> extends infer R ? Double$Keys<R> : never,
+                                  LookupKey<R, 'pipeline'>
+                                >[];
+                              }
+                            : never)
+                      >,
+                      TRest
+                    >
+                  ]
+              : never
+            : never
+          : never;
+
         $match: never;
         $merge: never;
         $out: never;
@@ -1439,7 +1512,44 @@ export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...
         $graphLookup: never;
         $group: PipelineResult<Simplify<AccumulateRootResultObject<T, LookupKey<TFirst, '$group'>>>, TRest>;
         $limit: never;
-        $lookup: never;
+        $lookup: LookupKey<TFirst, '$lookup'> extends infer R
+          ? LookupKey<R, 'from'> extends TableName<infer TFromTable>
+            ? [LookupKey<R, 'let'>] extends [never]
+              ? PipelineResult<
+                  Simplify<
+                    T & (LookupKey<R, 'as'> extends string ? {[key in LookupKey<R, 'as'>]: TFromTable[]} : never)
+                  >,
+                  TRest
+                >
+              : LookupKey<R, 'let'> extends ProjectObject<TFromTable, infer TLet>
+              ? [LookupKey<R, 'pipeline'>] extends [never]
+                ? PipelineResult<
+                    Simplify<
+                      T &
+                        (LookupKey<R, 'as'> extends string
+                          ? {[key in LookupKey<R, 'as'>]: ProjectResult<TFromTable, TLet>[]}
+                          : never)
+                    >,
+                    TRest
+                  >
+                : PipelineResult<
+                    Simplify<
+                      T &
+                        (LookupKey<R, 'as'> extends string
+                          ? {
+                              [key in LookupKey<R, 'as'>]: PipelineResult<
+                                ProjectResult<TFromTable, TLet> extends infer R ? Double$Keys<R> : never,
+                                LookupKey<R, 'pipeline'>
+                              >[];
+                            }
+                          : never)
+                    >,
+                    TRest
+                  >
+              : never
+            : never
+          : never;
+
         $match: never;
         $merge: never;
         $out: never;
