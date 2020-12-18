@@ -32,5 +32,6 @@ export interface Door {
   bolts: Bolt[];
 }
 export interface Bolt {
+  count: number;
   type: 'phillips' | 'flat';
 }

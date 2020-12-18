@@ -1491,12 +1491,11 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
               : never
             : never
           : never;
-
         $match: LookupKey<TFirst, '$match'> extends infer R
-          ? readonly [{$match: never}, ...Pipeline<T & {}, TRest>]
+          ? readonly [{$match: FilterQueryMatch<T, `$${DeepKeys<T>}`>}, ...Pipeline<T, TRest>]
           : never;
         $merge: LookupKey<TFirst, '$merge'> extends infer R
-          ? readonly [{$match: never}, ...Pipeline<T & {}, TRest>]
+          ? readonly [{$merge: never}, ...Pipeline<T & {}, TRest>]
           : never;
         $out: LookupKey<TFirst, '$out'> extends infer R ? readonly [{$out: never}, ...Pipeline<T & {}, TRest>] : never;
         $project: LookupKey<TFirst, '$project'> extends infer R
@@ -1534,7 +1533,30 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
           ? readonly [{$unset: never}, ...Pipeline<T & {}, TRest>]
           : never;
         $unwind: LookupKey<TFirst, '$unwind'> extends infer R
-          ? readonly [{$unwind: never}, ...Pipeline<T & {}, TRest>]
+          ? R extends string
+            ? readonly [
+                {
+                  $unwind: `$${DeepKeys<T>}`;
+                },
+                ...Pipeline<DeepReplaceKey<T, DeepKeyArray<R>, UnArray<DeepKeysResult<T, R>>>, TRest>
+              ]
+            : readonly [
+                {
+                  $unwind: {
+                    path: `$${DeepKeys<T>}`;
+                    preserveNullAndEmptyArrays?: boolean;
+                    includeArrayIndex?: TArrayIndexField;
+                  };
+                },
+                ...Pipeline<
+                  DeepReplaceKey<
+                    T & {[key in TArrayIndexField]: number},
+                    DeepKeyArray<LookupKey<R, 'path'>>,
+                    UnArray<DeepKeysResult<T, TKey>>
+                  >,
+                  TRest
+                >
+              ]
           : never;
       }[keyof TFirst]
     : never
@@ -1597,7 +1619,7 @@ export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...
             : never
           : never;
 
-        $match: LookupKey<TFirst, '$match'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $match: LookupKey<TFirst, '$match'> extends infer R ? PipelineResult<T, TRest> : never;
         $merge: LookupKey<TFirst, '$merge'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
         $out: LookupKey<TFirst, '$out'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
         $project: PipelineResult<Simplify<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>>, TRest>;
