@@ -241,6 +241,28 @@ type ProjectOperatorHelperFourTuple<TRootValue, TValue, TKey extends KEY> = [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 3>>
 ];
 
+export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
+  ? '$project' extends keyof TFirst
+    ? readonly [
+        {$project: ProjectRootObject<T, TFirst['$project']>},
+        ...Pipeline<ProjectResultRootObject<T, TFirst['$project']>, TRest>
+      ]
+    : '$group' extends keyof TFirst
+    ? readonly [
+        {$group: AccumulateRootObject<T, TFirst['$group']>},
+        ...Pipeline<AccumulateRootResultObject<T, TFirst['$group']>, TRest>
+      ]
+    : never
+  : TPipe;
+
+export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
+  ? '$project' extends keyof TFirst
+    ? PipelineResult<Simplify<ProjectResultRootObject<T, TFirst['$project']>>, TRest>
+    : '$group' extends keyof TFirst
+    ? PipelineResult<Simplify<AccumulateRootResultObject<T, TFirst['$group']>>, TRest>
+    : never
+  : T;
+
 type InterpretProjectOperator<TRootValue, TValue> =
   | {$abs: ProjectOperatorHelperExpression<TRootValue, TValue, '$abs'>}
   | {$acos: ProjectOperatorHelperExpression<TRootValue, TValue, '$acos'>}
@@ -1055,6 +1077,10 @@ export class Aggregator<T> {
   static start<T>(): Aggregator<T> {
     return new Aggregator<T>();
   }
+  pipe<TPipes>(pipe: Pipeline<T, TPipes>): any {
+    return null!;
+  }
+
   $addFields<TProject>(fields: ProjectRootObject<T, TProject>): Aggregator<T & ProjectResultRootObject<T, TProject>> {
     this.currentPipeline = {$addFields: fields};
     return new Aggregator<T & ProjectResultRootObject<T, TProject>>(this);
