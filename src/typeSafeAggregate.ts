@@ -255,7 +255,11 @@ type InterpretProjectOperator<TRootValue, TValue> =
   | {$and: ProjectOperatorHelperArray<TRootValue, TValue, '$and'>}
   | {$anyElementTrue: ProjectOperatorHelperArray<TRootValue, TValue, '$anyElementTrue'>}
   | {$arrayElemAt: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$arrayElemAt'>}
-  | {$arrayToObject: NotImplementedProjectedYet}
+  | {
+      $arrayToObject:
+        | ProjectOperatorHelperArray<TRootValue, TValue, '$arrayToObject'>
+        | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$arrayToObject', {k: 1; v: 1}>[];
+    }
   | {$asin: ProjectOperatorHelperExpression<TRootValue, TValue, '$asin'>}
   | {$asinh: ProjectOperatorHelperExpression<TRootValue, TValue, '$asinh'>}
   | {$atan: ProjectOperatorHelperExpression<TRootValue, TValue, '$atan'>}
@@ -424,7 +428,7 @@ type InterpretProjectOperator<TRootValue, TValue> =
         : never;
     }
   | {$max: ProjectOperatorHelperExpression<TRootValue, TValue, '$max'>}
-  | {$mergeObjects: NotImplementedProjectedYet}
+  | {$mergeObjects: ProjectOperatorHelperArray<TRootValue, TValue, '$mergeObjects'>}
   | {$meta: 'textScore' | 'indexKey'}
   | {$millisecond: ProjectOperatorHelperDate<TRootValue, TValue, '$millisecond'>}
   | {$min: ProjectOperatorHelperExpression<TRootValue, TValue, '$min'>}
@@ -548,7 +552,7 @@ type InterpretProjectOperator<TRootValue, TValue> =
 type InterpretAccumulateOperator<TRootValue, TValue> = {
   $avg?: ProjectOperatorHelperExpression<TRootValue, TValue, '$avg'>;
   $last?: ProjectOperatorHelperExpression<TRootValue, TValue, '$last'>;
-  $mergeObjects?: never;
+  $mergeObjects?: ProjectOperatorHelperExpression<TRootValue, TValue, '$mergeObjects'>;
   $stdDevPop?: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevPop'>;
   $stdDevSamp?: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevSamp'>;
   $addToSet?: ProjectOperatorHelperExpression<TRootValue, TValue, '$addToSet'>;
@@ -641,7 +645,7 @@ type ProjectResultExpressionInner<TRootValue, TValue, TKey extends KEY, TKey2 ex
 >;
 type ProjectResultArrayIndex<TRootValue, TValue, TKey extends KEY, TIndex extends number> = ProjectResult<
   TRootValue,
-  LookupArray<LookupKey<TValue, 'TKey'>, TIndex>
+  LookupArray<LookupKey<TValue, TKey>, TIndex>
 >;
 type NumberProjectResultExpression<TRootValue, TValue, TKey extends KEY> = NumberTypeOrNever<
   ProjectResult<TRootValue, LookupKey<TValue, TKey>>
@@ -651,6 +655,16 @@ type NumberProjectResultExpressionUnArray<TRootValue, TValue, TKey extends KEY> 
   ProjectResult<TRootValue, UnArray<LookupKey<TValue, TKey>>>
 >;
 
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+type FlattenUnion<T> = {
+  [K in keyof UnionToIntersection<T>]: K extends keyof T
+    ? T[K] extends any[]
+      ? T[K]
+      : T[K] extends object
+      ? FlattenUnion<T[K]>
+      : T[K]
+    : UnionToIntersection<T>[K] | undefined;
+};
 type ProjectResultOperators<TRootValue, TValue> = {
   // document, anything other than lookupkey would throw deep
   $abs: NumberProjectResultExpression<TRootValue, TValue, '$abs'>;
@@ -662,7 +676,7 @@ type ProjectResultOperators<TRootValue, TValue> = {
   $and: boolean;
   $anyElementTrue: boolean;
   $arrayElemAt: UnArray<ProjectResultArrayIndex<TRootValue, TValue, '$arrayElemAt', 0>>;
-  $arrayToObject: NotImplementedYet;
+  $arrayToObject: {k: string; v: unknown}[];
   $asin: NumberProjectResultExpression<TRootValue, TValue, '$asin'>;
   $asinh: NumberProjectResultExpression<TRootValue, TValue, '$asinh'>;
   $atan: NumberProjectResultExpression<TRootValue, TValue, '$atan'>;
@@ -760,7 +774,7 @@ type ProjectResultOperators<TRootValue, TValue> = {
       >[]
     : never;
   $max: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$max'>>>;
-  $mergeObjects: NotImplementedYet;
+  $mergeObjects: FlattenUnion<ProjectResultArrayIndex<TRootValue, TValue, '$mergeObjects', number>>;
   $meta: number;
   $millisecond: number;
   $min: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$min'>>>;
@@ -856,7 +870,7 @@ type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? {
       $avg: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$avg'>>>>;
       $last: ProjectResult<TRootValue, LookupKey<TValue, '$last'>>;
-      $mergeObjects: never;
+      $mergeObjects: FlattenUnion<UnArray<ProjectResultExpression<TRootValue, TValue, '$mergeObjects'>>>;
       $stdDevPop: number;
       $stdDevSamp: number;
 

@@ -928,3 +928,23 @@ test('project.exclude other2', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{doors: 0}, typeof result>>(true);
 });
+test('project.$mergeObjects', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $mergeObjects: [{a: 2 * 2}, {a: 2 * 3, b: 2 * 4}, {a: 2 * 5, c: 2 * 6}],
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $mergeObjects: [{a: 4}, {a: 6, b: 8}, {a: 10, c: 12}],
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+
+  assert<Has<{doors: {a: number; b: number | undefined; c: number | undefined}}, typeof result>>(true);
+});

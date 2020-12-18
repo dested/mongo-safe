@@ -79,7 +79,10 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $arrayElemAt: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$arrayElemAt'>;
 } | {
-    $arrayToObject: NotImplementedProjectedYet;
+    $arrayToObject: ProjectOperatorHelperArray<TRootValue, TValue, '$arrayToObject'> | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$arrayToObject', {
+        k: 1;
+        v: 1;
+    }>[];
 } | {
     $asin: ProjectOperatorHelperExpression<TRootValue, TValue, '$asin'>;
 } | {
@@ -258,7 +261,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $max: ProjectOperatorHelperExpression<TRootValue, TValue, '$max'>;
 } | {
-    $mergeObjects: NotImplementedProjectedYet;
+    $mergeObjects: ProjectOperatorHelperArray<TRootValue, TValue, '$mergeObjects'>;
 } | {
     $meta: 'textScore' | 'indexKey';
 } | {
@@ -415,7 +418,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 declare type InterpretAccumulateOperator<TRootValue, TValue> = {
     $avg?: ProjectOperatorHelperExpression<TRootValue, TValue, '$avg'>;
     $last?: ProjectOperatorHelperExpression<TRootValue, TValue, '$last'>;
-    $mergeObjects?: never;
+    $mergeObjects?: ProjectOperatorHelperExpression<TRootValue, TValue, '$mergeObjects'>;
     $stdDevPop?: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevPop'>;
     $stdDevSamp?: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevSamp'>;
     $addToSet?: ProjectOperatorHelperExpression<TRootValue, TValue, '$addToSet'>;
@@ -436,9 +439,13 @@ declare type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> 
 declare type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT` ? TRootValue : TValue extends '$$DESCEND' | '$$PRUNE' | '$$KEEP' ? TValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultObject<TRootValue, TValueArray>> : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : never;
 declare type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>> : TValue extends {} ? ProjectResultRootObject<TRootValue, TValue, TKey> : never;
 declare type ProjectResultExpression<TRootValue, TValue, TKey extends KEY> = ProjectResult<TRootValue, LookupKey<TValue, TKey>>;
-declare type ProjectResultArrayIndex<TRootValue, TValue, TKey extends KEY, TIndex extends number> = ProjectResult<TRootValue, LookupArray<LookupKey<TValue, 'TKey'>, TIndex>>;
+declare type ProjectResultArrayIndex<TRootValue, TValue, TKey extends KEY, TIndex extends number> = ProjectResult<TRootValue, LookupArray<LookupKey<TValue, TKey>, TIndex>>;
 declare type NumberProjectResultExpression<TRootValue, TValue, TKey extends KEY> = NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, TKey>>>;
 declare type NumberProjectResultExpressionUnArray<TRootValue, TValue, TKey extends KEY> = NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, TKey>>>>;
+declare type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+declare type FlattenUnion<T> = {
+    [K in keyof UnionToIntersection<T>]: K extends keyof T ? T[K] extends any[] ? T[K] : T[K] extends object ? FlattenUnion<T[K]> : T[K] : UnionToIntersection<T>[K] | undefined;
+};
 declare type ProjectResultOperators<TRootValue, TValue> = {
     $abs: NumberProjectResultExpression<TRootValue, TValue, '$abs'>;
     $acos: NumberProjectResultExpression<TRootValue, TValue, '$acos'>;
@@ -449,7 +456,10 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $and: boolean;
     $anyElementTrue: boolean;
     $arrayElemAt: UnArray<ProjectResultArrayIndex<TRootValue, TValue, '$arrayElemAt', 0>>;
-    $arrayToObject: NotImplementedYet;
+    $arrayToObject: {
+        k: string;
+        v: unknown;
+    }[];
     $asin: NumberProjectResultExpression<TRootValue, TValue, '$asin'>;
     $asinh: NumberProjectResultExpression<TRootValue, TValue, '$asinh'>;
     $atan: NumberProjectResultExpression<TRootValue, TValue, '$atan'>;
@@ -522,7 +532,7 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
         [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
     }, LookupKey<LookupKey<TValue, '$map'>, 'in'>>[] : never;
     $max: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$max'>>>;
-    $mergeObjects: NotImplementedYet;
+    $mergeObjects: FlattenUnion<ProjectResultArrayIndex<TRootValue, TValue, '$mergeObjects', number>>;
     $meta: number;
     $millisecond: number;
     $min: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$min'>>>;
@@ -596,7 +606,7 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
 declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
     $avg: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$avg'>>>>;
     $last: ProjectResult<TRootValue, LookupKey<TValue, '$last'>>;
-    $mergeObjects: never;
+    $mergeObjects: FlattenUnion<UnArray<ProjectResultExpression<TRootValue, TValue, '$mergeObjects'>>>;
     $stdDevPop: number;
     $stdDevSamp: number;
     $sum: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$sum'>>>>;

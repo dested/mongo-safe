@@ -1327,3 +1327,24 @@ test('resultCursor', async () => {
   const result = await aggregator.resultCursor(mockCollection);
   assert<IsExact<AggregationCursor<{shoes: string}>, typeof result>>(true);
 });
+
+test('project.$mergeObjects', async () => {
+  const aggregator = Aggregator.start<DBCar>().$group({
+    doors: {
+      $mergeObjects: '$doors',
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $group: {
+        doors: {
+          $mergeObjects: '$doors',
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+
+  assert<Has<{doors: Door}, typeof result>>(true);
+});
