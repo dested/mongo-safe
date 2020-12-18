@@ -10,15 +10,6 @@ const mockCollection: any = {
 };
 
 test('simple', async () => {
-  type j = PipelineResult<
-    DBCar,
-    [{$project: {shoes: '$doors'}}, {$group: {_id: 1; side: {$sum: 1}; ff: {$first: '$shoes'}}}]
-  >;
-  type jc = Pipeline<
-    DBCar,
-    [{$project: {shoes: '$doeors'}}, {$group: {_id: 1; side: {$sum: 1}; ff: {$first: '$shoes'}}}]
-  >;
-
   let dbCarAggregator = Aggregator.start<DBCar>();
 
   const aggregator = dbCarAggregator.pipe([

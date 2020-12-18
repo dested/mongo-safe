@@ -241,28 +241,6 @@ type ProjectOperatorHelperFourTuple<TRootValue, TValue, TKey extends KEY> = [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 3>>
 ];
 
-export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
-  ? '$project' extends keyof TFirst
-    ? readonly [
-        {$project: ProjectRootObject<T, TFirst['$project']>},
-        ...Pipeline<ProjectResultRootObject<T, TFirst['$project']>, TRest>
-      ]
-    : '$group' extends keyof TFirst
-    ? readonly [
-        {$group: AccumulateRootObject<T, TFirst['$group']>},
-        ...Pipeline<AccumulateRootResultObject<T, TFirst['$group']>, TRest>
-      ]
-    : never
-  : TPipe;
-
-export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
-  ? '$project' extends keyof TFirst
-    ? PipelineResult<Simplify<ProjectResultRootObject<T, TFirst['$project']>>, TRest>
-    : '$group' extends keyof TFirst
-    ? PipelineResult<Simplify<AccumulateRootResultObject<T, TFirst['$group']>>, TRest>
-    : never
-  : T;
-
 type InterpretProjectOperator<TRootValue, TValue> =
   | {$abs: ProjectOperatorHelperExpression<TRootValue, TValue, '$abs'>}
   | {$acos: ProjectOperatorHelperExpression<TRootValue, TValue, '$acos'>}
@@ -1077,7 +1055,7 @@ export class Aggregator<T> {
   static start<T>(): Aggregator<T> {
     return new Aggregator<T>();
   }
-  pipe<TPipes>(pipe: Pipeline<T, TPipes>): any {
+  pipe<TPipes>(pipe: Pipeline<T, TPipes>): PipelineResult<T, TPipes> {
     return null!;
   }
 
@@ -1381,3 +1359,103 @@ export class Aggregator<T> {
 function safeKeys<T>(model: T): (keyof T)[] {
   return Object.keys(model) as (keyof T)[];
 }
+
+type PipelineSteps =
+  | '$addFields'
+  | '$bucket'
+  | '$bucketAuto'
+  | '$count'
+  | '$facet'
+  | '$geoNear'
+  | '$graphLookup'
+  | '$group'
+  | '$limit'
+  | '$lookup'
+  | '$match'
+  | '$merge'
+  | '$out'
+  | '$project'
+  | '$redact'
+  | '$replaceRoot'
+  | '$replaceWith'
+  | '$sample'
+  | '$sampleRate'
+  | '$set'
+  | '$skip'
+  | '$sort'
+  | '$sortByCount'
+  | '$unionWith'
+  | '$unset'
+  | '$unwind';
+
+export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
+  ? keyof TFirst extends PipelineSteps
+    ? {
+        $addFields: never;
+        $bucket: never;
+        $bucketAuto: never;
+        $count: never;
+        $facet: never;
+        $geoNear: never;
+        $graphLookup: never;
+        $group: readonly [
+          {$group: AccumulateRootObject<T, LookupKey<TFirst, '$group'>>},
+          ...Pipeline<AccumulateRootResultObject<T, LookupKey<TFirst, '$group'>>, TRest>
+        ];
+        $limit: never;
+        $lookup: never;
+        $match: never;
+        $merge: never;
+        $out: never;
+        $project: readonly [
+          {$project: ProjectRootObject<T, LookupKey<TFirst, '$project'>>},
+          ...Pipeline<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>, TRest>
+        ];
+        $redact: never;
+        $replaceRoot: never;
+        $replaceWith: never;
+        $sample: never;
+        $sampleRate: never;
+        $set: never;
+        $skip: never;
+        $sort: never;
+        $sortByCount: never;
+        $unionWith: never;
+        $unset: never;
+        $unwind: never;
+      }[keyof TFirst]
+    : never
+  : TPipe;
+
+export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
+  ? keyof TFirst extends PipelineSteps
+    ? {
+        $addFields: never;
+        $bucket: never;
+        $bucketAuto: never;
+        $count: never;
+        $facet: never;
+        $geoNear: never;
+        $graphLookup: never;
+        $group: PipelineResult<Simplify<AccumulateRootResultObject<T, LookupKey<TFirst, '$group'>>>, TRest>;
+        $limit: never;
+        $lookup: never;
+        $match: never;
+        $merge: never;
+        $out: never;
+        $project: PipelineResult<Simplify<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>>, TRest>;
+        $redact: never;
+        $replaceRoot: never;
+        $replaceWith: never;
+        $sample: never;
+        $sampleRate: never;
+        $set: never;
+        $skip: never;
+        $sort: never;
+        $sortByCount: never;
+        $unionWith: never;
+        $unset: never;
+        $unwind: never;
+      }[keyof TFirst]
+    : never
+  : T;
