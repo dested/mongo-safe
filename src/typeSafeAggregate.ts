@@ -590,7 +590,7 @@ type InterpretAccumulateOperator<TRootValue, TValue> = {
   $sum?: ProjectOperatorHelperExpression<TRootValue, TValue, '$sum'>;
 };
 
-export type ExpressionStringReferenceKey<T> = `$${DeepKeys<T>}`;
+export type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
 
 export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add one more here without overflow lol
  */ TValue extends `$${string}`
@@ -609,7 +609,7 @@ type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 type ProjectRootObject<TRootValue, TProject> = {
-  [key in keyof TProject]: InterpretProjectExpression<TRootValue & CurrentAggregate<TRootValue>, TProject[key]>;
+  [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 
 type AllAccumulateOperators =
@@ -632,7 +632,9 @@ type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue
     : 0
   : 0;
 
-type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
+type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT`
+  ? TRootValue
+  : TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
   : TValue extends RawTypes
   ? TValue
@@ -644,7 +646,9 @@ type ProjectResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}`
   ? ProjectResultObject<TRootValue, TValue>
   : Impossible;
 
-type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$${infer TRawKey}`
+type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT`
+  ? TRootValue
+  : TValue extends `$${infer TRawKey}`
   ? DeepKeysResult<TRootValue, TRawKey>
   : CheckProjectDeepKey<TKey, TValue> extends 1
   ? DeepKeysResult<TRootValue, TKey>
@@ -970,18 +974,12 @@ export type ProjectResultObject<TRootValue, TObj> = TObj extends infer T
 
 export type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T
   ? {
-      [key in keyof T]: ProjectResultRoot<
-        TRootValue & CurrentAggregate<TRootValue>,
-        T[key],
-        GetProjectDeepKey<TDeepProjectKey, key>
-      >;
+      [key in keyof T]: ProjectResultRoot<TRootValue, T[key], GetProjectDeepKey<TDeepProjectKey, key>>;
     }
   : Impossible;
 
 export type LookupKey<T, TKey extends string | number | Symbol> = TKey extends keyof T ? T[TKey] : never;
 export type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
-
-export type CurrentAggregate<TRootValue> = {$CURRENT: TRootValue};
 
 type InterpretAccumulateExpression<TRootValue, TValue> = /*
  */ TValue extends `$${infer TRawKey}`
@@ -994,22 +992,17 @@ type InterpretAccumulateExpression<TRootValue, TValue> = /*
 
 type AccumulateRootObject<TRootValue, TAccumulateObject> = {
   [key in keyof TAccumulateObject]: key extends '_id'
-    ? InterpretProjectExpression<TRootValue & CurrentAggregate<TRootValue>, TAccumulateObject[key]>
-    : InterpretAccumulateExpression<TRootValue & CurrentAggregate<TRootValue>, TAccumulateObject[key]>;
+    ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]>
+    : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
 
 type BucketRootObject<TRootValue, TAccumulateObject> = {
-  [key in keyof TAccumulateObject]: InterpretAccumulateExpression<
-    TRootValue & CurrentAggregate<TRootValue>,
-    TAccumulateObject[key]
-  >;
+  [key in keyof TAccumulateObject]: InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
 
 type AccumulateRootResultObject<TRootValue, TObj> = TObj extends infer T
   ? {
-      [key in keyof T]: key extends '_id'
-        ? ProjectResult<TRootValue & CurrentAggregate<TRootValue>, T[key]>
-        : AccumulateResult<TRootValue & CurrentAggregate<TRootValue>, T[key]>;
+      [key in keyof T]: key extends '_id' ? ProjectResult<TRootValue, T[key]> : AccumulateResult<TRootValue, T[key]>;
     }
   : Impossible;
 type BucketRootResultObject<TRootValue, TObj, TId> = TObj extends infer T
@@ -1247,10 +1240,7 @@ export class Aggregator<T> {
   }
 
   $redact<TExpression>(
-    expression: ProjectResult<T & CurrentAggregate<T> & MongoRedactTypes, TExpression> extends
-      | '$$DESCEND'
-      | '$$PRUNE'
-      | '$$KEEP'
+    expression: ProjectResult<T & MongoRedactTypes, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP'
       ? InterpretProjectExpression<T & MongoRedactTypes, TExpression>
       : never
   ): Aggregator<T> {
@@ -1259,16 +1249,16 @@ export class Aggregator<T> {
   }
 
   $replaceRoot<TNewRootValue, TNewRoot extends {newRoot: TNewRootValue}>(params: {
-    newRoot: InterpretProjectExpression<T & CurrentAggregate<T>, TNewRootValue>;
-  }): Aggregator<ProjectResult<T & CurrentAggregate<T>, TNewRootValue>> {
+    newRoot: InterpretProjectExpression<T, TNewRootValue>;
+  }): Aggregator<ProjectResult<T, TNewRootValue>> {
     this.currentPipeline = {$replaceRoot: params};
-    return new Aggregator<ProjectResult<T & CurrentAggregate<T>, TNewRootValue>>(this);
+    return new Aggregator<ProjectResult<T, TNewRootValue>>(this);
   }
   $replaceWith<TNewRootValue, TNewRoot extends {newRoot: TNewRootValue}>(params: {
-    newRoot: InterpretProjectExpression<T & CurrentAggregate<T>, TNewRootValue>;
-  }): Aggregator<ProjectResult<T & CurrentAggregate<T>, TNewRootValue>> {
+    newRoot: InterpretProjectExpression<T, TNewRootValue>;
+  }): Aggregator<ProjectResult<T, TNewRootValue>> {
     this.currentPipeline = {$replaceWith: params};
-    return new Aggregator<ProjectResult<T & CurrentAggregate<T>, TNewRootValue>>(this);
+    return new Aggregator<ProjectResult<T, TNewRootValue>>(this);
   }
 
   $sample(props: {size: number}): Aggregator<T> {
@@ -1295,10 +1285,10 @@ export class Aggregator<T> {
   }
 
   $sortByCount<TExpression>(
-    expression: InterpretProjectExpression<T & CurrentAggregate<T>, TExpression>
-  ): Aggregator<{_id: ProjectResult<T & CurrentAggregate<T>, TExpression>; count: number}> {
+    expression: InterpretProjectExpression<T, TExpression>
+  ): Aggregator<{_id: ProjectResult<T, TExpression>; count: number}> {
     this.currentPipeline = {$sortByCount: expression};
-    return new Aggregator<{_id: ProjectResult<T & CurrentAggregate<T>, TExpression>; count: number}>(this);
+    return new Aggregator<{_id: ProjectResult<T, TExpression>; count: number}>(this);
   }
 
   $unionWith<TOtherTable, TPipeline = never>(
