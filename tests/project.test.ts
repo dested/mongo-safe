@@ -1011,7 +1011,7 @@ test('project.$arrayToObject.array', async () => {
   assert<IsExact<{doors: {}}, typeof result>>(true);
 });
 
-test('project.objectToArray', async () => {
+test('project.$objectToArray', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     doors: {
       $objectToArray: {
@@ -1061,4 +1061,73 @@ test('project.objectToArray', async () => {
       typeof result
     >
   >(true);
+});
+
+test('project.$reduceSimple', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $reduce: {
+        input: ['a', 'b', 'c'],
+        initialValue: '',
+        in: {$concat: ['$$value', '$$this']},
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $reduce: {
+            input: ['a', 'b', 'c'],
+            initialValue: '',
+            in: {$concat: ['$$value', '$$this']},
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    IsExact<
+      {
+        doors: string;
+      },
+      typeof result
+    >
+  >(true);
+});
+
+test('project.$reduceComplex', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $reduce: {
+        input: [1, 2, 3, 4],
+        initialValue: {sum: 5, product: 2},
+        in: {
+          sum: {$add: ['$$value.sum', '$$this']},
+          product: {$multiply: ['$$value.product', '$$this']},
+        },
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $reduce: {
+            input: [1, 2, 3, 4],
+            initialValue: {sum: 5, product: 2},
+            in: {
+              sum: {$add: ['$$value.sum', '$$this']},
+              product: {$multiply: ['$$value.product', '$$this']},
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{doors: {sum: number; product: number}}, typeof result>>(true);
 });
