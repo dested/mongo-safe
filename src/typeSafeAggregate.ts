@@ -1055,9 +1055,11 @@ export class Aggregator<T> {
   static start<T>(): Aggregator<T> {
     return new Aggregator<T>();
   }
+  /*
   pipe<TPipes>(pipe: Pipeline<T, TPipes>): PipelineResult<T, TPipes> {
     return null!;
   }
+*/
 
   $addFields<TProject>(fields: ProjectRootObject<T, TProject>): Aggregator<T & ProjectResultRootObject<T, TProject>> {
     this.currentPipeline = {$addFields: fields};
@@ -1391,7 +1393,10 @@ type PipelineSteps =
 export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
   ? keyof TFirst extends PipelineSteps
     ? {
-        $addFields: never;
+        $addFields: readonly [
+          {$addFields: ProjectRootObject<T, LookupKey<TFirst, '$addFields'>>},
+          ...Pipeline<T & ProjectResultRootObject<T, LookupKey<TFirst, '$addFields'>>, TRest>
+        ];
         $bucket: never;
         $bucketAuto: never;
         $count: never;
@@ -1430,7 +1435,7 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
 export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
   ? keyof TFirst extends PipelineSteps
     ? {
-        $addFields: never;
+        $addFields: PipelineResult<Simplify<T & ProjectResultRootObject<T, LookupKey<TFirst, '$addFields'>>>, TRest>;
         $bucket: never;
         $bucketAuto: never;
         $count: never;

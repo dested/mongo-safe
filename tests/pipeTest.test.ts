@@ -17,6 +17,5 @@ test('simple', async () => {
     {$group: {_id: 1, side: {$sum: 1}, ff: {$first: '$shoes'}}},
   ] as const);
 
-  //shouldnt overflow
   assert<IsExact<{readonly _id: 1; readonly side: number; readonly ff: Door[]}, typeof aggregator>>(true);
 });
