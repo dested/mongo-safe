@@ -526,7 +526,6 @@ test('project.$map.nested.ref', async () => {
   assert<Has<{shoes: {a: true; b: {bar: number}}[]}, typeof result>>(true);
 });
 
-/*
 test('project.$map.double-nested.ref', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {
@@ -574,10 +573,18 @@ test('project.$map.double-nested.ref', async () => {
   ]);
 
   const [result] = await aggregator.result(mockCollection);
-  result.shoes[0].b[0].fire === 'phiull';
   assert<Has<{shoes: {a: true; b: {fire: 'phillips' | 'flat'}[]}[]}, typeof result>>(true);
 });
-*/
+
+test('project.$literal', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    shoes: {$literal: {$shoes: 12}},
+  });
+  expect(aggregator.query()).toEqual([{$project: {shoes: {$literal: {$shoes: 12}}}}]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{shoes: {$shoes: 12}}, typeof result>>(true);
+});
 
 test('project.$sum', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
@@ -587,6 +594,66 @@ test('project.$sum', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: 7}, typeof result>>(true);
+});
+
+test('project.$filter', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    thing: {
+      $filter: {
+        input: '$doors',
+        as: 'shoes',
+        cond: {$gte: ['$$shoes.someNumber', '$someRootNumber']},
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        thing: {
+          $filter: {
+            input: '$doors',
+            as: 'shoes',
+            cond: {$gte: ['$$shoes.someNumber', '$someRootNumber']},
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{thing: Door[]}, typeof result>>(true);
+});
+test('project.$convert', async () => {
+  const aggregator = Aggregator.start<DBCar>()
+    .$project({
+      thing: {
+        $convert: {input: '$color', to: 'string'},
+      },
+    })
+    .$project({
+      thing2: {
+        $multiply: ['$thing', '$thing'],
+      },
+    });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        thing: {
+          $convert: {input: '$color', to: 'string'},
+        },
+      },
+    },
+    {
+      $project: {
+        thing2: {
+          $multiply: ['$thing', '$thing'],
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{thing: number}, typeof result>>(true);
 });
 
 test('project.$sum.ref', async () => {
@@ -833,6 +900,18 @@ test('project.exclude other1', async () => {
 
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: 0}, typeof result>>(true);
+});
+test('project.$setUnion', async () => {
+  type Item = {_id: number; A: string[]; B: string[]};
+  const aggregator = Aggregator.start<Item>().$project({A: 1, B: 1, allValues: {$setUnion: ['$A', '$B']}, _id: 0});
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {A: 1, B: 1, allValues: {$setUnion: ['$A', '$B']}, _id: 0},
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<Has<{A: string[]; B: string[]; allValues: string[]}, typeof result>>(true);
 });
 test('project.exclude other2', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
