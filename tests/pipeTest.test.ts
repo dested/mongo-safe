@@ -141,8 +141,37 @@ test('unwind', async () => {
 
   assert<Has<DBUserRoundStats & {roundsParticipated: DBUserRoundStatDetails; shoes: number}, typeof aggregator>>(true);
 });
+test('unroll', async () => {
+  let dbCarAggregator = Aggregator.start<DBUserRoundStats>();
+  const gameId = 'abc';
+  const currentGeneration = 10;
 
-test('swg', async () => {
+  const aggregator = dbCarAggregator.pipe([
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+    {$match: {gameId}},
+  ] as const);
+
+  assert<
+    Has<
+      {
+        _id: string;
+        gameId: string;
+        userName: string;
+        rank: number;
+        score: number;
+      },
+      typeof aggregator
+    >
+  >(true);
+}) /*test('swg', async () => {
   let dbCarAggregator = Aggregator.start<DBUserRoundStats>();
   const generationsPerDay = (24 * 60 * 60 * 1000) / 600;
   const valuableGenerations = generationsPerDay * 2.5;
@@ -188,36 +217,28 @@ test('swg', async () => {
         },
       },
     },
+    {
+      $group: {
+        _id: '$userId',
+        userName: {$first: '$userName'},
+        gameId: {$first: '$gameId'},
+        score: {$sum: '$score'},
+      },
+    },
+    {$sort: {score: -1}},
+    {$group: {_id: 1, ranks: {$push: '$$CURRENT'}}},
+    {$unwind: {path: '$ranks', includeArrayIndex: 'rank'}},
+    {
+      $project: {
+        _id: '$ranks._id',
+        gameId: '$ranks.gameId',
+        userName: '$ranks.userName',
+        score: '$ranks.score',
+        rank: '$rank',
+      },
+    },
   ] as const);
 
-  assert<Has<{score: number; userName: string; gameId: string; userId: string; _id: ObjectID}, typeof aggregator>>(
-    true
-  );
-});
-
-/*
-
-  const aggregator = Aggregator.start<DBUserRoundStats>()
-    .$group({
-      _id: '$userId',
-      userName: {$first: '$userName'},
-      gameId: {$first: '$gameId'},
-      score: {$sum: '$score'},
-    })
-    .$sort({score: -1})
-    .$group({_id: 1, ranks: {$push: '$$CURRENT'}})
-    .$unwind({path: '$ranks', includeArrayIndex: 'rank'})
-    .$project({
-      _id: '$ranks._id',
-      gameId: '$ranks.gameId',
-      userName: '$ranks.userName',
-      score: '$ranks.score',
-      rank: '$rank',
-    });
-
-  // expect(aggregator.query()).toEqual([{}]);
-
-  const [result] = await aggregator.result(mockCollection);
   assert<
     Has<
       {
@@ -227,7 +248,7 @@ test('swg', async () => {
         rank: number;
         score: number;
       },
-      typeof result
+      typeof aggregator
     >
   >(true);
-*/
+})*/;

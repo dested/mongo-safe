@@ -102,7 +102,6 @@ test('$project.array', async () => {
     doorHeads: '$doors.bolts.type',
     carbHeads: '$carburetor.bolts.type',
   });
-
   expect(aggregator.query()).toEqual([
     {
       $project: {

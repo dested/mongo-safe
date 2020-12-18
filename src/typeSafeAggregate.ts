@@ -1526,10 +1526,13 @@ export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer 
           ? readonly [{$skip: never}, ...Pipeline<T & {}, TRest>]
           : never;
         $sort: LookupKey<TFirst, '$sort'> extends infer R
-          ? readonly [{$sort: never}, ...Pipeline<T & {}, TRest>]
+          ? readonly [{$sort: {[key in DeepKeys<T>]?: 1 | -1}}, ...Pipeline<T & {}, TRest>]
           : never;
         $sortByCount: LookupKey<TFirst, '$sortByCount'> extends infer R
-          ? readonly [{$sortByCount: never}, ...Pipeline<T & {}, TRest>]
+          ? readonly [
+              {$sortByCount: InterpretProjectExpression<T, R>},
+              ...Pipeline<{_id: ProjectResult<T, R>; count: number}, TRest>
+            ]
           : never;
         $unionWith: LookupKey<TFirst, '$unionWith'> extends infer R
           ? readonly [{$unionWith: never}, ...Pipeline<T & {}, TRest>]
@@ -1663,9 +1666,9 @@ export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...
           : never;
         $set: LookupKey<TFirst, '$set'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
         $skip: LookupKey<TFirst, '$skip'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
-        $sort: LookupKey<TFirst, '$sort'> extends infer R ? PipelineResult<Simplify<T & never>, TRest> : never;
+        $sort: LookupKey<TFirst, '$sort'> extends infer R ? PipelineResult<Simplify<T>, TRest> : never;
         $sortByCount: LookupKey<TFirst, '$sortByCount'> extends infer R
-          ? PipelineResult<Simplify<T & never>, TRest>
+          ? Pipeline<{_id: ProjectResult<T, R>; count: number}, TRest>
           : never;
         $unionWith: LookupKey<TFirst, '$unionWith'> extends infer R
           ? PipelineResult<Simplify<T & never>, TRest>
