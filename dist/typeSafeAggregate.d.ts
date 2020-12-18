@@ -79,10 +79,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $arrayElemAt: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$arrayElemAt'>;
 } | {
-    $arrayToObject: ProjectOperatorHelperArray<TRootValue, TValue, '$arrayToObject'> | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$arrayToObject', {
-        k: 1;
-        v: 1;
-    }>[];
+    $arrayToObject: ProjectOperatorHelperArray<TRootValue, TValue, '$arrayToObject'> | ProjectOperatorHelperExpression<TRootValue, TValue, '$arrayToObject'>;
 } | {
     $asin: ProjectOperatorHelperExpression<TRootValue, TValue, '$asin'>;
 } | {
@@ -281,7 +278,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
 } | {
     $not: ProjectOperatorHelperExpression<TRootValue, TValue, '$not'>;
 } | {
-    $objectToArray: NotImplementedProjectedYet;
+    $objectToArray: ProjectOperatorHelperExpression<TRootValue, TValue, '$objectToArray'>;
 } | {
     $or: ProjectOperatorHelperArray<TRootValue, TValue, '$or'>;
 } | {
@@ -446,6 +443,19 @@ declare type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) e
 declare type FlattenUnion<T> = {
     [K in keyof UnionToIntersection<T>]: K extends keyof T ? T[K] extends any[] ? T[K] : T[K] extends object ? FlattenUnion<T[K]> : T[K] : UnionToIntersection<T>[K] | undefined;
 };
+declare type ArrayToObjectTupleBuilder<T> = T extends [infer TFirst, ...infer TRest] ? LookupKey<TFirst, 'k'> extends string ? {
+    [key in LookupKey<TFirst, 'k'>]: LookupKey<TFirst, 'v'>;
+} & ArrayToObjectTupleBuilder<TRest> : never : {};
+export declare type UnionToTuple<Union> = UnionToIntersection<Union extends unknown ? (distributed: Union) => void : never> extends (merged: infer Intersection) => void ? [
+    ...UnionToTuple<Exclude<Union, Intersection>>,
+    Intersection
+] : [];
+declare type ObjectToArrayHelper<T> = UnionToTuple<{
+    [key in keyof T]: {
+        k: key;
+        v: T[key];
+    };
+}[keyof T]>;
 declare type ProjectResultOperators<TRootValue, TValue> = {
     $abs: NumberProjectResultExpression<TRootValue, TValue, '$abs'>;
     $acos: NumberProjectResultExpression<TRootValue, TValue, '$acos'>;
@@ -456,10 +466,7 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $and: boolean;
     $anyElementTrue: boolean;
     $arrayElemAt: UnArray<ProjectResultArrayIndex<TRootValue, TValue, '$arrayElemAt', 0>>;
-    $arrayToObject: {
-        k: string;
-        v: unknown;
-    }[];
+    $arrayToObject: ProjectResultExpression<TRootValue, TValue, '$arrayToObject'> extends infer TInner ? UnArray<TInner> extends any[] ? unknown : ArrayToObjectTupleBuilder<UnionToTuple<UnArray<TInner>>> : never;
     $asin: NumberProjectResultExpression<TRootValue, TValue, '$asin'>;
     $asinh: NumberProjectResultExpression<TRootValue, TValue, '$asinh'>;
     $atan: NumberProjectResultExpression<TRootValue, TValue, '$atan'>;
@@ -542,7 +549,7 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $multiply: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$multiply'>;
     $ne: boolean;
     $not: boolean;
-    $objectToArray: NotImplementedYet;
+    $objectToArray: ObjectToArrayHelper<ProjectResultExpression<TRootValue, TValue, '$objectToArray'>>;
     $or: boolean;
     $pow: number;
     $push: ProjectResultExpression<TRootValue, TValue, '$push'>[];

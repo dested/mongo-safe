@@ -946,5 +946,119 @@ test('project.$mergeObjects', async () => {
 
   const [result] = await aggregator.result(mockCollection);
 
-  assert<Has<{doors: {a: number; b: number | undefined; c: number | undefined}}, typeof result>>(true);
+  assert<IsExact<{doors: {a: number; b: number | undefined; c: number | undefined}}, typeof result>>(true);
+});
+
+test('project.$arrayToObject.keys', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $arrayToObject: {
+        $literal: [
+          {k: 'item', v: 'abc123'},
+          {k: 'qty', v: 25},
+        ],
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $arrayToObject: {
+            $literal: [
+              {k: 'item', v: 'abc123'},
+              {k: 'qty', v: 25},
+            ],
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{doors: {item: 'abc123'; qty: 25}}, typeof result>>(true);
+});
+
+test('project.$arrayToObject.array', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $arrayToObject: {
+        $literal: [
+          ['item', 'abc123'],
+          ['qty', 25],
+          ['shoes', 30],
+        ],
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $arrayToObject: {
+            $literal: [
+              ['item', 'abc123'],
+              ['qty', 25],
+              ['shoes', 30],
+            ],
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<IsExact<{doors: {}}, typeof result>>(true);
+});
+
+test('project.objectToArray', async () => {
+  const aggregator = Aggregator.start<DBCar>().$project({
+    doors: {
+      $objectToArray: {
+        item: 'foo',
+        qty: 25,
+        size: {len: 25, w: 10, uom: 'cm'},
+      },
+    },
+  });
+  expect(aggregator.query()).toEqual([
+    {
+      $project: {
+        doors: {
+          $objectToArray: {
+            item: 'foo',
+            qty: 25,
+            size: {len: 25, w: 10, uom: 'cm'},
+          },
+        },
+      },
+    },
+  ]);
+
+  const [result] = await aggregator.result(mockCollection);
+  assert<
+    IsExact<
+      {
+        doors: (
+          | {
+              k: 'item';
+              v: 'foo';
+            }
+          | {
+              k: 'qty';
+              v: 25;
+            }
+          | {
+              k: 'size';
+              v: {
+                len: 25;
+                w: 10;
+                uom: 'cm';
+              };
+            }
+        )[];
+      },
+      typeof result
+    >
+  >(true);
 });

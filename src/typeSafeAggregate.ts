@@ -258,7 +258,7 @@ type InterpretProjectOperator<TRootValue, TValue> =
   | {
       $arrayToObject:
         | ProjectOperatorHelperArray<TRootValue, TValue, '$arrayToObject'>
-        | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$arrayToObject', {k: 1; v: 1}>[];
+        | ProjectOperatorHelperExpression<TRootValue, TValue, '$arrayToObject'>;
     }
   | {$asin: ProjectOperatorHelperExpression<TRootValue, TValue, '$asin'>}
   | {$asinh: ProjectOperatorHelperExpression<TRootValue, TValue, '$asinh'>}
@@ -438,7 +438,7 @@ type InterpretProjectOperator<TRootValue, TValue> =
   | {$multiply: ProjectOperatorHelperArray<TRootValue, TValue, '$multiply'>}
   | {$ne: ProjectOperatorHelperCondition<TRootValue, TValue, '$ne'>}
   | {$not: ProjectOperatorHelperExpression<TRootValue, TValue, '$not'>}
-  | {$objectToArray: NotImplementedProjectedYet}
+  | {$objectToArray: ProjectOperatorHelperExpression<TRootValue, TValue, '$objectToArray'>}
   | {$or: ProjectOperatorHelperArray<TRootValue, TValue, '$or'>}
   | {$pow: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$pow:'>}
   | {$push: ProjectOperatorHelperExpression<TRootValue, TValue, '$push'>}
@@ -665,6 +665,36 @@ type FlattenUnion<T> = {
       : T[K]
     : UnionToIntersection<T>[K] | undefined;
 };
+
+type ArrayToObjectTupleBuilder<T> = T extends [infer TFirst, ...infer TRest]
+  ? LookupKey<TFirst, 'k'> extends string
+    ? {[key in LookupKey<TFirst, 'k'>]: LookupKey<TFirst, 'v'>} & ArrayToObjectTupleBuilder<TRest>
+    : never
+  : {};
+
+//shamelessly stolen from https://github.com/sindresorhus/type-fest/blob/738bd1a6332c571bd203c769d7912dd618bdf1a3/source/union-to-tuple.d.ts
+export type UnionToTuple<Union> = UnionToIntersection<
+  // Distributive conditional trick.
+  // See the source for the `UnionToIntersection` type for more details.
+  Union extends unknown ? (distributed: Union) => void : never
+> extends (merged: infer Intersection) => void
+  ? // Transforms ('A' | 'B') into [[[], "A"], "B"], but destructures the arrays
+    [...UnionToTuple<Exclude<Union, Intersection>>, Intersection]
+  : [];
+
+type ObjectToArrayHelper<T> = UnionToTuple<
+  {
+    [key in keyof T]: {k: key; v: T[key]};
+  }[keyof T]
+>;
+let m = {
+  item: 'foo',
+  qty: 25,
+  size: {len: 25, w: 10, uom: 'cm'},
+};
+
+type j = ObjectToArrayHelper<typeof m>;
+
 type ProjectResultOperators<TRootValue, TValue> = {
   // document, anything other than lookupkey would throw deep
   $abs: NumberProjectResultExpression<TRootValue, TValue, '$abs'>;
@@ -676,7 +706,11 @@ type ProjectResultOperators<TRootValue, TValue> = {
   $and: boolean;
   $anyElementTrue: boolean;
   $arrayElemAt: UnArray<ProjectResultArrayIndex<TRootValue, TValue, '$arrayElemAt', 0>>;
-  $arrayToObject: {k: string; v: unknown}[];
+  $arrayToObject: ProjectResultExpression<TRootValue, TValue, '$arrayToObject'> extends infer TInner
+    ? UnArray<TInner> extends any[]
+      ? unknown
+      : ArrayToObjectTupleBuilder<UnionToTuple<UnArray<TInner>>>
+    : never;
   $asin: NumberProjectResultExpression<TRootValue, TValue, '$asin'>;
   $asinh: NumberProjectResultExpression<TRootValue, TValue, '$asinh'>;
   $atan: NumberProjectResultExpression<TRootValue, TValue, '$atan'>;
@@ -784,7 +818,7 @@ type ProjectResultOperators<TRootValue, TValue> = {
   $multiply: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$multiply'>;
   $ne: boolean;
   $not: boolean;
-  $objectToArray: NotImplementedYet;
+  $objectToArray: ObjectToArrayHelper<ProjectResultExpression<TRootValue, TValue, '$objectToArray'>>;
   $or: boolean;
   $pow: number;
   $push: ProjectResultExpression<TRootValue, TValue, '$push'>[];
