@@ -10,6 +10,7 @@ const mockCollection: any = {
     toArray: () => [],
   }),
 };
+/*
 
 test('simple', async () => {
   let dbCarAggregator = Aggregator.start<DBCar>();
@@ -108,6 +109,7 @@ test('simple3', async () => {
     >
   >(true);
 });
+*/
 
 type DBUserRoundStats = {
   _id: ObjectID;
@@ -150,23 +152,21 @@ test('unroll', async () => {
     {$match: {gameId}},
     {$match: {gameId}},
     {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
+    {$project: {shoes: '$gameId'}},
+    {$match: {shoes: 'string'}},
+    {$project: {shoes: '$shoes'}},
+    {$match: {shoes: 'string'}},
+    {$project: {shoes: '$shoes'}},
+    {$match: {shoes: 'string'}},
+    {$project: {shoes: '$shoes'}},
+    {$match: {shoes: 'string'}},
   ] as const);
   const aggregator2 = dbCarAggregator.pipe([
     {$match: {gameId}},
     {$match: {gameId}},
     {$match: {gameId}},
     {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
-    {$match: {gameId}},
+    {$project: {shoes: '$gameId'}},
   ] as const);
 
   assert<
