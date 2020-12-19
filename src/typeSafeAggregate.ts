@@ -10,14 +10,15 @@ import {
 } from 'mongodb';
 import {FilterQueryMatch} from './filterQueryMatch';
 import {Decimal128} from 'bson';
+import {Pipeline} from 'piper';
 
-type KEY = string | number | Symbol;
+export type KEY = string | number | Symbol;
 type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
 type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
 type Impossible = never;
 
 type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
-type DeepExcludeNever<T> = T extends NonObjectValues
+export type DeepExcludeNever<T> = T extends NonObjectValues
   ? T
   : T extends ReadonlyArray<infer TArr>
   ? Array<DeepExcludeNever<T[number]>>
@@ -608,7 +609,7 @@ export type InterpretProjectExpression<TRootValue, TValue> = /* // you cant add 
 type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
-type ProjectRootObject<TRootValue, TProject> = {
+export type ProjectRootObject<TRootValue, TProject> = {
   readonly [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 
@@ -1033,7 +1034,7 @@ export type GraphDeep<TOther, TAs extends string, TDepthField extends string> = 
   [key in TAs]: (TOther & {[oKey in TDepthField]: number})[];
 };
 
-type Simplify<T> = T extends object | any[] ? {[K in keyof T]: T[K]} : T;
+export type Simplify<T> = T extends object | any[] ? {[K in keyof T]: T[K]} : T;
 
 //todo document this trick
 type TableName<TTable> = string & {__table: TTable};
@@ -1359,69 +1360,3 @@ export class Aggregator<T> {
 function safeKeys<T>(model: T): (keyof T)[] {
   return Object.keys(model) as (keyof T)[];
 }
-
-type PipelineSteps = '$match';
-
-type Cast<TLeft, TRight> = TLeft extends TRight ? TRight : never;
-
-export type PipelineTest<T, TFirst, TKey extends KEY> = LookupKey<
-  {
-    $match: LookupKey<TFirst, '$match'> extends infer R
-      ? TFirst extends {$match: FilterQueryMatch<T, `$${DeepKeys<T>}`>}
-        ? T
-        : false
-      : 3;
-    $project: LookupKey<TFirst, '$project'> extends infer R
-      ? TFirst extends {$project: ProjectRootObject<T, R>}
-        ? DeepExcludeNever<ProjectResultRootObject<T, R, ''>>
-        : false
-      : 4;
-  },
-  TKey
->;
-
-type m<T, TPipe> = {
-  [outerKey in keyof TPipe]: LookupKey<
-    {[key in keyof TPipe]: key extends outerKey ? PipelineTest<T, TPipe[key], keyof TPipe[key]> : 0},
-    outerKey
-  >;
-};
-
-type c = m<DBUserRoundStats, [{$match: {gameId: 'ah'}}, {$match: {gameId: 'ah'}}, {$match: {gameId: 'ah'}}]>;
-
-type DBUserRoundStats = {
-  _id: ObjectID;
-  gameId: string;
-  userId: string;
-  userName: string;
-  roundsParticipated: DBUserRoundStatDetails[];
-};
-type DBUserRoundStatDetails = {
-  generation: number;
-  votesCast: number;
-  votesWon: number;
-  damageDone: number;
-  unitsDestroyed: number;
-  unitsCreated: number;
-  resourcesMined: number;
-  distanceMoved: number;
-};
-export type Pipeline<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
-  ? PipelineTest<T, TFirst, keyof TFirst> extends infer TResult
-    ? TResult extends false
-      ? 11111
-      : Pipeline<TResult, TRest>
-    : 1
-  : [];
-
-export type PipelineResult<T, TPipe> = TPipe extends readonly [infer TFirst, ...infer TRest]
-  ? keyof TFirst extends PipelineSteps
-    ? {
-        $match: LookupKey<TFirst, '$match'> extends infer R ? PipelineResult<T, TRest> : never;
-        $project: PipelineResult<
-          Simplify<DeepExcludeNever<ProjectResultRootObject<T, LookupKey<TFirst, '$project'>>>>,
-          TRest
-        >;
-      }[keyof TFirst]
-    : never
-  : T;
