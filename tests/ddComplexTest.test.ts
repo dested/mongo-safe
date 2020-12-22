@@ -90,8 +90,8 @@ test('complex1', async () => {
       otherUser2Idd: 8,
       otherField3: '$when',
 
-      otherUser1Id: 1,
-      otherUser2Id: 2,
+      otherUser1Id: {$literal: 1},
+      otherUser2Id: {$literal: 2},
     })
     .$lookup({
       from: tableName<DBRelationship>('relationship'),

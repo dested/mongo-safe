@@ -212,7 +212,7 @@ type ProjectOperatorHelperExpressionObject<
   TKey extends KEY,
   TObj extends Record<string, 1 | 0>
 > = {
-  [key in keyof TObj as key extends 1 ? key : never]: ProjectOperatorHelperExpressionInner<
+  [key in keyof TObj as TObj[key] extends 1 ? key : never]: ProjectOperatorHelperExpressionInner<
     TRootValue,
     TExpression,
     TKey,
@@ -220,13 +220,14 @@ type ProjectOperatorHelperExpressionObject<
   >;
 } &
   {
-    [key in keyof TObj as key extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<
+    [key in keyof TObj as TObj[key] extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<
       TRootValue,
       TExpression,
       TKey,
       key
     >;
   };
+
 type ProjectOperatorHelperOneTuple<TRootValue, TExpression, TKey extends KEY> = [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>
 ];
@@ -276,7 +277,7 @@ export type InterpretProjectOperator<TRootValue, TExpression> =
   | {
       $cond:
         | ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$cond'>
-        | ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$cond', {else: 0; if: 1; then: 1}>;
+        | ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$cond', {if: 1; then: 1; else: 0}>;
     }
   | {
       $convert: ProjectOperatorHelperExpressionObject<
@@ -338,19 +339,18 @@ export type InterpretProjectOperator<TRootValue, TExpression> =
         as: infer TAs;
         cond: any;
       }
-        ? {
-            input: InterpretProjectExpression<TRootValue, TInput>;
-            as: TAs;
+        ? Simplify<
+            TRootValue &
+              (TAs extends string ? Double$Keys<{[key in TAs]: UnArray<ProjectResult<TRootValue, TInput>>}> : never)
+          > extends infer TNewValue
+          ? {
+              input: InterpretProjectExpression<TRootValue, TInput>;
+              as: TAs;
 
-            cond: ProjectOperatorHelperExpressionInner<
-              TRootValue &
-                (TAs extends string ? Double$Keys<{[key in TAs]: UnArray<ProjectResult<TRootValue, TInput>>}> : never),
-              TExpression,
-              '$filter',
-              'cond'
-            >;
-          }
-        : never;
+              cond: ProjectOperatorHelperExpressionInner<TNewValue, TExpression, '$filter', 'cond'>;
+            }
+          : Impossible
+        : Impossible;
     }
   | {$first: ProjectOperatorHelperExpression<TRootValue, TExpression, '$first'>}
   | {$floor: ProjectOperatorHelperExpression<TRootValue, TExpression, '$floor'>}
@@ -387,22 +387,21 @@ export type InterpretProjectOperator<TRootValue, TExpression> =
   | {$isoWeekYear: ProjectOperatorHelperDate<TRootValue, TExpression, '$isoWeekYear'>}
   | {$last: ProjectOperatorHelperExpression<TRootValue, TExpression, '$last'>}
   | {
-      $let: ProjectOperatorHelperExpression<TRootValue, TExpression, '$let'> extends {
-        vars: InterpretProjectExpression<TRootValue, infer TVars>;
-      }
-        ? {
-            vars: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, '$let', 'vars'>;
-            in: ProjectResultObject<TRootValue, TVars> extends infer R
-              ? // todo document let is a little sketchy, the values that come from vars are not super typesafe, which doesnt matter because we dont check them yet, but maybe someday
-                ProjectOperatorHelperExpressionInner<
-                  TRootValue & Double$Keys<{[key in keyof R]: 1}>,
-                  TExpression,
-                  '$let',
-                  'in'
-                >
-              : Impossible;
-          }
-        : never;
+      $let: {
+        vars: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, '$let', 'vars'>;
+        in: ProjectResultObject<
+          TRootValue,
+          ProjectOperatorHelperExpressionInner<TRootValue, TExpression, '$let', 'vars'>
+        > extends infer R
+          ? // todo document let is a little sketchy, the values that come from vars are not super typesafe, which doesnt matter because we dont check them yet, but maybe someday
+            ProjectOperatorHelperExpressionInner<
+              TRootValue & Double$Keys<{[key in keyof R]: 1}>,
+              TExpression,
+              '$let',
+              'in'
+            >
+          : Impossible;
+      };
     }
   | {$literal: LookupKey<TExpression, '$literal'>}
   | {$ln: ProjectOperatorHelperExpression<TRootValue, TExpression, '$ln'>}
@@ -615,11 +614,32 @@ export type InterpretProjectExpression<TRootValue, TExpression> = /* // you cant
   ? ProjectObject<TRootValue, TExpression>
   : Impossible;
 
+export type InterpretProjectRootExpression<
+  TRootValue,
+  TKey extends KEY,
+  TExpression
+> = /* // you cant add one more here without overflow lol
+ */ TExpression extends `$${string}`
+  ? ExpressionStringReferenceKey<TRootValue>
+  : TExpression extends 1
+  ? TKey extends DeepKeys<TRootValue>
+    ? TExpression
+    : never
+  : TExpression extends RawTypes
+  ? TExpression
+  : keyof TExpression extends AllOperators
+  ? InterpretProjectOperator<TRootValue, TExpression>
+  : TExpression extends Array<infer TValueArr>
+  ? Array<InterpretProjectExpression<TRootValue, TValueArr>>
+  : TExpression extends {}
+  ? ProjectObject<TRootValue, TExpression>
+  : Impossible;
+
 type ProjectObject<TRootValue, TProject> = {
   [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 type ProjectRootObject<TRootValue, TProject> = {
-  [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
+  [key in keyof TProject]: InterpretProjectRootExpression<TRootValue, key, TProject[key]>;
 };
 
 type AllAccumulateOperators =
@@ -636,6 +656,7 @@ type AllAccumulateOperators =
   | '$sum';
 
 type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
+
 type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue extends 0 | false
   ? [TKey] extends ['_id']
     ? 1
@@ -1062,7 +1083,7 @@ export function isPossiblyTableName(tableName: any): tableName is TableName<any>
 }
 
 type Double$Keys<T> = {[key in keyof T as `$${key extends string ? key : never}`]: T[key]};
-type MongoRedactTypes = {$$DESCEND: '$$DESCEND'; $$PRUNE: '$$PRUNE'; $$KEEP: '$$KEEP'};
+type MongoRedactTypes = {$DESCEND: '$DESCEND'; $PRUNE: '$PRUNE'; $KEEP: '$KEEP'};
 
 export class Aggregator<T> {
   private currentPipeline?: {};
@@ -1267,7 +1288,7 @@ export class Aggregator<T> {
   }
 
   $redact<TExpression>(
-    expression: ProjectResult<T & MongoRedactTypes, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP'
+    expression: ProjectResult<T & MongoRedactTypes, TExpression> extends '$DESCEND' | '$PRUNE' | '$KEEP'
       ? InterpretProjectExpression<T & MongoRedactTypes, TExpression>
       : never
   ): Aggregator<T> {

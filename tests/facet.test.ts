@@ -12,7 +12,7 @@ const mockCollection: any = {
 
 test('project.none', async () => {
   const aggregator = Aggregator.start<DBCar>()
-    .$project({someNumber: 1, doors: 1})
+    .$project({someRootNumber: 1, doors: 1})
     .$unwind('$doors')
     .$facet({
       thing1: (agg) => agg.$group({_id: '$doors.side', count: {$sum: '$doors.someNumber'}}),
@@ -20,7 +20,7 @@ test('project.none', async () => {
         agg.$group({_id: '$doors.someDate', counter: {$sum: '$doors.someNumber'}}).$match({counter: {$gt: 10}}),
     });
   expect(aggregator.query()).toEqual([
-    {$project: {someNumber: 1, doors: 1}},
+    {$project: {someRootNumber: 1, doors: 1}},
     {$unwind: '$doors'},
     {
       $facet: {

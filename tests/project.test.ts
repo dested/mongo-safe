@@ -287,7 +287,7 @@ test('project.$dateToParts', async () => {
   >(true);
 });
 test('project.$let', async () => {
-  const aggregator = Aggregator.start<{price: number; tax: number}>().$project({
+  const aggregator = Aggregator.start<{applyDiscount: boolean; price: number; tax: number}>().$project({
     finalTotal: {
       $let: {
         vars: {
@@ -675,7 +675,6 @@ test('project.$sum.ref.nested', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<{shoes: number}, typeof result>>(true);
 });
-
 test('project.$abs', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
     shoes: {$abs: 7},
@@ -848,6 +847,7 @@ test('project.fancyAdd', async () => {
 
 test('project.bad 1', async () => {
   const aggregator = Aggregator.start<DBCar>().$project({
+    // @ts-ignore
     shmores: 1,
   });
   expect(aggregator.query()).toEqual([{$project: {shmores: 1}}]);

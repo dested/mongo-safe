@@ -37,9 +37,9 @@ declare type ProjectOperatorHelperArrayOrExpression<TRootValue, TExpression, TKe
 declare type ProjectOperatorHelperExpression<TRootValue, TExpression, TKey extends KEY> = InterpretProjectExpression<TRootValue, LookupKey<TExpression, TKey>>;
 declare type ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey1 extends KEY, TKey2 extends KEY> = InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TExpression, TKey1>, TKey2>>;
 declare type ProjectOperatorHelperExpressionObject<TRootValue, TExpression, TKey extends KEY, TObj extends Record<string, 1 | 0>> = {
-    [key in keyof TObj as key extends 1 ? key : never]: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, key>;
+    [key in keyof TObj as TObj[key] extends 1 ? key : never]: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, key>;
 } & {
-    [key in keyof TObj as key extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, key>;
+    [key in keyof TObj as TObj[key] extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, key>;
 };
 declare type ProjectOperatorHelperOneTuple<TRootValue, TExpression, TKey extends KEY> = [
     InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>
@@ -105,9 +105,9 @@ export declare type InterpretProjectOperator<TRootValue, TExpression> = {
     $concatArrays: ProjectOperatorHelperArray<TRootValue, TExpression, '$concatArrays'>;
 } | {
     $cond: ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$cond'> | ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$cond', {
-        else: 0;
         if: 1;
         then: 1;
+        else: 0;
     }>;
 } | {
     $convert: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$convert', {
@@ -179,13 +179,13 @@ export declare type InterpretProjectOperator<TRootValue, TExpression> = {
         input: InterpretProjectExpression<TRootValue, infer TInput>;
         as: infer TAs;
         cond: any;
-    } ? {
+    } ? Simplify<TRootValue & (TAs extends string ? Double$Keys<{
+        [key in TAs]: UnArray<ProjectResult<TRootValue, TInput>>;
+    }> : never)> extends infer TNewValue ? {
         input: InterpretProjectExpression<TRootValue, TInput>;
         as: TAs;
-        cond: ProjectOperatorHelperExpressionInner<TRootValue & (TAs extends string ? Double$Keys<{
-            [key in TAs]: UnArray<ProjectResult<TRootValue, TInput>>;
-        }> : never), TExpression, '$filter', 'cond'>;
-    } : never;
+        cond: ProjectOperatorHelperExpressionInner<TNewValue, TExpression, '$filter', 'cond'>;
+    } : Impossible : Impossible;
 } | {
     $first: ProjectOperatorHelperExpression<TRootValue, TExpression, '$first'>;
 } | {
@@ -217,14 +217,12 @@ export declare type InterpretProjectOperator<TRootValue, TExpression> = {
 } | {
     $last: ProjectOperatorHelperExpression<TRootValue, TExpression, '$last'>;
 } | {
-    $let: ProjectOperatorHelperExpression<TRootValue, TExpression, '$let'> extends {
-        vars: InterpretProjectExpression<TRootValue, infer TVars>;
-    } ? {
+    $let: {
         vars: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, '$let', 'vars'>;
-        in: ProjectResultObject<TRootValue, TVars> extends infer R ? ProjectOperatorHelperExpressionInner<TRootValue & Double$Keys<{
+        in: ProjectResultObject<TRootValue, ProjectOperatorHelperExpressionInner<TRootValue, TExpression, '$let', 'vars'>> extends infer R ? ProjectOperatorHelperExpressionInner<TRootValue & Double$Keys<{
             [key in keyof R]: 1;
         }>, TExpression, '$let', 'in'> : Impossible;
-    } : never;
+    };
 } | {
     $literal: LookupKey<TExpression, '$literal'>;
 } | {
@@ -444,11 +442,12 @@ declare type InterpretAccumulateOperator<TRootValue, TExpression> = {
 };
 export declare type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
 export declare type InterpretProjectExpression<TRootValue, TExpression> = TExpression extends `$${string}` ? ExpressionStringReferenceKey<TRootValue> : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllOperators ? InterpretProjectOperator<TRootValue, TExpression> : TExpression extends Array<infer TValueArr> ? Array<InterpretProjectExpression<TRootValue, TValueArr>> : TExpression extends {} ? ProjectObject<TRootValue, TExpression> : Impossible;
+export declare type InterpretProjectRootExpression<TRootValue, TKey extends KEY, TExpression> = TExpression extends `$${string}` ? ExpressionStringReferenceKey<TRootValue> : TExpression extends 1 ? TKey extends DeepKeys<TRootValue> ? TExpression : never : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllOperators ? InterpretProjectOperator<TRootValue, TExpression> : TExpression extends Array<infer TValueArr> ? Array<InterpretProjectExpression<TRootValue, TValueArr>> : TExpression extends {} ? ProjectObject<TRootValue, TExpression> : Impossible;
 declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
 declare type ProjectRootObject<TRootValue, TProject> = {
-    [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
+    [key in keyof TProject]: InterpretProjectRootExpression<TRootValue, key, TProject[key]>;
 };
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
 declare type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
@@ -706,9 +705,9 @@ declare type Double$Keys<T> = {
     [key in keyof T as `$${key extends string ? key : never}`]: T[key];
 };
 declare type MongoRedactTypes = {
-    $$DESCEND: '$$DESCEND';
-    $$PRUNE: '$$PRUNE';
-    $$KEEP: '$$KEEP';
+    $DESCEND: '$DESCEND';
+    $PRUNE: '$PRUNE';
+    $KEEP: '$KEEP';
 };
 export declare class Aggregator<T> {
     private parent?;
@@ -793,7 +792,7 @@ export declare class Aggregator<T> {
     }): Aggregator<never>;
     $out<TOutTable>(tableName: TableName<TOutTable>): Aggregator<never>;
     $project<TProject>(query: ProjectRootObject<T, TProject>): Aggregator<DeepExcludeNever<ProjectResultRootObject<T, TProject, ''>>>;
-    $redact<TExpression>(expression: ProjectResult<T & MongoRedactTypes, TExpression> extends '$$DESCEND' | '$$PRUNE' | '$$KEEP' ? InterpretProjectExpression<T & MongoRedactTypes, TExpression> : never): Aggregator<T>;
+    $redact<TExpression>(expression: ProjectResult<T & MongoRedactTypes, TExpression> extends '$DESCEND' | '$PRUNE' | '$KEEP' ? InterpretProjectExpression<T & MongoRedactTypes, TExpression> : never): Aggregator<T>;
     $replaceRoot<TNewRootValue, TNewRoot extends {
         newRoot: TNewRootValue;
     }>(params: {

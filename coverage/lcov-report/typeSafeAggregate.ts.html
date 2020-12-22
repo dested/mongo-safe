@@ -1439,7 +1439,49 @@
 <a name='L1380'></a><a href='#L1380'>1380</a>
 <a name='L1381'></a><a href='#L1381'>1381</a>
 <a name='L1382'></a><a href='#L1382'>1382</a>
-<a name='L1383'></a><a href='#L1383'>1383</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L1383'></a><a href='#L1383'>1383</a>
+<a name='L1384'></a><a href='#L1384'>1384</a>
+<a name='L1385'></a><a href='#L1385'>1385</a>
+<a name='L1386'></a><a href='#L1386'>1386</a>
+<a name='L1387'></a><a href='#L1387'>1387</a>
+<a name='L1388'></a><a href='#L1388'>1388</a>
+<a name='L1389'></a><a href='#L1389'>1389</a>
+<a name='L1390'></a><a href='#L1390'>1390</a>
+<a name='L1391'></a><a href='#L1391'>1391</a>
+<a name='L1392'></a><a href='#L1392'>1392</a>
+<a name='L1393'></a><a href='#L1393'>1393</a>
+<a name='L1394'></a><a href='#L1394'>1394</a>
+<a name='L1395'></a><a href='#L1395'>1395</a>
+<a name='L1396'></a><a href='#L1396'>1396</a>
+<a name='L1397'></a><a href='#L1397'>1397</a>
+<a name='L1398'></a><a href='#L1398'>1398</a>
+<a name='L1399'></a><a href='#L1399'>1399</a>
+<a name='L1400'></a><a href='#L1400'>1400</a>
+<a name='L1401'></a><a href='#L1401'>1401</a>
+<a name='L1402'></a><a href='#L1402'>1402</a>
+<a name='L1403'></a><a href='#L1403'>1403</a>
+<a name='L1404'></a><a href='#L1404'>1404</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3035,7 +3077,7 @@ type ProjectOperatorHelperExpressionObject&lt;
   TKey extends KEY,
   TObj extends Record&lt;string, 1 | 0&gt;
 &gt; = {
-  [key in keyof TObj as key extends 1 ? key : never]: ProjectOperatorHelperExpressionInner&lt;
+  [key in keyof TObj as TObj[key] extends 1 ? key : never]: ProjectOperatorHelperExpressionInner&lt;
     TRootValue,
     TExpression,
     TKey,
@@ -3043,13 +3085,14 @@ type ProjectOperatorHelperExpressionObject&lt;
   &gt;;
 } &amp;
   {
-    [key in keyof TObj as key extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner&lt;
+    [key in keyof TObj as TObj[key] extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner&lt;
       TRootValue,
       TExpression,
       TKey,
       key
     &gt;;
   };
+&nbsp;
 type ProjectOperatorHelperOneTuple&lt;TRootValue, TExpression, TKey extends KEY&gt; = [
   InterpretProjectExpression&lt;TRootValue, LookupArray&lt;LookupKey&lt;TExpression, TKey&gt;, 0&gt;&gt;
 ];
@@ -3099,7 +3142,7 @@ export type InterpretProjectOperator&lt;TRootValue, TExpression&gt; =
   | {
       $cond:
         | ProjectOperatorHelperThreeTuple&lt;TRootValue, TExpression, '$cond'&gt;
-        | ProjectOperatorHelperExpressionObject&lt;TRootValue, TExpression, '$cond', {else: 0; if: 1; then: 1}&gt;;
+        | ProjectOperatorHelperExpressionObject&lt;TRootValue, TExpression, '$cond', {if: 1; then: 1; else: 0}&gt;;
     }
   | {
       $convert: ProjectOperatorHelperExpressionObject&lt;
@@ -3161,19 +3204,18 @@ export type InterpretProjectOperator&lt;TRootValue, TExpression&gt; =
         as: infer TAs;
         cond: any;
       }
-        ? {
-            input: InterpretProjectExpression&lt;TRootValue, TInput&gt;;
-            as: TAs;
+        ? Simplify&lt;
+            TRootValue &amp;
+              (TAs extends string ? Double$Keys&lt;{[key in TAs]: UnArray&lt;ProjectResult&lt;TRootValue, TInput&gt;&gt;}&gt; : never)
+          &gt; extends infer TNewValue
+          ? {
+              input: InterpretProjectExpression&lt;TRootValue, TInput&gt;;
+              as: TAs;
 &nbsp;
-            cond: ProjectOperatorHelperExpressionInner&lt;
-              TRootValue &amp;
-                (TAs extends string ? Double$Keys&lt;{[key in TAs]: UnArray&lt;ProjectResult&lt;TRootValue, TInput&gt;&gt;}&gt; : never),
-              TExpression,
-              '$filter',
-              'cond'
-            &gt;;
-          }
-        : never;
+              cond: ProjectOperatorHelperExpressionInner&lt;TNewValue, TExpression, '$filter', 'cond'&gt;;
+            }
+          : Impossible
+        : Impossible;
     }
   | {$first: ProjectOperatorHelperExpression&lt;TRootValue, TExpression, '$first'&gt;}
   | {$floor: ProjectOperatorHelperExpression&lt;TRootValue, TExpression, '$floor'&gt;}
@@ -3210,22 +3252,21 @@ export type InterpretProjectOperator&lt;TRootValue, TExpression&gt; =
   | {$isoWeekYear: ProjectOperatorHelperDate&lt;TRootValue, TExpression, '$isoWeekYear'&gt;}
   | {$last: ProjectOperatorHelperExpression&lt;TRootValue, TExpression, '$last'&gt;}
   | {
-      $let: ProjectOperatorHelperExpression&lt;TRootValue, TExpression, '$let'&gt; extends {
-        vars: InterpretProjectExpression&lt;TRootValue, infer TVars&gt;;
-      }
-        ? {
-            vars: ProjectOperatorHelperExpressionInner&lt;TRootValue, TExpression, '$let', 'vars'&gt;;
-            in: ProjectResultObject&lt;TRootValue, TVars&gt; extends infer R
-              ? // todo document let is a little sketchy, the values that come from vars are not super typesafe, which doesnt matter because we dont check them yet, but maybe someday
-                ProjectOperatorHelperExpressionInner&lt;
-                  TRootValue &amp; Double$Keys&lt;{[key in keyof R]: 1}&gt;,
-                  TExpression,
-                  '$let',
-                  'in'
-                &gt;
-              : Impossible;
-          }
-        : never;
+      $let: {
+        vars: ProjectOperatorHelperExpressionInner&lt;TRootValue, TExpression, '$let', 'vars'&gt;;
+        in: ProjectResultObject&lt;
+          TRootValue,
+          ProjectOperatorHelperExpressionInner&lt;TRootValue, TExpression, '$let', 'vars'&gt;
+        &gt; extends infer R
+          ? // todo document let is a little sketchy, the values that come from vars are not super typesafe, which doesnt matter because we dont check them yet, but maybe someday
+            ProjectOperatorHelperExpressionInner&lt;
+              TRootValue &amp; Double$Keys&lt;{[key in keyof R]: 1}&gt;,
+              TExpression,
+              '$let',
+              'in'
+            &gt;
+          : Impossible;
+      };
     }
   | {$literal: LookupKey&lt;TExpression, '$literal'&gt;}
   | {$ln: ProjectOperatorHelperExpression&lt;TRootValue, TExpression, '$ln'&gt;}
@@ -3438,11 +3479,32 @@ export type InterpretProjectExpression&lt;TRootValue, TExpression&gt; = /* // yo
   ? ProjectObject&lt;TRootValue, TExpression&gt;
   : Impossible;
 &nbsp;
+export type InterpretProjectRootExpression&lt;
+  TRootValue,
+  TKey extends KEY,
+  TExpression
+&gt; = /* // you cant add one more here without overflow lol
+ */ TExpression extends `$${string}`
+  ? ExpressionStringReferenceKey&lt;TRootValue&gt;
+  : TExpression extends 1
+  ? TKey extends DeepKeys&lt;TRootValue&gt;
+    ? TExpression
+    : never
+  : TExpression extends RawTypes
+  ? TExpression
+  : keyof TExpression extends AllOperators
+  ? InterpretProjectOperator&lt;TRootValue, TExpression&gt;
+  : TExpression extends Array&lt;infer TValueArr&gt;
+  ? Array&lt;InterpretProjectExpression&lt;TRootValue, TValueArr&gt;&gt;
+  : TExpression extends {}
+  ? ProjectObject&lt;TRootValue, TExpression&gt;
+  : Impossible;
+&nbsp;
 type ProjectObject&lt;TRootValue, TProject&gt; = {
   [key in keyof TProject]: InterpretProjectExpression&lt;TRootValue, TProject[key]&gt;;
 };
 type ProjectRootObject&lt;TRootValue, TProject&gt; = {
-  [key in keyof TProject]: InterpretProjectExpression&lt;TRootValue, TProject[key]&gt;;
+  [key in keyof TProject]: InterpretProjectRootExpression&lt;TRootValue, key, TProject[key]&gt;;
 };
 &nbsp;
 type AllAccumulateOperators =
@@ -3459,6 +3521,7 @@ type AllAccumulateOperators =
   | '$sum';
 &nbsp;
 type CheckProjectDeepKey&lt;TKey extends string, TValue&gt; = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
+&nbsp;
 type CheckProjectDeepKeyRemoveUnderscoreID&lt;TKey extends string, TValue&gt; = TValue extends 0 | false
   ? [TKey] extends ['_id']
     ? 1
@@ -3885,7 +3948,7 @@ export function isPossiblyTableName(tableName: any): tableName is TableName&lt;a
 }
 &nbsp;
 type Double$Keys&lt;T&gt; = {[key in keyof T as `$${key extends string ? key : never}`]: T[key]};
-type MongoRedactTypes = {$$DESCEND: '$$DESCEND'; $$PRUNE: '$$PRUNE'; $$KEEP: '$$KEEP'};
+type MongoRedactTypes = {$DESCEND: '$DESCEND'; $PRUNE: '$PRUNE'; $KEEP: '$KEEP'};
 &nbsp;
 export class Aggregator&lt;T&gt; {
   private currentPipeline?: {};
@@ -4090,7 +4153,7 @@ export class Aggregator&lt;T&gt; {
   }
 &nbsp;
   $redact&lt;TExpression&gt;(
-    expression: ProjectResult&lt;T &amp; MongoRedactTypes, TExpression&gt; extends '$$DESCEND' | '$$PRUNE' | '$$KEEP'
+    expression: ProjectResult&lt;T &amp; MongoRedactTypes, TExpression&gt; extends '$DESCEND' | '$PRUNE' | '$KEEP'
       ? InterpretProjectExpression&lt;T &amp; MongoRedactTypes, TExpression&gt;
       : never
   ): Aggregator&lt;T&gt; {
@@ -4210,7 +4273,7 @@ function safeKeys&lt;T&gt;(model: T): (keyof T)[] {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank">istanbul</a>
-                at Tue Dec 22 2020 11:53:57 GMT-0700 (Mountain Standard Time)
+                at Tue Dec 22 2020 14:59:01 GMT-0700 (Mountain Standard Time)
             </div>
         </div>
         <script src="prettify.js"></script>
