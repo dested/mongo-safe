@@ -139,59 +139,9 @@ test('$lookup', async () => {
   assert<Has<DBCar & {windows: DBWindow[]}, typeof result>>(true);
 });
 
-test('$lookup.let', async () => {
-  const aggregator = Aggregator.start<DBCar>().$lookup({
-    from: tableName<DBWindow>('window'),
-    localField: '_id',
-    foreignField: 'carId',
-    as: 'windows',
-    let: {a: 12},
-  });
-
-  expect(aggregator.query()).toEqual([
-    {
-      $lookup: {
-        from: 'window',
-        localField: '_id',
-        foreignField: 'carId',
-        as: 'windows',
-        let: {a: 12},
-      },
-    },
-  ]);
-
-  const [result] = await aggregator.result(mockCollection);
-  assert<Has<DBCar & {windows: {a: 12}[]}, typeof result>>(true);
-});
-test('$lookup.letComplex', async () => {
-  const aggregator = Aggregator.start<DBCar>().$lookup({
-    from: tableName<DBWindow>('window'),
-    localField: '_id',
-    foreignField: 'carId',
-    as: 'windows',
-    let: {a: '$carId'},
-  });
-
-  expect(aggregator.query()).toEqual([
-    {
-      $lookup: {
-        from: 'window',
-        localField: '_id',
-        foreignField: 'carId',
-        as: 'windows',
-        let: {a: '$carId'},
-      },
-    },
-  ]);
-
-  const [result] = await aggregator.result(mockCollection);
-  assert<Has<DBCar & {windows: {a: ObjectID}[]}, typeof result>>(true);
-});
 test('$lookup.pipeline.let', async () => {
   const aggregator = Aggregator.start<DBCar>().$lookup({
     from: tableName<DBWindow>('window'),
-    localField: '_id',
-    foreignField: 'carId',
     as: 'windows',
     let: {a: '$carId'},
     pipeline: (agg) => agg.$project({shoes: '$$a'}),
@@ -201,8 +151,6 @@ test('$lookup.pipeline.let', async () => {
     {
       $lookup: {
         from: 'window',
-        localField: '_id',
-        foreignField: 'carId',
         as: 'windows',
         let: {a: '$carId'},
         pipeline: [{$project: {shoes: '$$a'}}],
@@ -301,7 +249,7 @@ test('$graphLookup.otherTable', async () => {
     from: tableName<DBWindow>('window'),
     startWith: '$doors',
     as: 'shoes',
-    connectFromField: 'someDate',
+    connectFromField: 'carId',
     connectToField: 'tint',
   });
 
@@ -311,7 +259,7 @@ test('$graphLookup.otherTable', async () => {
         from: 'window',
         startWith: '$doors',
         as: 'shoes',
-        connectFromField: 'someDate',
+        connectFromField: 'carId',
         connectToField: 'tint',
       },
     },
@@ -379,7 +327,7 @@ test('$graphLookup.depthField', async () => {
     from: tableName<DBWindow>('window'),
     startWith: '$color',
     as: 'shoes',
-    connectFromField: 'carburetor',
+    connectFromField: '_id',
     connectToField: 'tint',
     depthField: 'numConnections',
   });
@@ -390,7 +338,7 @@ test('$graphLookup.depthField', async () => {
         from: 'window',
         startWith: '$color',
         as: 'shoes',
-        connectFromField: 'carburetor',
+        connectFromField: '_id',
         connectToField: 'tint',
         depthField: 'numConnections',
       },

@@ -24,102 +24,102 @@ export declare type DeReferenceExpression<TRootValue, TRef> = TRef extends `$${i
     [key in keyof TRef]: DeReferenceExpression<TRootValue, TRef[key]>;
 } : TRef;
 declare type AllOperators = '$dateToString' | '$cond' | '$eq' | '$map' | '$sum' | '$abs' | '$acos' | '$acosh' | '$add' | '$addToSet' | '$allElementsTrue' | '$and' | '$anyElementTrue' | '$arrayElemAt' | '$arrayToObject' | '$asin' | '$asinh' | '$atan' | '$atan2' | '$atanh' | '$avg' | '$ceil' | '$cmp' | '$concat' | '$concatArrays' | '$convert' | '$cos' | '$dateFromParts' | '$dateToParts' | '$dateFromString' | '$dayOfMonth' | '$dayOfWeek' | '$dayOfYear' | '$degreesToRadians' | '$divide' | '$exp' | '$filter' | '$first' | '$floor' | '$gt' | '$gte' | '$hour' | '$ifNull' | '$in' | '$indexOfArray' | '$indexOfBytes' | '$indexOfCP' | '$isArray' | '$isoDayOfWeek' | '$isoWeek' | '$isoWeekYear' | '$last' | '$let' | '$literal' | '$ln' | '$log' | '$log10' | '$lt' | '$lte' | '$ltrim' | '$max' | '$mergeObjects' | '$meta' | '$min' | '$millisecond' | '$minute' | '$mod' | '$month' | '$multiply' | '$ne' | '$not' | '$objectToArray' | '$or' | '$pow' | '$push' | '$radiansToDegrees' | '$range' | '$reduce' | '$regexFind' | '$regexFindAll' | '$regexMatch' | '$reverseArray' | '$round' | '$rtrim' | '$second' | '$setDifference' | '$setEquals' | '$setIntersection' | '$setIsSubset' | '$setUnion' | '$size' | '$sin' | '$slice' | '$split' | '$sqrt' | '$stdDevPop' | '$stdDevSamp' | '$strcasecmp' | '$strLenBytes' | '$strLenCP' | '$substr' | '$substrBytes' | '$substrCP' | '$subtract' | '$switch' | '$tan' | '$toBool' | '$toDate' | '$toDecimal' | '$toDouble' | '$toInt' | '$toLong' | '$toObjectId' | '$toString' | '$toLower' | '$toUpper' | '$trim' | '$trunc' | '$type' | '$week' | '$year' | '$zip';
-declare type ProjectOperatorHelperCondition<TRootValue, TValue, TKey extends KEY> = LookupKey<TValue, TKey> extends [
+declare type ProjectOperatorHelperCondition<TRootValue, TExpression, TKey extends KEY> = LookupKey<TExpression, TKey> extends [
     InterpretProjectExpression<TRootValue, infer TLeft>,
     InterpretProjectExpression<TRootValue, infer TRight>
 ] ? [InterpretProjectExpression<TRootValue, TLeft>, InterpretProjectExpression<TRootValue, TRight>] : never;
-declare type ProjectOperatorHelperArray<TRootValue, TValue, TKey extends KEY> = LookupKey<TValue, TKey> extends Array<InterpretProjectExpression<TRootValue, infer TArr>> ? InterpretProjectExpression<TRootValue, TArr>[] : never;
-declare type ProjectOperatorHelperDate<TRootValue, TValue, TKey extends KEY> = {
-    date: ProjectOperatorHelperExpressionInner<TRootValue, TValue, TKey, 'date'>;
-    timezone?: ProjectOperatorHelperExpressionInner<TRootValue, TValue, TKey, 'timezone'>;
-} | ProjectOperatorHelperExpression<TRootValue, TValue, TKey>;
-declare type ProjectOperatorHelperArrayOrExpression<TRootValue, TValue, TKey extends KEY> = ProjectOperatorHelperArray<TRootValue, TValue, TKey> | ProjectOperatorHelperExpression<TRootValue, TValue, TKey>;
-declare type ProjectOperatorHelperExpression<TRootValue, TValue, TKey extends KEY> = InterpretProjectExpression<TRootValue, LookupKey<TValue, TKey>>;
-declare type ProjectOperatorHelperExpressionInner<TRootValue, TValue, TKey1 extends KEY, TKey2 extends KEY> = InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, TKey1>, TKey2>>;
-declare type ProjectOperatorHelperExpressionObject<TRootValue, TValue, TKey extends KEY, TObj extends Record<string, 1 | 0>> = {
-    [key in keyof TObj as key extends 1 ? key : never]: ProjectOperatorHelperExpressionInner<TRootValue, TValue, TKey, key>;
+declare type ProjectOperatorHelperArray<TRootValue, TExpression, TKey extends KEY> = LookupKey<TExpression, TKey> extends Array<InterpretProjectExpression<TRootValue, infer TArr>> ? InterpretProjectExpression<TRootValue, TArr>[] : never;
+declare type ProjectOperatorHelperDate<TRootValue, TExpression, TKey extends KEY> = {
+    date: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, 'date'>;
+    timezone?: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, 'timezone'>;
+} | ProjectOperatorHelperExpression<TRootValue, TExpression, TKey>;
+declare type ProjectOperatorHelperArrayOrExpression<TRootValue, TExpression, TKey extends KEY> = ProjectOperatorHelperArray<TRootValue, TExpression, TKey> | ProjectOperatorHelperExpression<TRootValue, TExpression, TKey>;
+declare type ProjectOperatorHelperExpression<TRootValue, TExpression, TKey extends KEY> = InterpretProjectExpression<TRootValue, LookupKey<TExpression, TKey>>;
+declare type ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey1 extends KEY, TKey2 extends KEY> = InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TExpression, TKey1>, TKey2>>;
+declare type ProjectOperatorHelperExpressionObject<TRootValue, TExpression, TKey extends KEY, TObj extends Record<string, 1 | 0>> = {
+    [key in keyof TObj as key extends 1 ? key : never]: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, key>;
 } & {
-    [key in keyof TObj as key extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<TRootValue, TValue, TKey, key>;
+    [key in keyof TObj as key extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, TKey, key>;
 };
-declare type ProjectOperatorHelperOneTuple<TRootValue, TValue, TKey extends KEY> = [
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>
+declare type ProjectOperatorHelperOneTuple<TRootValue, TExpression, TKey extends KEY> = [
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>
 ];
-declare type ProjectOperatorHelperTwoTuple<TRootValue, TValue, TKey extends KEY> = [
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>
+declare type ProjectOperatorHelperTwoTuple<TRootValue, TExpression, TKey extends KEY> = [
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>,
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 1>>
 ];
-declare type ProjectOperatorHelperThreeTuple<TRootValue, TValue, TKey extends KEY> = [
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>,
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 2>>
+declare type ProjectOperatorHelperThreeTuple<TRootValue, TExpression, TKey extends KEY> = [
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>,
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 1>>,
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 2>>
 ];
-declare type ProjectOperatorHelperFourTuple<TRootValue, TValue, TKey extends KEY> = [
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 0>>,
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 1>>,
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 2>>,
-    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TValue, TKey>, 3>>
+declare type ProjectOperatorHelperFourTuple<TRootValue, TExpression, TKey extends KEY> = [
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>,
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 1>>,
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 2>>,
+    InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 3>>
 ];
-declare type InterpretProjectOperator<TRootValue, TValue> = {
-    $abs: ProjectOperatorHelperExpression<TRootValue, TValue, '$abs'>;
+export declare type InterpretProjectOperator<TRootValue, TExpression> = {
+    $abs: ProjectOperatorHelperExpression<TRootValue, TExpression, '$abs'>;
 } | {
-    $acos: ProjectOperatorHelperExpression<TRootValue, TValue, '$acos'>;
+    $acos: ProjectOperatorHelperExpression<TRootValue, TExpression, '$acos'>;
 } | {
-    $acosh: ProjectOperatorHelperExpression<TRootValue, TValue, '$acosh'>;
+    $acosh: ProjectOperatorHelperExpression<TRootValue, TExpression, '$acosh'>;
 } | {
-    $add: ProjectOperatorHelperArray<TRootValue, TValue, '$add'>;
+    $add: ProjectOperatorHelperArray<TRootValue, TExpression, '$add'>;
 } | {
-    $addToSet: ProjectOperatorHelperExpression<TRootValue, TValue, '$addToSet'>;
+    $addToSet: ProjectOperatorHelperExpression<TRootValue, TExpression, '$addToSet'>;
 } | {
-    $allElementsTrue: ProjectOperatorHelperArray<TRootValue, TValue, '$allElementsTrue'>;
+    $allElementsTrue: ProjectOperatorHelperArray<TRootValue, TExpression, '$allElementsTrue'>;
 } | {
-    $and: ProjectOperatorHelperArray<TRootValue, TValue, '$and'>;
+    $and: ProjectOperatorHelperArray<TRootValue, TExpression, '$and'>;
 } | {
-    $anyElementTrue: ProjectOperatorHelperArray<TRootValue, TValue, '$anyElementTrue'>;
+    $anyElementTrue: ProjectOperatorHelperArray<TRootValue, TExpression, '$anyElementTrue'>;
 } | {
-    $arrayElemAt: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$arrayElemAt'>;
+    $arrayElemAt: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$arrayElemAt'>;
 } | {
-    $arrayToObject: ProjectOperatorHelperArray<TRootValue, TValue, '$arrayToObject'> | ProjectOperatorHelperExpression<TRootValue, TValue, '$arrayToObject'>;
+    $arrayToObject: ProjectOperatorHelperArray<TRootValue, TExpression, '$arrayToObject'> | ProjectOperatorHelperExpression<TRootValue, TExpression, '$arrayToObject'>;
 } | {
-    $asin: ProjectOperatorHelperExpression<TRootValue, TValue, '$asin'>;
+    $asin: ProjectOperatorHelperExpression<TRootValue, TExpression, '$asin'>;
 } | {
-    $asinh: ProjectOperatorHelperExpression<TRootValue, TValue, '$asinh'>;
+    $asinh: ProjectOperatorHelperExpression<TRootValue, TExpression, '$asinh'>;
 } | {
-    $atan: ProjectOperatorHelperExpression<TRootValue, TValue, '$atan'>;
+    $atan: ProjectOperatorHelperExpression<TRootValue, TExpression, '$atan'>;
 } | {
-    $atan2: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$atan2'>;
+    $atan2: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$atan2'>;
 } | {
-    $atanh: ProjectOperatorHelperExpression<TRootValue, TValue, '$atanh'>;
+    $atanh: ProjectOperatorHelperExpression<TRootValue, TExpression, '$atanh'>;
 } | {
-    $avg: ProjectOperatorHelperArrayOrExpression<TRootValue, TValue, '$avg'>;
+    $avg: ProjectOperatorHelperArrayOrExpression<TRootValue, TExpression, '$avg'>;
 } | {
-    $binarySize: ProjectOperatorHelperExpression<TRootValue, TValue, '$binarySize'>;
+    $binarySize: ProjectOperatorHelperExpression<TRootValue, TExpression, '$binarySize'>;
 } | {
-    $bsonSize: ProjectOperatorHelperExpression<TRootValue, TValue, '$bsonSize'>;
+    $bsonSize: ProjectOperatorHelperExpression<TRootValue, TExpression, '$bsonSize'>;
 } | {
-    $ceil: ProjectOperatorHelperExpression<TRootValue, TValue, '$ceil'>;
+    $ceil: ProjectOperatorHelperExpression<TRootValue, TExpression, '$ceil'>;
 } | {
-    $cmp: ProjectOperatorHelperArray<TRootValue, TValue, '$cmp'>;
+    $cmp: ProjectOperatorHelperArray<TRootValue, TExpression, '$cmp'>;
 } | {
-    $concat: ProjectOperatorHelperArray<TRootValue, TValue, '$concat'>;
+    $concat: ProjectOperatorHelperArray<TRootValue, TExpression, '$concat'>;
 } | {
-    $concatArrays: ProjectOperatorHelperArray<TRootValue, TValue, '$concatArrays'>;
+    $concatArrays: ProjectOperatorHelperArray<TRootValue, TExpression, '$concatArrays'>;
 } | {
-    $cond: ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$cond'> | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$cond', {
+    $cond: ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$cond'> | ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$cond', {
         else: 0;
         if: 1;
         then: 1;
     }>;
 } | {
-    $convert: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$convert', {
+    $convert: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$convert', {
         input: 1;
         to: 0;
         onError: 0;
         onNull: 0;
     }>;
 } | {
-    $cos: ProjectOperatorHelperExpression<TRootValue, TValue, '$cos'>;
+    $cos: ProjectOperatorHelperExpression<TRootValue, TExpression, '$cos'>;
 } | {
-    $dateFromParts: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$dateFromParts', {
+    $dateFromParts: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateFromParts', {
         year: 1;
         month: 0;
         day: 0;
@@ -128,7 +128,7 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
         second: 0;
         millisecond: 0;
         timezone: 0;
-    }> | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$dateFromParts', {
+    }> | ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateFromParts', {
         isoWeekYear: 1;
         isoWeek: 0;
         isoDayOfWeek: 0;
@@ -139,43 +139,43 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
         timezone: 0;
     }>;
 } | {
-    $dateFromString: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$dateFromString', {
+    $dateFromString: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateFromString', {
         dateString: 1;
         format: 0;
         timezone: 0;
         onError: 0;
     }>;
 } | {
-    $dateToParts: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$dateToParts', {
+    $dateToParts: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateToParts', {
         date: 1;
         timezone: 0;
-    }> | (ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$dateToParts', {
+    }> | (ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateToParts', {
         date: 1;
         timezone: 0;
     }> & {
         iso8601?: boolean;
     });
 } | {
-    $dateToString: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$dateToString', {
+    $dateToString: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateToString', {
         date: 1;
         format: 0;
     }>;
 } | {
-    $dayOfMonth: ProjectOperatorHelperDate<TRootValue, TValue, '$dayOfMonth'>;
+    $dayOfMonth: ProjectOperatorHelperDate<TRootValue, TExpression, '$dayOfMonth'>;
 } | {
-    $dayOfWeek: ProjectOperatorHelperDate<TRootValue, TValue, '$dayOfWeek'>;
+    $dayOfWeek: ProjectOperatorHelperDate<TRootValue, TExpression, '$dayOfWeek'>;
 } | {
-    $dayOfYear: ProjectOperatorHelperDate<TRootValue, TValue, '$dayOfYear'>;
+    $dayOfYear: ProjectOperatorHelperDate<TRootValue, TExpression, '$dayOfYear'>;
 } | {
-    $degreesToRadians: ProjectOperatorHelperExpression<TRootValue, TValue, '$degreesToRadians'>;
+    $degreesToRadians: ProjectOperatorHelperExpression<TRootValue, TExpression, '$degreesToRadians'>;
 } | {
-    $divide: ProjectOperatorHelperArray<TRootValue, TValue, '$divide'>;
+    $divide: ProjectOperatorHelperArray<TRootValue, TExpression, '$divide'>;
 } | {
-    $eq: ProjectOperatorHelperCondition<TRootValue, TValue, '$eq'>;
+    $eq: ProjectOperatorHelperCondition<TRootValue, TExpression, '$eq'>;
 } | {
-    $exp: ProjectOperatorHelperExpression<TRootValue, TValue, '$exp'>;
+    $exp: ProjectOperatorHelperExpression<TRootValue, TExpression, '$exp'>;
 } | {
-    $filter: ProjectOperatorHelperExpression<TRootValue, TValue, '$filter'> extends {
+    $filter: ProjectOperatorHelperExpression<TRootValue, TExpression, '$filter'> extends {
         input: InterpretProjectExpression<TRootValue, infer TInput>;
         as: infer TAs;
         cond: any;
@@ -184,112 +184,112 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
         as: TAs;
         cond: ProjectOperatorHelperExpressionInner<TRootValue & (TAs extends string ? Double$Keys<{
             [key in TAs]: UnArray<ProjectResult<TRootValue, TInput>>;
-        }> : never), TValue, '$filter', 'cond'>;
+        }> : never), TExpression, '$filter', 'cond'>;
     } : never;
 } | {
-    $first: ProjectOperatorHelperExpression<TRootValue, TValue, '$first'>;
+    $first: ProjectOperatorHelperExpression<TRootValue, TExpression, '$first'>;
 } | {
-    $floor: ProjectOperatorHelperExpression<TRootValue, TValue, '$floor'>;
+    $floor: ProjectOperatorHelperExpression<TRootValue, TExpression, '$floor'>;
 } | {
-    $gt: ProjectOperatorHelperCondition<TRootValue, TValue, '$gt'>;
+    $gt: ProjectOperatorHelperCondition<TRootValue, TExpression, '$gt'>;
 } | {
-    $gte: ProjectOperatorHelperCondition<TRootValue, TValue, '$gte'>;
+    $gte: ProjectOperatorHelperCondition<TRootValue, TExpression, '$gte'>;
 } | {
-    $hour: ProjectOperatorHelperDate<TRootValue, TValue, '$hour'>;
+    $hour: ProjectOperatorHelperDate<TRootValue, TExpression, '$hour'>;
 } | {
-    $ifNull: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$ifNull'>;
+    $ifNull: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$ifNull'>;
 } | {
-    $in: ProjectOperatorHelperArray<TRootValue, TValue, '$in'>;
+    $in: ProjectOperatorHelperArray<TRootValue, TExpression, '$in'>;
 } | {
-    $indexOfArray: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$indexOfArray'> | ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$indexOfArray'> | ProjectOperatorHelperFourTuple<TRootValue, TValue, '$indexOfArray'>;
+    $indexOfArray: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$indexOfArray'> | ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$indexOfArray'> | ProjectOperatorHelperFourTuple<TRootValue, TExpression, '$indexOfArray'>;
 } | {
-    $indexOfBytes: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$indexOfBytes'> | ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$indexOfBytes'> | ProjectOperatorHelperFourTuple<TRootValue, TValue, '$indexOfBytes'>;
+    $indexOfBytes: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$indexOfBytes'> | ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$indexOfBytes'> | ProjectOperatorHelperFourTuple<TRootValue, TExpression, '$indexOfBytes'>;
 } | {
-    $indexOfCP: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$indexOfCP'> | ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$indexOfCP'> | ProjectOperatorHelperFourTuple<TRootValue, TValue, '$indexOfCP'>;
+    $indexOfCP: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$indexOfCP'> | ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$indexOfCP'> | ProjectOperatorHelperFourTuple<TRootValue, TExpression, '$indexOfCP'>;
 } | {
-    $isArray: ProjectOperatorHelperExpression<TRootValue, TValue, '$isArray'>;
+    $isArray: ProjectOperatorHelperExpression<TRootValue, TExpression, '$isArray'>;
 } | {
-    $isoDayOfWeek: ProjectOperatorHelperDate<TRootValue, TValue, '$isoDayOfWeek'>;
+    $isoDayOfWeek: ProjectOperatorHelperDate<TRootValue, TExpression, '$isoDayOfWeek'>;
 } | {
-    $isoWeek: ProjectOperatorHelperDate<TRootValue, TValue, '$isoWeek'>;
+    $isoWeek: ProjectOperatorHelperDate<TRootValue, TExpression, '$isoWeek'>;
 } | {
-    $isoWeekYear: ProjectOperatorHelperDate<TRootValue, TValue, '$isoWeekYear'>;
+    $isoWeekYear: ProjectOperatorHelperDate<TRootValue, TExpression, '$isoWeekYear'>;
 } | {
-    $last: ProjectOperatorHelperExpression<TRootValue, TValue, '$last'>;
+    $last: ProjectOperatorHelperExpression<TRootValue, TExpression, '$last'>;
 } | {
-    $let: ProjectOperatorHelperExpression<TRootValue, TValue, '$let'> extends {
+    $let: ProjectOperatorHelperExpression<TRootValue, TExpression, '$let'> extends {
         vars: InterpretProjectExpression<TRootValue, infer TVars>;
     } ? {
-        vars: ProjectOperatorHelperExpressionInner<TRootValue, TValue, '$let', 'vars'>;
+        vars: ProjectOperatorHelperExpressionInner<TRootValue, TExpression, '$let', 'vars'>;
         in: ProjectResultObject<TRootValue, TVars> extends infer R ? ProjectOperatorHelperExpressionInner<TRootValue & Double$Keys<{
             [key in keyof R]: 1;
-        }>, TValue, '$let', 'in'> : Impossible;
+        }>, TExpression, '$let', 'in'> : Impossible;
     } : never;
 } | {
-    $literal: LookupKey<TValue, '$literal'>;
+    $literal: LookupKey<TExpression, '$literal'>;
 } | {
-    $ln: ProjectOperatorHelperExpression<TRootValue, TValue, '$ln'>;
+    $ln: ProjectOperatorHelperExpression<TRootValue, TExpression, '$ln'>;
 } | {
-    $log: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$log'>;
+    $log: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$log'>;
 } | {
-    $log10: ProjectOperatorHelperExpression<TRootValue, TValue, '$log10'>;
+    $log10: ProjectOperatorHelperExpression<TRootValue, TExpression, '$log10'>;
 } | {
-    $lt: ProjectOperatorHelperCondition<TRootValue, TValue, '$lt'>;
+    $lt: ProjectOperatorHelperCondition<TRootValue, TExpression, '$lt'>;
 } | {
-    $lte: ProjectOperatorHelperCondition<TRootValue, TValue, '$lte'>;
+    $lte: ProjectOperatorHelperCondition<TRootValue, TExpression, '$lte'>;
 } | {
-    $ltrim: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$ltrim', {
+    $ltrim: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$ltrim', {
         input: 1;
         chars: 0;
     }>;
 } | {
-    $map: LookupKey<TValue, '$map'> extends {
+    $map: LookupKey<TExpression, '$map'> extends {
         as: string;
         in: infer TIn;
         input: ExpressionStringReferenceKey<TRootValue>;
     } ? {
-        as: LookupKey<LookupKey<TValue, '$map'>, 'as'>;
+        as: LookupKey<LookupKey<TExpression, '$map'>, 'as'>;
         in: ProjectObject<TRootValue & {
-            [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
+            [key in `$${LookupKey<LookupKey<TExpression, '$map'>, 'as'>}`]: DeReferenceExpression<TRootValue, LookupKey<LookupKey<TExpression, '$map'>, 'input'>>;
         }, TIn>;
         input: ExpressionStringReferenceKey<TRootValue>;
     } : never;
 } | {
-    $max: ProjectOperatorHelperExpression<TRootValue, TValue, '$max'>;
+    $max: ProjectOperatorHelperExpression<TRootValue, TExpression, '$max'>;
 } | {
-    $mergeObjects: ProjectOperatorHelperArray<TRootValue, TValue, '$mergeObjects'>;
+    $mergeObjects: ProjectOperatorHelperArray<TRootValue, TExpression, '$mergeObjects'>;
 } | {
     $meta: 'textScore' | 'indexKey';
 } | {
-    $millisecond: ProjectOperatorHelperDate<TRootValue, TValue, '$millisecond'>;
+    $millisecond: ProjectOperatorHelperDate<TRootValue, TExpression, '$millisecond'>;
 } | {
-    $min: ProjectOperatorHelperExpression<TRootValue, TValue, '$min'>;
+    $min: ProjectOperatorHelperExpression<TRootValue, TExpression, '$min'>;
 } | {
-    $minute: ProjectOperatorHelperDate<TRootValue, TValue, '$minute'>;
+    $minute: ProjectOperatorHelperDate<TRootValue, TExpression, '$minute'>;
 } | {
-    $mod: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$mod'>;
+    $mod: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$mod'>;
 } | {
-    $month: ProjectOperatorHelperDate<TRootValue, TValue, '$month'>;
+    $month: ProjectOperatorHelperDate<TRootValue, TExpression, '$month'>;
 } | {
-    $multiply: ProjectOperatorHelperArray<TRootValue, TValue, '$multiply'>;
+    $multiply: ProjectOperatorHelperArray<TRootValue, TExpression, '$multiply'>;
 } | {
-    $ne: ProjectOperatorHelperCondition<TRootValue, TValue, '$ne'>;
+    $ne: ProjectOperatorHelperCondition<TRootValue, TExpression, '$ne'>;
 } | {
-    $not: ProjectOperatorHelperExpression<TRootValue, TValue, '$not'>;
+    $not: ProjectOperatorHelperExpression<TRootValue, TExpression, '$not'>;
 } | {
-    $objectToArray: ProjectOperatorHelperExpression<TRootValue, TValue, '$objectToArray'>;
+    $objectToArray: ProjectOperatorHelperExpression<TRootValue, TExpression, '$objectToArray'>;
 } | {
-    $or: ProjectOperatorHelperArray<TRootValue, TValue, '$or'>;
+    $or: ProjectOperatorHelperArray<TRootValue, TExpression, '$or'>;
 } | {
-    $pow: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$pow:'>;
+    $pow: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$pow:'>;
 } | {
-    $push: ProjectOperatorHelperExpression<TRootValue, TValue, '$push'>;
+    $push: ProjectOperatorHelperExpression<TRootValue, TExpression, '$push'>;
 } | {
-    $radiansToDegrees: ProjectOperatorHelperExpression<TRootValue, TValue, '$radiansToDegrees'>;
+    $radiansToDegrees: ProjectOperatorHelperExpression<TRootValue, TExpression, '$radiansToDegrees'>;
 } | {
-    $range: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$range'> | ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$range'>;
+    $range: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$range'> | ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$range'>;
 } | {
-    $reduce: ProjectOperatorHelperExpression<TRootValue, TValue, '$reduce'> extends {
+    $reduce: ProjectOperatorHelperExpression<TRootValue, TExpression, '$reduce'> extends {
         input: InterpretProjectExpression<TRootValue, infer TInput>;
         initialValue: InterpretProjectExpression<TRootValue, infer TInitialValue>;
         in: any;
@@ -299,79 +299,79 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
         in: ProjectResultObject<TRootValue, TInput> extends infer R ? ProjectOperatorHelperExpressionInner<TRootValue & {
             $value: UnArray<ProjectResultObject<TRootValue, TInitialValue>>;
             $this: ProjectResultObject<TRootValue, TInput>;
-        }, TValue, '$reduce', 'in'> : Impossible;
+        }, TExpression, '$reduce', 'in'> : Impossible;
     } : never;
 } | {
-    $regexFind: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$regexFind', {
+    $regexFind: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$regexFind', {
         input: 1;
         regex: 1;
         options: 0;
     }>;
 } | {
-    $regexFindAll: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$regexFindAll', {
+    $regexFindAll: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$regexFindAll', {
         input: 1;
         regex: 1;
         options: 0;
     }>;
 } | {
-    $regexMatch: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$regexMatch', {
+    $regexMatch: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$regexMatch', {
         input: 1;
         regex: 1;
         options: 0;
     }>;
 } | {
-    $reverseArray: ProjectOperatorHelperExpression<TRootValue, TValue, '$reverseArray'>;
+    $reverseArray: ProjectOperatorHelperExpression<TRootValue, TExpression, '$reverseArray'>;
 } | {
-    $round: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$round'>;
+    $round: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$round'>;
 } | {
-    $rtrim: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$rtrim', {
+    $rtrim: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$rtrim', {
         input: 1;
         chars: 0;
     }>;
 } | {
-    $second: ProjectOperatorHelperDate<TRootValue, TValue, '$second'>;
+    $second: ProjectOperatorHelperDate<TRootValue, TExpression, '$second'>;
 } | {
-    $setDifference: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$setDifference'>;
+    $setDifference: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$setDifference'>;
 } | {
-    $setEquals: ProjectOperatorHelperArray<TRootValue, TValue, '$setEquals'>;
+    $setEquals: ProjectOperatorHelperArray<TRootValue, TExpression, '$setEquals'>;
 } | {
-    $setIntersection: ProjectOperatorHelperArray<TRootValue, TValue, '$setIntersection'>;
+    $setIntersection: ProjectOperatorHelperArray<TRootValue, TExpression, '$setIntersection'>;
 } | {
-    $setIsSubset: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$setIsSubset'>;
+    $setIsSubset: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$setIsSubset'>;
 } | {
-    $setUnion: ProjectOperatorHelperArray<TRootValue, TValue, '$setUnion'>;
+    $setUnion: ProjectOperatorHelperArray<TRootValue, TExpression, '$setUnion'>;
 } | {
-    $sin: ProjectOperatorHelperExpression<TRootValue, TValue, '$sin'>;
+    $sin: ProjectOperatorHelperExpression<TRootValue, TExpression, '$sin'>;
 } | {
-    $size: ProjectOperatorHelperExpression<TRootValue, TValue, '$size'>;
+    $size: ProjectOperatorHelperExpression<TRootValue, TExpression, '$size'>;
 } | {
-    $slice: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$slice'> | ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$slice'>;
+    $slice: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$slice'> | ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$slice'>;
 } | {
-    $split: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$split'>;
+    $split: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$split'>;
 } | {
-    $sqrt: ProjectOperatorHelperExpression<TRootValue, TValue, '$sqrt'>;
+    $sqrt: ProjectOperatorHelperExpression<TRootValue, TExpression, '$sqrt'>;
 } | {
-    $stdDevPop: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevPop'> | ProjectOperatorHelperArray<TRootValue, TValue, '$stdDevPop'>;
+    $stdDevPop: ProjectOperatorHelperExpression<TRootValue, TExpression, '$stdDevPop'> | ProjectOperatorHelperArray<TRootValue, TExpression, '$stdDevPop'>;
 } | {
-    $stdDevSamp: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevSamp'> | ProjectOperatorHelperArray<TRootValue, TValue, '$stdDevSamp'>;
+    $stdDevSamp: ProjectOperatorHelperExpression<TRootValue, TExpression, '$stdDevSamp'> | ProjectOperatorHelperArray<TRootValue, TExpression, '$stdDevSamp'>;
 } | {
-    $strcasecmp: ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$strcasecmp'>;
+    $strcasecmp: ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$strcasecmp'>;
 } | {
-    $strLenBytes: ProjectOperatorHelperExpression<TRootValue, TValue, '$strLenBytes'>;
+    $strLenBytes: ProjectOperatorHelperExpression<TRootValue, TExpression, '$strLenBytes'>;
 } | {
-    $strLenCP: ProjectOperatorHelperExpression<TRootValue, TValue, '$strLenCP'>;
+    $strLenCP: ProjectOperatorHelperExpression<TRootValue, TExpression, '$strLenCP'>;
 } | {
-    $substr: ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$substr'>;
+    $substr: ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$substr'>;
 } | {
-    $substrBytes: ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$substrBytes'>;
+    $substrBytes: ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$substrBytes'>;
 } | {
-    $substrCP: ProjectOperatorHelperThreeTuple<TRootValue, TValue, '$substrCP'>;
+    $substrCP: ProjectOperatorHelperThreeTuple<TRootValue, TExpression, '$substrCP'>;
 } | {
-    $subtract: ProjectOperatorHelperArray<TRootValue, TValue, '$subtract'>;
+    $subtract: ProjectOperatorHelperArray<TRootValue, TExpression, '$subtract'>;
 } | {
-    $sum: ProjectOperatorHelperExpression<TRootValue, TValue, '$sum'>;
+    $sum: ProjectOperatorHelperExpression<TRootValue, TExpression, '$sum'>;
 } | {
-    $switch: LookupKey<TValue, '$switch'> extends {
+    $switch: LookupKey<TExpression, '$switch'> extends {
         branches: {
             case: InterpretProjectExpression<TRootValue, infer TBranchCase>;
             then: InterpretProjectExpression<TRootValue, infer TBranchThen>;
@@ -385,65 +385,65 @@ declare type InterpretProjectOperator<TRootValue, TValue> = {
         default: InterpretProjectExpression<TRootValue, TDefault>;
     } : never;
 } | {
-    $tan: ProjectOperatorHelperExpression<TRootValue, TValue, '$tan'>;
+    $tan: ProjectOperatorHelperExpression<TRootValue, TExpression, '$tan'>;
 } | {
-    $toBool: ProjectOperatorHelperExpression<TRootValue, TValue, '$toBool'>;
+    $toBool: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toBool'>;
 } | {
-    $toDate: ProjectOperatorHelperExpression<TRootValue, TValue, '$toDate'>;
+    $toDate: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toDate'>;
 } | {
-    $toDecimal: ProjectOperatorHelperExpression<TRootValue, TValue, '$toDecimal'>;
+    $toDecimal: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toDecimal'>;
 } | {
-    $toDouble: ProjectOperatorHelperExpression<TRootValue, TValue, '$toDouble'>;
+    $toDouble: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toDouble'>;
 } | {
-    $toInt: ProjectOperatorHelperExpression<TRootValue, TValue, '$toInt'>;
+    $toInt: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toInt'>;
 } | {
-    $toLong: ProjectOperatorHelperExpression<TRootValue, TValue, '$toLong'>;
+    $toLong: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toLong'>;
 } | {
-    $toLower: ProjectOperatorHelperExpression<TRootValue, TValue, '$toLower'>;
+    $toLower: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toLower'>;
 } | {
-    $toObjectId: ProjectOperatorHelperExpression<TRootValue, TValue, '$toObjectId'>;
+    $toObjectId: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toObjectId'>;
 } | {
-    $toString: ProjectOperatorHelperExpression<TRootValue, TValue, '$toString'>;
+    $toString: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toString'>;
 } | {
-    $toUpper: ProjectOperatorHelperExpression<TRootValue, TValue, '$toUpper'>;
+    $toUpper: ProjectOperatorHelperExpression<TRootValue, TExpression, '$toUpper'>;
 } | {
-    $trim: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$trim', {
+    $trim: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$trim', {
         input: 1;
         chars: 0;
     }>;
 } | {
-    $trunc: ProjectOperatorHelperOneTuple<TRootValue, TValue, '$trunc'> | ProjectOperatorHelperTwoTuple<TRootValue, TValue, '$trunc'> | ProjectOperatorHelperExpression<TRootValue, TValue, '$trunc'>;
+    $trunc: ProjectOperatorHelperOneTuple<TRootValue, TExpression, '$trunc'> | ProjectOperatorHelperTwoTuple<TRootValue, TExpression, '$trunc'> | ProjectOperatorHelperExpression<TRootValue, TExpression, '$trunc'>;
 } | {
-    $type: ProjectOperatorHelperExpression<TRootValue, TValue, '$type'>;
+    $type: ProjectOperatorHelperExpression<TRootValue, TExpression, '$type'>;
 } | {
-    $week: ProjectOperatorHelperDate<TRootValue, TValue, '$week'>;
+    $week: ProjectOperatorHelperDate<TRootValue, TExpression, '$week'>;
 } | {
-    $year: ProjectOperatorHelperDate<TRootValue, TValue, '$year'>;
+    $year: ProjectOperatorHelperDate<TRootValue, TExpression, '$year'>;
 } | {
-    $zip: ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$zip', {
+    $zip: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$zip', {
         inputs: 1;
         useLongestLength: 0;
-    }> | ProjectOperatorHelperExpressionObject<TRootValue, TValue, '$zip', {
+    }> | ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$zip', {
         inputs: 1;
         useLongestLength: 1;
         defaults: 1;
     }>;
 };
-declare type InterpretAccumulateOperator<TRootValue, TValue> = {
-    $avg?: ProjectOperatorHelperExpression<TRootValue, TValue, '$avg'>;
-    $last?: ProjectOperatorHelperExpression<TRootValue, TValue, '$last'>;
-    $mergeObjects?: ProjectOperatorHelperExpression<TRootValue, TValue, '$mergeObjects'>;
-    $stdDevPop?: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevPop'>;
-    $stdDevSamp?: ProjectOperatorHelperExpression<TRootValue, TValue, '$stdDevSamp'>;
-    $addToSet?: ProjectOperatorHelperExpression<TRootValue, TValue, '$addToSet'>;
-    $first?: ProjectOperatorHelperExpression<TRootValue, TValue, '$first'>;
-    $max?: ProjectOperatorHelperExpression<TRootValue, TValue, '$max'>;
-    $min?: ProjectOperatorHelperExpression<TRootValue, TValue, '$min'>;
-    $push?: ProjectOperatorHelperExpression<TRootValue, TValue, '$push'>;
-    $sum?: ProjectOperatorHelperExpression<TRootValue, TValue, '$sum'>;
+declare type InterpretAccumulateOperator<TRootValue, TExpression> = {
+    $avg?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$avg'>;
+    $last?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$last'>;
+    $mergeObjects?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$mergeObjects'>;
+    $stdDevPop?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$stdDevPop'>;
+    $stdDevSamp?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$stdDevSamp'>;
+    $addToSet?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$addToSet'>;
+    $first?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$first'>;
+    $max?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$max'>;
+    $min?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$min'>;
+    $push?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$push'>;
+    $sum?: ProjectOperatorHelperExpression<TRootValue, TExpression, '$sum'>;
 };
 export declare type ExpressionStringReferenceKey<T> = `$${DeepKeys<T> | '$CURRENT'}`;
-export declare type InterpretProjectExpression<TRootValue, TValue> = TValue extends `$${string}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? InterpretProjectOperator<TRootValue, TValue> : TValue extends Array<infer TValueArr> ? Array<InterpretProjectExpression<TRootValue, TValueArr>> : TValue extends {} ? ProjectObject<TRootValue, TValue> : Impossible;
+export declare type InterpretProjectExpression<TRootValue, TExpression> = TExpression extends `$${string}` ? ExpressionStringReferenceKey<TRootValue> : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllOperators ? InterpretProjectOperator<TRootValue, TExpression> : TExpression extends Array<infer TValueArr> ? Array<InterpretProjectExpression<TRootValue, TValueArr>> : TExpression extends {} ? ProjectObject<TRootValue, TExpression> : Impossible;
 declare type ProjectObject<TRootValue, TProject> = {
     [key in keyof TProject]: InterpretProjectExpression<TRootValue, TProject[key]>;
 };
@@ -453,13 +453,13 @@ declare type ProjectRootObject<TRootValue, TProject> = {
 declare type AllAccumulateOperators = '$addToSet' | '$avg' | '$first' | '$last' | '$max' | '$mergeObjects' | '$min' | '$push' | '$stdDevPop' | '$stdDevSamp' | '$sum';
 declare type CheckProjectDeepKey<TKey extends string, TValue> = TValue extends 1 | true ? ([TKey] extends [never] ? 0 : 1) : 0;
 declare type CheckProjectDeepKeyRemoveUnderscoreID<TKey extends string, TValue> = TValue extends 0 | false ? [TKey] extends ['_id'] ? 1 : 0 : 0;
-declare type ProjectResult<TRootValue, TValue> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultObject<TRootValue, TValueArray>> : TValue extends {} ? ProjectResultObject<TRootValue, TValue> : Impossible;
-declare type ProjectResultRoot<TRootValue, TValue, TKey extends string = never> = TValue extends `$$CURRENT` ? TRootValue : TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TValue> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TValue> extends 1 ? never : TValue extends RawTypes ? TValue : keyof TValue extends AllOperators ? ProjectResultOperators<TRootValue, TValue>[keyof TValue] : TValue extends Array<infer TValueArray> ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>> : TValue extends {} ? ProjectResultRootObject<TRootValue, TValue, TKey> : Impossible;
-declare type ProjectResultExpression<TRootValue, TValue, TKey extends KEY> = ProjectResult<TRootValue, LookupKey<TValue, TKey>>;
-declare type ProjectResultExpressionInner<TRootValue, TValue, TKey extends KEY, TKey2 extends KEY> = ProjectResult<TRootValue, LookupKey<LookupKey<TValue, TKey>, TKey2>>;
-declare type ProjectResultArrayIndex<TRootValue, TValue, TKey extends KEY, TIndex extends number> = ProjectResult<TRootValue, LookupArray<LookupKey<TValue, TKey>, TIndex>>;
-declare type NumberProjectResultExpression<TRootValue, TValue, TKey extends KEY> = NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TValue, TKey>>>;
-declare type NumberProjectResultExpressionUnArray<TRootValue, TValue, TKey extends KEY> = NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TValue, TKey>>>>;
+declare type ProjectResult<TRootValue, TExpression> = TExpression extends `$$CURRENT` ? TRootValue : TExpression extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllOperators ? ProjectResultOperators<TRootValue, TExpression>[keyof TExpression] : TExpression extends Array<infer TExpressionArray> ? Array<ProjectResultObject<TRootValue, TExpressionArray>> : TExpression extends {} ? ProjectResultObject<TRootValue, TExpression> : Impossible;
+declare type ProjectResultRoot<TRootValue, TExpression, TKey extends string = never> = TExpression extends `$$CURRENT` ? TRootValue : TExpression extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : CheckProjectDeepKey<TKey, TExpression> extends 1 ? DeepKeysResult<TRootValue, TKey> : CheckProjectDeepKeyRemoveUnderscoreID<TKey, TExpression> extends 1 ? never : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllOperators ? ProjectResultOperators<TRootValue, TExpression>[keyof TExpression] : TExpression extends Array<infer TValueArray> ? Array<ProjectResultRootObject<TRootValue, TValueArray, TKey>> : TExpression extends {} ? ProjectResultRootObject<TRootValue, TExpression, TKey> : Impossible;
+declare type ProjectResultExpression<TRootValue, TExpression, TKey extends KEY> = ProjectResult<TRootValue, LookupKey<TExpression, TKey>>;
+declare type ProjectResultExpressionInner<TRootValue, TExpression, TKey extends KEY, TKey2 extends KEY> = ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, TKey>, TKey2>>;
+declare type ProjectResultArrayIndex<TRootValue, TExpression, TKey extends KEY, TIndex extends number> = ProjectResult<TRootValue, LookupArray<LookupKey<TExpression, TKey>, TIndex>>;
+declare type NumberProjectResultExpression<TRootValue, TExpression, TKey extends KEY> = NumberTypeOrNever<ProjectResult<TRootValue, LookupKey<TExpression, TKey>>>;
+declare type NumberProjectResultExpressionUnArray<TRootValue, TExpression, TKey extends KEY> = NumberTypeOrNever<ProjectResult<TRootValue, UnArray<LookupKey<TExpression, TKey>>>>;
 declare type UnionToIntersection<U> = (U extends any ? (k: U) => void : Impossible) extends (k: infer I) => void ? I : Impossible;
 declare type FlattenUnion<T> = {
     [K in keyof UnionToIntersection<T>]: K extends keyof T ? T[K] extends any[] ? T[K] : T[K] extends object ? FlattenUnion<T[K]> : T[K] : UnionToIntersection<T>[K] | undefined;
@@ -477,35 +477,35 @@ declare type ObjectToArrayHelper<T> = UnionToTuple<{
         v: T[key];
     };
 }[keyof T]>;
-declare type ProjectResultOperators<TRootValue, TValue> = {
-    $abs: NumberProjectResultExpression<TRootValue, TValue, '$abs'>;
-    $acos: NumberProjectResultExpression<TRootValue, TValue, '$acos'>;
-    $acosh: NumberProjectResultExpression<TRootValue, TValue, '$acosh'>;
-    $add: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$add'>;
-    $addToSet: ProjectResultExpression<TRootValue, TValue, '$addToSet'>[];
+declare type ProjectResultOperators<TRootValue, TExpression> = {
+    $abs: NumberProjectResultExpression<TRootValue, TExpression, '$abs'>;
+    $acos: NumberProjectResultExpression<TRootValue, TExpression, '$acos'>;
+    $acosh: NumberProjectResultExpression<TRootValue, TExpression, '$acosh'>;
+    $add: NumberProjectResultExpressionUnArray<TRootValue, TExpression, '$add'>;
+    $addToSet: ProjectResultExpression<TRootValue, TExpression, '$addToSet'>[];
     $allElementsTrue: boolean;
     $and: boolean;
     $anyElementTrue: boolean;
-    $arrayElemAt: UnArray<ProjectResultArrayIndex<TRootValue, TValue, '$arrayElemAt', 0>>;
-    $arrayToObject: ProjectResultExpression<TRootValue, TValue, '$arrayToObject'> extends infer TInner ? UnArray<TInner> extends any[] ? unknown : ArrayToObjectTupleBuilder<UnionToTuple<UnArray<TInner>>> : never;
-    $asin: NumberProjectResultExpression<TRootValue, TValue, '$asin'>;
-    $asinh: NumberProjectResultExpression<TRootValue, TValue, '$asinh'>;
-    $atan: NumberProjectResultExpression<TRootValue, TValue, '$atan'>;
-    $atan2: NumberTypeOrNever<UnArray<ProjectResultArrayIndex<TRootValue, TValue, '$atan2', 0>>>;
-    $atanh: NumberProjectResultExpression<TRootValue, TValue, '$atanh'>;
+    $arrayElemAt: UnArray<ProjectResultArrayIndex<TRootValue, TExpression, '$arrayElemAt', 0>>;
+    $arrayToObject: ProjectResultExpression<TRootValue, TExpression, '$arrayToObject'> extends infer TInner ? UnArray<TInner> extends any[] ? unknown : ArrayToObjectTupleBuilder<UnionToTuple<UnArray<TInner>>> : never;
+    $asin: NumberProjectResultExpression<TRootValue, TExpression, '$asin'>;
+    $asinh: NumberProjectResultExpression<TRootValue, TExpression, '$asinh'>;
+    $atan: NumberProjectResultExpression<TRootValue, TExpression, '$atan'>;
+    $atan2: NumberTypeOrNever<UnArray<ProjectResultArrayIndex<TRootValue, TExpression, '$atan2', 0>>>;
+    $atanh: NumberProjectResultExpression<TRootValue, TExpression, '$atanh'>;
     $avg: number;
     $binarySize: number;
     $bsonSize: number;
-    $ceil: NumberProjectResultExpression<TRootValue, TValue, '$ceil'>;
-    $cmp: NumberTypeOrNever<ProjectResultArrayIndex<TRootValue, TValue, '$cmp', 0>>;
+    $ceil: NumberProjectResultExpression<TRootValue, TExpression, '$ceil'>;
+    $cmp: NumberTypeOrNever<ProjectResultArrayIndex<TRootValue, TExpression, '$cmp', 0>>;
     $concat: string;
-    $concatArrays: DeepUnArray<ProjectResultArrayIndex<TRootValue, TValue, '$concatArrays', 0>>[];
-    $cond: LookupKey<TValue, '$cond'> extends Array<any> ? ProjectResultArrayIndex<TRootValue, TValue, '$cond', 1> | ProjectResultArrayIndex<TRootValue, TValue, '$cond', 2> : ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'then'>> | ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$cond'>, 'else'>>;
+    $concatArrays: DeepUnArray<ProjectResultArrayIndex<TRootValue, TExpression, '$concatArrays', 0>>[];
+    $cond: LookupKey<TExpression, '$cond'> extends Array<any> ? ProjectResultArrayIndex<TRootValue, TExpression, '$cond', 1> | ProjectResultArrayIndex<TRootValue, TExpression, '$cond', 2> : ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$cond'>, 'then'>> | ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$cond'>, 'else'>>;
     $convert: unknown;
-    $cos: NumberProjectResultExpression<TRootValue, TValue, '$cos'>;
+    $cos: NumberProjectResultExpression<TRootValue, TExpression, '$cos'>;
     $dateFromParts: Date;
     $dateFromString: Date;
-    $dateToParts: true extends LookupKey<LookupKey<TValue, '$dateToParts'>, 'iso8601'> ? {
+    $dateToParts: true extends LookupKey<LookupKey<TExpression, '$dateToParts'>, 'iso8601'> ? {
         isoWeekYear: number;
         isoWeek: number;
         isoDayOfWeek: number;
@@ -527,17 +527,17 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $dayOfWeek: number;
     $dayOfYear: number;
     $degreesToRadians: number;
-    $divide: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$divide'>;
+    $divide: NumberProjectResultExpressionUnArray<TRootValue, TExpression, '$divide'>;
     $eq: boolean;
     $exp: number;
-    $filter: ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$filter'>, 'input'>>;
-    $first: UnArray<ProjectResultExpression<TRootValue, TValue, '$first'>>;
-    $floor: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$floor'>;
+    $filter: ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$filter'>, 'input'>>;
+    $first: UnArray<ProjectResultExpression<TRootValue, TExpression, '$first'>>;
+    $floor: NumberProjectResultExpressionUnArray<TRootValue, TExpression, '$floor'>;
     $gt: boolean;
     $gte: boolean;
     $hour: number;
-    $ifNull: ProjectResultExpression<TRootValue, TValue, '$ifNull'>;
-    $in: ProjectResultExpression<TRootValue, TValue, '$in'>;
+    $ifNull: ProjectResultExpression<TRootValue, TExpression, '$ifNull'>;
+    $in: ProjectResultExpression<TRootValue, TExpression, '$in'>;
     $indexOfArray: number;
     $indexOfBytes: number;
     $indexOfCP: number;
@@ -545,45 +545,45 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $isoDayOfWeek: number;
     $isoWeek: number;
     $isoWeekYear: number;
-    $last: UnArray<ProjectResultExpression<TRootValue, TValue, '$last'>>;
+    $last: UnArray<ProjectResultExpression<TRootValue, TExpression, '$last'>>;
     $let: ProjectResult<TRootValue & Double$Keys<{
-        [key in keyof ProjectResultObject<TRootValue, ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$let'>, 'vars'>>>]: 1;
-    }>, LookupKey<LookupKey<TValue, '$let'>, 'in'>>;
-    $literal: LookupKey<TValue, '$literal'>;
+        [key in keyof ProjectResultObject<TRootValue, ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$let'>, 'vars'>>>]: 1;
+    }>, LookupKey<LookupKey<TExpression, '$let'>, 'in'>>;
+    $literal: LookupKey<TExpression, '$literal'>;
     $ln: number;
     $log: number;
     $log10: number;
     $lt: boolean;
     $lte: boolean;
     $ltrim: string;
-    $map: LookupKey<LookupKey<TValue, '$map'>, 'as'> extends string ? ProjectResult<TRootValue & {
-        [key in `$${LookupKey<LookupKey<TValue, '$map'>, 'as'>}`]: ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$map'>, 'input'>>;
-    }, LookupKey<LookupKey<TValue, '$map'>, 'in'>>[] : never;
-    $max: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$max'>>>;
-    $mergeObjects: FlattenUnion<ProjectResultArrayIndex<TRootValue, TValue, '$mergeObjects', number>>;
+    $map: LookupKey<LookupKey<TExpression, '$map'>, 'as'> extends string ? ProjectResult<TRootValue & {
+        [key in `$${LookupKey<LookupKey<TExpression, '$map'>, 'as'>}`]: ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$map'>, 'input'>>;
+    }, LookupKey<LookupKey<TExpression, '$map'>, 'in'>>[] : never;
+    $max: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TExpression, '$max'>>>;
+    $mergeObjects: FlattenUnion<ProjectResultArrayIndex<TRootValue, TExpression, '$mergeObjects', number>>;
     $meta: number;
     $millisecond: number;
-    $min: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$min'>>>;
+    $min: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TExpression, '$min'>>>;
     $minute: number;
     $mod: number;
     $month: number;
-    $multiply: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$multiply'>;
+    $multiply: NumberProjectResultExpressionUnArray<TRootValue, TExpression, '$multiply'>;
     $ne: boolean;
     $not: boolean;
-    $objectToArray: ObjectToArrayHelper<ProjectResultExpression<TRootValue, TValue, '$objectToArray'>>;
+    $objectToArray: ObjectToArrayHelper<ProjectResultExpression<TRootValue, TExpression, '$objectToArray'>>;
     $or: boolean;
     $pow: number;
-    $push: ProjectResultExpression<TRootValue, TValue, '$push'>[];
+    $push: ProjectResultExpression<TRootValue, TExpression, '$push'>[];
     $radiansToDegrees: number;
     $range: number[];
-    $reduce: ProjectOperatorHelperExpression<TRootValue, TValue, '$reduce'> extends {
+    $reduce: ProjectOperatorHelperExpression<TRootValue, TExpression, '$reduce'> extends {
         input: InterpretProjectExpression<TRootValue, infer TInput>;
         initialValue: InterpretProjectExpression<TRootValue, infer TInitialValue>;
         in: any;
     } ? ProjectResultObject<TRootValue, TInput> extends infer R ? ProjectResultExpressionInner<TRootValue & {
         $value: UnArray<ProjectResultObject<TRootValue, TInitialValue>>;
         $this: ProjectResultObject<TRootValue, TInput>;
-    }, TValue, '$reduce', 'in'> : never : never;
+    }, TExpression, '$reduce', 'in'> : never : never;
     $regexFind: {
         match: string;
         idx: number;
@@ -595,18 +595,18 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
         captures: string[];
     }[];
     $regexMatch: boolean;
-    $reverseArray: ProjectResultExpression<TRootValue, TValue, '$reverseArray'>;
+    $reverseArray: ProjectResultExpression<TRootValue, TExpression, '$reverseArray'>;
     $round: number;
     $rtrim: string;
     $second: number;
-    $setDifference: ProjectResultArrayIndex<TRootValue, TValue, '$setDifference', 0>;
+    $setDifference: ProjectResultArrayIndex<TRootValue, TExpression, '$setDifference', 0>;
     $setEquals: boolean;
-    $setIntersection: UnArray<ProjectResultExpression<TRootValue, TValue, '$setIntersection'>>;
+    $setIntersection: UnArray<ProjectResultExpression<TRootValue, TExpression, '$setIntersection'>>;
     $setIsSubset: boolean;
-    $setUnion: ProjectResultArrayIndex<TRootValue, TValue, '$setUnion', number>;
+    $setUnion: ProjectResultArrayIndex<TRootValue, TExpression, '$setUnion', number>;
     $sin: number;
     $size: number;
-    $slice: ProjectResultArrayIndex<TRootValue, TValue, '$slice', 0>;
+    $slice: ProjectResultArrayIndex<TRootValue, TExpression, '$slice', 0>;
     $split: string;
     $sqrt: number;
     $stdDevPop: number;
@@ -617,9 +617,9 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $substr: string;
     $substrBytes: string;
     $substrCP: string;
-    $subtract: NumberProjectResultExpressionUnArray<TRootValue, TValue, '$subtract'>;
-    $sum: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TValue, '$sum'>>>;
-    $switch: InterpretProjectExpression<TRootValue, LookupKey<LookupArray<LookupKey<LookupKey<TValue, '$switch'>, 'branches'>, number>, 'then'>> | InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TValue, '$switch'>, 'default'>>;
+    $subtract: NumberProjectResultExpressionUnArray<TRootValue, TExpression, '$subtract'>;
+    $sum: NumberTypeOrNever<UnArray<ProjectResultExpression<TRootValue, TExpression, '$sum'>>>;
+    $switch: InterpretProjectExpression<TRootValue, LookupKey<LookupArray<LookupKey<LookupKey<TExpression, '$switch'>, 'branches'>, number>, 'then'>> | InterpretProjectExpression<TRootValue, LookupKey<LookupKey<TExpression, '$switch'>, 'default'>>;
     $tan: number;
     $toBool: boolean;
     $toDate: Date;
@@ -632,27 +632,27 @@ declare type ProjectResultOperators<TRootValue, TValue> = {
     $toString: string;
     $toUpper: string;
     $trim: string;
-    $trunc: LookupKey<TValue, '$trunc'> extends Array<any> ? NumberTypeOrNever<ProjectResultArrayIndex<TRootValue, TValue, '$trunc', 0>> : NumberProjectResultExpression<TRootValue, TValue, '$trunc'>;
+    $trunc: LookupKey<TExpression, '$trunc'> extends Array<any> ? NumberTypeOrNever<ProjectResultArrayIndex<TRootValue, TExpression, '$trunc', 0>> : NumberProjectResultExpression<TRootValue, TExpression, '$trunc'>;
     $type: 'double' | 'string' | 'object' | 'array' | 'binData' | 'objectId' | 'bool' | 'date' | 'null' | 'regex' | 'javascript' | 'int' | 'timestamp' | 'long' | 'decimal' | 'minKey' | 'maxKey';
     $week: number;
     $year: number;
-    $zip: UnArray<UnArray<ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$zip'>, 'inputs'>>>> extends infer TInput ? [LookupKey<LookupKey<TValue, '$zip'>, 'defaults'>] extends [never] ? Array<Array<TInput>> : Array<Array<TInput | UnArray<ProjectResult<TRootValue, LookupKey<LookupKey<TValue, '$zip'>, 'defaults'>>>>> : never;
+    $zip: UnArray<UnArray<ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$zip'>, 'inputs'>>>> extends infer TInput ? [LookupKey<LookupKey<TExpression, '$zip'>, 'defaults'>] extends [never] ? Array<Array<TInput>> : Array<Array<TInput | UnArray<ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$zip'>, 'defaults'>>>>> : never;
 };
-declare type AccumulateResult<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? {
-    $avg: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$avg'>>>>;
-    $last: ProjectResult<TRootValue, LookupKey<TValue, '$last'>>;
-    $mergeObjects: FlattenUnion<UnArray<ProjectResultExpression<TRootValue, TValue, '$mergeObjects'>>>;
+declare type AccumulateResult<TRootValue, TExpression> = TExpression extends `$${infer TRawKey}` ? DeepKeysResult<TRootValue, TRawKey> : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllAccumulateOperators ? {
+    $avg: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TExpression, '$avg'>>>>;
+    $last: ProjectResult<TRootValue, LookupKey<TExpression, '$last'>>;
+    $mergeObjects: FlattenUnion<UnArray<ProjectResultExpression<TRootValue, TExpression, '$mergeObjects'>>>;
     $stdDevPop: number;
     $stdDevSamp: number;
-    $sum: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$sum'>>>>;
-    $addToSet: ProjectResult<TRootValue, LookupKey<TValue, '$addToSet'>>[];
-    $first: ProjectResult<TRootValue, LookupKey<TValue, '$first'>>;
-    $min: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$min'>>>>;
-    $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TValue, '$max'>>>>;
-    $push: ProjectResult<TRootValue, LookupKey<TValue, '$push'>>[];
-}[keyof TValue] : Impossible;
+    $sum: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TExpression, '$sum'>>>>;
+    $addToSet: ProjectResult<TRootValue, LookupKey<TExpression, '$addToSet'>>[];
+    $first: ProjectResult<TRootValue, LookupKey<TExpression, '$first'>>;
+    $min: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TExpression, '$min'>>>>;
+    $max: NumberTypeOrNever<UnArray<ProjectResult<TRootValue, LookupKey<TExpression, '$max'>>>>;
+    $push: ProjectResult<TRootValue, LookupKey<TExpression, '$push'>>[];
+}[keyof TExpression] : Impossible;
 declare type GetProjectDeepKey<TDeepProjectKey extends string, key> = TDeepProjectKey extends never ? never : TDeepProjectKey extends '' ? key : key extends string ? `${TDeepProjectKey}.${key}` : '';
-export declare type ProjectResultObject<TRootValue, TObj> = TObj extends infer T ? {
+export declare type ProjectResultObject<TRootValue, TExpression> = TExpression extends infer T ? {
     [key in keyof T]: ProjectResult<TRootValue, T[key]>;
 } : Impossible;
 export declare type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey extends string = never> = TObj extends infer T ? {
@@ -660,7 +660,7 @@ export declare type ProjectResultRootObject<TRootValue, TObj, TDeepProjectKey ex
 } : Impossible;
 export declare type LookupKey<T, TKey extends string | number | Symbol> = TKey extends keyof T ? T[TKey] : never;
 export declare type LookupArray<T, TIndex extends number> = T extends Array<any> ? T[TIndex] : never;
-declare type InterpretAccumulateExpression<TRootValue, TValue> = TValue extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TValue extends RawTypes ? TValue : keyof TValue extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TValue> : Impossible;
+declare type InterpretAccumulateExpression<TRootValue, TExpression> = TExpression extends `$${infer TRawKey}` ? ExpressionStringReferenceKey<TRootValue> : TExpression extends RawTypes ? TExpression : keyof TExpression extends AllAccumulateOperators ? InterpretAccumulateOperator<TRootValue, TExpression> : Impossible;
 declare type AccumulateRootObject<TRootValue, TAccumulateObject> = {
     [key in keyof TAccumulateObject]: key extends '_id' ? InterpretProjectExpression<TRootValue, TAccumulateObject[key]> : InterpretAccumulateExpression<TRootValue, TAccumulateObject[key]>;
 };
@@ -753,7 +753,7 @@ export declare class Aggregator<T> {
     $graphLookup<TOther, TAs extends string, TDepthField extends string = never>(props: {
         as: TAs;
         from: TableName<TOther>;
-        connectFromField: DeepKeys<T>;
+        connectFromField: DeepKeys<TOther>;
         connectToField: DeepKeys<TOther>;
         depthField?: TDepthField;
         maxDepth?: number;
@@ -763,11 +763,14 @@ export declare class Aggregator<T> {
     $limit(limit: number): Aggregator<T>;
     $lookup<TLookupTable, TAs extends string, TLet extends {} = never, TPipeline extends {} = never>(props: {
         from: TableName<TLookupTable>;
+        as: TAs;
         localField: DeepKeys<T>;
         foreignField: DeepKeys<TLookupTable>;
+    } | {
+        from: TableName<TLookupTable>;
         as: TAs;
         let?: ProjectObject<TLookupTable, TLet>;
-        pipeline?: (agg: Aggregator<ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never>) => Aggregator<TPipeline>;
+        pipeline: (agg: Aggregator<Simplify<TLookupTable & (ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never)>>) => Aggregator<TPipeline>;
     }): Aggregator<T & ([TPipeline] extends [never] ? [TLet] extends [never] ? {
         [key in TAs]: TLookupTable[];
     } : {

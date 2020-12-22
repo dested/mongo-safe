@@ -1,4 +1,5 @@
 import {Binary, BSONType, DeepKeys, DeepKeysValue} from 'mongodb';
+import {InterpretProjectOperator, LookupKey} from './typeSafeAggregate';
 
 export type FilterQueryMatch<T, TMatchValues> = {
   [key in DeepKeys<T>]?:
@@ -75,6 +76,7 @@ export type RootQuerySelector<T, TMatchValues> = {
   $where?: string | Function | TMatchValues;
   /** https://docs.mongodb.com/manual/reference/operator/query/comment/#op._S_comment */
   $comment?: string | TMatchValues;
+  $expr?: InterpretProjectOperator<T, any /*ugh*/>;
 };
 /** https://docs.mongodb.com/manual/reference/operator/query-bitwise */
 type BitwiseQuery =
