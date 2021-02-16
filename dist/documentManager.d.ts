@@ -6,6 +6,9 @@ export declare class DocumentManager<T extends {
     private collectionName;
     private getConnection;
     constructor(collectionName: string, getConnection: () => Promise<Db>);
+    tableName: string & {
+        __table: T;
+    };
     insertDocument(document: OptionalId<T>): Promise<WithId<T>>;
     getCollection<TOverride = T>(): Promise<import("mongodb").Collection<TOverride>>;
     insertDocuments(documents: OptionalId<T>[]): Promise<WithId<T>[]>;

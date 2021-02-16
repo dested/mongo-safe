@@ -11,16 +11,17 @@ import {
   UpdateQuery,
   WithId,
 } from 'mongodb';
+import {tableName} from './typeSafeAggregate';
 
 export class DocumentManager<T extends {_id: ObjectId}> {
   constructor(private collectionName: string, private getConnection: () => Promise<Db>) {}
-
+  public tableName = tableName<T>(this.collectionName);
   async insertDocument(document: OptionalId<T>): Promise<WithId<T>> {
-    console.log('inserting');
+    // console.log('inserting');
     const result = await (await this.getCollection()).insertOne(document);
-    console.log('inserted');
+    // console.log('inserted');
     document._id = result.insertedId;
-    console.log('inserted got id  ');
+    // console.log('inserted got id  ');
     return document as WithId<T>;
   }
 

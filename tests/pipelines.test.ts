@@ -143,7 +143,7 @@ test('$lookup.pipeline.let', async () => {
   const aggregator = Aggregator.start<DBCar>().$lookup({
     from: tableName<DBWindow>('window'),
     as: 'windows',
-    let: {a: '$carId'},
+    let: {a: '$doors'},
     pipeline: (agg) => agg.$project({shoes: '$$a'}),
   });
 
@@ -152,7 +152,7 @@ test('$lookup.pipeline.let', async () => {
       $lookup: {
         from: 'window',
         as: 'windows',
-        let: {a: '$carId'},
+        let: {a: '$doors.side'},
         pipeline: [{$project: {shoes: '$$a'}}],
       },
     },
@@ -1291,6 +1291,50 @@ test('project.$mergeObjects', async () => {
       },
     },
   ]);
+
+  const [result] = await aggregator.result(mockCollection);
+
+  assert<Has<{doors: Door}, typeof result>>(true);
+});
+
+test('project.$mergeObjects', async () => {
+  const gameId: string = 'a';
+  const generation: number = 2;
+  type EntityAction = 'attack' | 'move' | 'spawn-infantry' | 'spawn-tank' | 'spawn-plane' | 'mine';
+  type PlayableFactionId = 1 | 2 | 3;
+
+  const aggregator = await Aggregator.start<{
+    userId: string;
+    gameId: string;
+    generation: number;
+    entityId: number;
+    action: EntityAction;
+    hexId: string;
+    factionId: PlayableFactionId;
+  }>()
+    .$match({
+      gameId,
+      generation,
+    })
+    .$group({
+      _id: {
+        entityId: '$entityId',
+        action: '$action',
+        hexId: '$hexId',
+      },
+      count: {$sum: 1},
+    })
+
+    .$group({
+      _id: '$_id.entityId',
+      actions: {
+        $push: {
+          action: '$_id.action',
+          hexId: '$_id.hexId',
+          count: '$count',
+        },
+      },
+    });
 
   const [result] = await aggregator.result(mockCollection);
 

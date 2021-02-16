@@ -768,7 +768,7 @@ export declare class Aggregator<T> {
     } | {
         from: TableName<TLookupTable>;
         as: TAs;
-        let?: ProjectObject<TLookupTable, TLet>;
+        let?: ProjectObject<T, TLet>;
         pipeline: (agg: Aggregator<Simplify<TLookupTable & (ProjectResult<TLookupTable, TLet> extends infer R ? Double$Keys<R> : never)>>) => Aggregator<TPipeline>;
     }): Aggregator<T & ([TPipeline] extends [never] ? [TLet] extends [never] ? {
         [key in TAs]: TLookupTable[];

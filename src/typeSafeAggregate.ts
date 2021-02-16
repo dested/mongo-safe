@@ -1193,7 +1193,7 @@ export class Aggregator<T> {
       | {
           from: TableName<TLookupTable>;
           as: TAs;
-          let?: ProjectObject<TLookupTable, TLet>;
+          let?: ProjectObject<T, TLet>;
           pipeline: (
             // somehow you overcame deep nested with this again. it defers testing of the types until its sure that its ary, and not just thinks it is
             // THIS DOES NOT WORK WHEN T IS NEVER
