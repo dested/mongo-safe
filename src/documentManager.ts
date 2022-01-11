@@ -30,6 +30,9 @@ export class DocumentManager<T extends {_id: ObjectId}> {
   }
 
   async insertDocuments(documents: OptionalId<T>[]): Promise<WithId<T>[]> {
+    if (documents.length === 0) {
+      return [] as WithId<T>[];
+    }
     const result = await (await this.getCollection()).insertMany(documents);
     for (let i = 0; i < documents.length; i++) {
       documents[i]._id = result.insertedIds[i];
