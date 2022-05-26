@@ -138,7 +138,6 @@ test('$lookup', async () => {
   const [result] = await aggregator.result(mockCollection);
   assert<Has<DBCar & {windows: DBWindow[]}, typeof result>>(true);
 });
-
 test('$lookup.pipeline.let', async () => {
   const aggregator = Aggregator.start<DBCar>().$lookup({
     from: tableName<DBWindow>('window'),
@@ -1338,5 +1337,5 @@ test('project.$mergeObjects', async () => {
 
   const [result] = await aggregator.result(mockCollection);
 
-  assert<Has<{doors: Door}, typeof result>>(true);
+  assert<Has<{_id: number; actions: {action: EntityAction; hexId: string; count: number}[]}, typeof result>>(true);
 });

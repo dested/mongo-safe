@@ -2,18 +2,17 @@ import {
   DeepKeys,
   DeepKeysResult,
   NumericTypes,
-  Collection,
-  ObjectID,
+  Collection, 
   ObjectId,
   DeepKeyArray,
   AggregationCursor,
 } from 'mongodb';
-import {FilterQueryMatch} from './filterQueryMatch';
+import {Filter} from './filterQueryMatch';
 import {Decimal128} from 'bson';
 
 type KEY = string | number | Symbol;
-type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
-type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
+type RawTypes = number | boolean | string | Date | ObjectId | NumericTypes;
+type NonObjectValues = number | boolean | string | Date | ObjectId | NumericTypes;
 type Impossible = never;
 
 type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
@@ -218,15 +217,14 @@ type ProjectOperatorHelperExpressionObject<
     TKey,
     key
   >;
-} &
-  {
-    [key in keyof TObj as TObj[key] extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<
-      TRootValue,
-      TExpression,
-      TKey,
-      key
-    >;
-  };
+} & {
+  [key in keyof TObj as TObj[key] extends 0 ? key : never]?: ProjectOperatorHelperExpressionInner<
+    TRootValue,
+    TExpression,
+    TKey,
+    key
+  >;
+};
 
 type ProjectOperatorHelperOneTuple<TRootValue, TExpression, TKey extends KEY> = [
   InterpretProjectExpression<TRootValue, LookupArray<LookupKey<TExpression, TKey>, 0>>
@@ -323,7 +321,7 @@ export type InterpretProjectOperator<TRootValue, TExpression> =
         TRootValue,
         TExpression,
         '$dateToString',
-        {date: 1; format: 0}
+        {date: 1; format: 0; timezone: 0}
       >;
     }
   | {$dayOfMonth: ProjectOperatorHelperDate<TRootValue, TExpression, '$dayOfMonth'>}
@@ -419,13 +417,12 @@ export type InterpretProjectOperator<TRootValue, TExpression> =
         ? {
             as: LookupKey<LookupKey<TExpression, '$map'>, 'as'>;
             in: ProjectObject<
-              TRootValue &
-                {
-                  [key in `$${LookupKey<LookupKey<TExpression, '$map'>, 'as'>}`]: DeReferenceExpression<
-                    TRootValue,
-                    LookupKey<LookupKey<TExpression, '$map'>, 'input'>
-                  >;
-                },
+              TRootValue & {
+                [key in `$${LookupKey<LookupKey<TExpression, '$map'>, 'as'>}`]: DeReferenceExpression<
+                  TRootValue,
+                  LookupKey<LookupKey<TExpression, '$map'>, 'input'>
+                >;
+              },
               TIn
             >;
             input: ExpressionStringReferenceKey<TRootValue>;
@@ -834,14 +831,12 @@ type ProjectResultOperators<TRootValue, TExpression> = {
   $last: UnArray<ProjectResultExpression<TRootValue, TExpression, '$last'>>;
   $let: ProjectResult<
     TRootValue &
-      Double$Keys<
-        {
-          [key in keyof ProjectResultObject<
-            TRootValue,
-            ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$let'>, 'vars'>>
-          >]: 1;
-        }
-      >,
+      Double$Keys<{
+        [key in keyof ProjectResultObject<
+          TRootValue,
+          ProjectResult<TRootValue, LookupKey<LookupKey<TExpression, '$let'>, 'vars'>>
+        >]: 1;
+      }>,
     LookupKey<LookupKey<TExpression, '$let'>, 'in'>
   >;
 
@@ -854,13 +849,12 @@ type ProjectResultOperators<TRootValue, TExpression> = {
   $ltrim: string;
   $map: LookupKey<LookupKey<TExpression, '$map'>, 'as'> extends string
     ? ProjectResult<
-        TRootValue &
-          {
-            [key in `$${LookupKey<LookupKey<TExpression, '$map'>, 'as'>}`]: ProjectResult<
-              TRootValue,
-              LookupKey<LookupKey<TExpression, '$map'>, 'input'>
-            >;
-          },
+        TRootValue & {
+          [key in `$${LookupKey<LookupKey<TExpression, '$map'>, 'as'>}`]: ProjectResult<
+            TRootValue,
+            LookupKey<LookupKey<TExpression, '$map'>, 'input'>
+          >;
+        },
         LookupKey<LookupKey<TExpression, '$map'>, 'in'>
       >[]
     : never;
@@ -1136,9 +1130,9 @@ export class Aggregator<T> {
     return new Aggregator<{[cKey in TKey]: number}>(this);
   }
 
-  $facet<TItem>(
-    props: {[key in keyof TItem]: (agg: Aggregator<T>) => Aggregator<TItem[key]>}
-  ): Aggregator<{[key in keyof TItem]: TItem[key][]}> {
+  $facet<TItem>(props: {[key in keyof TItem]: (agg: Aggregator<T>) => Aggregator<TItem[key]>}): Aggregator<{
+    [key in keyof TItem]: TItem[key][];
+  }> {
     this.currentPipeline = {$facet: {}};
 
     for (const safeKey of safeKeys(props)) {
@@ -1152,7 +1146,7 @@ export class Aggregator<T> {
       type: 'Point';
       coordinates: [number, number];
     };
-    query?: FilterQueryMatch<T, `$${DeepKeys<T>}`>;
+    query?: Filter<T, `$${DeepKeys<T>}`>;
     spherical?: boolean;
     maxDistance?: number;
     minDistance?: number;
@@ -1241,7 +1235,7 @@ export class Aggregator<T> {
     >(this);
   }
 
-  $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T> {
+  $match(query: Filter<T, `$${DeepKeys<T>}`>): Aggregator<T> {
     this.currentPipeline = {$match: query};
     return new Aggregator<T>(this);
   }

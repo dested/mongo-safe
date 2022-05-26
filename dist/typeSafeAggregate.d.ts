@@ -1,9 +1,9 @@
-import { DeepKeys, DeepKeysResult, NumericTypes, Collection, ObjectID, ObjectId, DeepKeyArray, AggregationCursor } from 'mongodb';
-import { FilterQueryMatch } from './filterQueryMatch';
+import { DeepKeys, DeepKeysResult, NumericTypes, Collection, ObjectId, DeepKeyArray, AggregationCursor } from 'mongodb';
+import { Filter } from './filterQueryMatch';
 import { Decimal128 } from 'bson';
 declare type KEY = string | number | Symbol;
-declare type RawTypes = number | boolean | string | Date | ObjectID | NumericTypes;
-declare type NonObjectValues = number | boolean | string | Date | ObjectID | NumericTypes;
+declare type RawTypes = number | boolean | string | Date | ObjectId | NumericTypes;
+declare type NonObjectValues = number | boolean | string | Date | ObjectId | NumericTypes;
 declare type Impossible = never;
 declare type NumberTypeOrNever<TValue> = TValue extends NumericTypes ? ([TValue] extends [number] ? number : TValue) : never;
 declare type DeepExcludeNever<T> = T extends NonObjectValues ? T : T extends Array<infer TArr> ? Array<DeepExcludeNever<T[number]>> : {
@@ -159,6 +159,7 @@ export declare type InterpretProjectOperator<TRootValue, TExpression> = {
     $dateToString: ProjectOperatorHelperExpressionObject<TRootValue, TExpression, '$dateToString', {
         date: 1;
         format: 0;
+        timezone: 0;
     }>;
 } | {
     $dayOfMonth: ProjectOperatorHelperDate<TRootValue, TExpression, '$dayOfMonth'>;
@@ -740,7 +741,7 @@ export declare class Aggregator<T> {
             type: 'Point';
             coordinates: [number, number];
         };
-        query?: FilterQueryMatch<T, `$${DeepKeys<T>}`>;
+        query?: Filter<T, `$${DeepKeys<T>}`>;
         spherical?: boolean;
         maxDistance?: number;
         minDistance?: number;
@@ -777,7 +778,7 @@ export declare class Aggregator<T> {
     } : {
         [key in TAs]: TPipeline[];
     })>;
-    $match(query: FilterQueryMatch<T, `$${DeepKeys<T>}`>): Aggregator<T>;
+    $match(query: Filter<T, `$${DeepKeys<T>}`>): Aggregator<T>;
     $merge<TOtherCollection, TOn, TLet extends {} = never, TPipeline extends {} = never>(props: {
         into: TableName<TOtherCollection> | {
             db: string;

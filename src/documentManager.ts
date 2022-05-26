@@ -1,15 +1,16 @@
 import {
   AggregationCursor,
-  Cursor,
+  FindCursor,
   Db,
   DeepKeys,
-  FilterQuery,
-  IndexOptions,
-  ObjectID,
+  Filter,
+  CreateIndexesOptions,
   ObjectId,
-  OptionalId,
-  UpdateQuery,
+  UpdateFilter,
   WithId,
+  OptionalId,
+  SortDirection,
+  OptionalUnlessRequiredId,
 } from 'mongodb';
 import {tableName} from './typeSafeAggregate';
 
@@ -18,7 +19,7 @@ export class DocumentManager<T extends {_id: ObjectId}> {
   public tableName = tableName<T>(this.collectionName);
   async insertDocument(document: OptionalId<T>): Promise<WithId<T>> {
     // console.log('inserting');
-    const result = await (await this.getCollection()).insertOne(document);
+    const result = await (await this.getCollection()).insertOne(document as OptionalUnlessRequiredId<T>);
     // console.log('inserted');
     document._id = result.insertedId;
     // console.log('inserted got id  ');
@@ -33,18 +34,18 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     if (documents.length === 0) {
       return [] as WithId<T>[];
     }
-    const result = await (await this.getCollection()).insertMany(documents);
+    const result = await (await this.getCollection()).insertMany(documents as OptionalUnlessRequiredId<T>[]);
     for (let i = 0; i < documents.length; i++) {
       documents[i]._id = result.insertedIds[i];
     }
     return documents as WithId<T>[];
   }
 
-  async updateOne(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void> {
+  async updateOne(filter: Filter<T>, update: UpdateFilter<T> | T): Promise<void> {
     await (await this.getCollection()).updateOne(filter, update);
   }
 
-  async updateOneGet(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<T | undefined> {
+  async updateOneGet(filter: Filter<T>, update: UpdateFilter<T> | T): Promise<WithId<T> | undefined> {
     const result = await (await this.getCollection()).updateOne(filter, update as any);
     if (result.upsertedCount === 1 || result.modifiedCount === 1) {
       return this.getOne(filter);
@@ -52,7 +53,7 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     return undefined;
   }
 
-  async updateMany(filter: FilterQuery<T>, update: UpdateQuery<T> | T): Promise<void> {
+  async updateMany(filter: Filter<T>, update: UpdateFilter<T> | T): Promise<void> {
     await (await this.getCollection()).updateMany(filter, update);
   }
 
@@ -70,12 +71,12 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     TOverride extends {[key in keyof T]: T[key]} = {[key in keyof T]: T[key]},
     TProjection extends {[key in keyof TOverride]?: 1 | -1} = {[key in keyof TOverride]?: 1 | -1},
     TKeys extends keyof TProjection & keyof TOverride = keyof T
-  >(query: FilterQuery<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}> {
+  >(query: Filter<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}> {
     const item = await (await this.getCollection<any>()).findOne(query as any, {projection});
     return item;
   }
 
-  async getOne(query: FilterQuery<T>, projection?: any): Promise<T | undefined> {
+  async getOne(query: Filter<T>, projection?: any): Promise<WithId<T> | undefined> {
     if (projection) {
       console.log('get one project');
       const result = await (await this.getCollection()).findOne(query, {projection});
@@ -93,57 +94,57 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     TOverride extends {[key in keyof T]: T[key]} = {[key in keyof T]: T[key]},
     TProjection extends {[key in keyof TOverride]?: 1 | -1} = {[key in keyof TOverride]?: 1 | -1},
     TKeys extends keyof TProjection & keyof TOverride = keyof T
-  >(query: FilterQuery<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}[]> {
+  >(query: Filter<T>, projection: TProjection): Promise<{[key in TKeys]: TOverride[key]}[]> {
     // console.time(`getting all`);
     const items = (await this.getCollection<any>())
       .find(query as any)
       .project(projection)
       .toArray();
     // console.timeEnd(`getting all`);
-    return items;
+    return items as any as {[key in TKeys]: TOverride[key]}[];
   }
 
   async aggregate<TAgg>(query: any): Promise<TAgg[]> {
-    return (await this.getCollection<any>()).aggregate(query).toArray();
+    return (await this.getCollection<any>()).aggregate(query).toArray() as any as TAgg[];
   }
 
   async aggregateCursor<TAgg>(query: any): Promise<AggregationCursor<TAgg>> {
     return (await this.getCollection<any>()).aggregate(query);
   }
 
-  async getById(id: string | ObjectID, projection?: any): Promise<T | undefined> {
-    const objectId: ObjectID = typeof id === 'string' ? ObjectID.createFromHexString(id) : id;
-    let result: T | null;
+  async getById(id: string | ObjectId, projection?: any): Promise<WithId<T> | undefined> {
+    const objectId: ObjectId = typeof id === 'string' ? ObjectId.createFromHexString(id) : id;
+    let result: WithId<T> | null;
     if (projection) {
-      result = await (await this.getCollection<any>()).findOne({_id: objectId} as any, {projection});
+      result = await (await this.getCollection<any>()).findOne({_id: objectId}, {projection});
     } else {
-      result = await (await this.getCollection<any>()).findOne({_id: objectId} as any);
+      result = await (await this.getCollection<any>()).findOne({_id: objectId});
     }
     if (!result) return undefined;
     return result;
   }
-  async deleteMany(query: FilterQuery<T>): Promise<void> {
+  async deleteMany(query: Filter<T>): Promise<void> {
     await (await this.getCollection()).deleteMany(query);
   }
-  async deleteOne(query: FilterQuery<T>): Promise<void> {
+  async deleteOne(query: Filter<T>): Promise<void> {
     await (await this.getCollection()).deleteOne(query);
   }
 
-  async getAll(query: FilterQuery<T>): Promise<T[]> {
+  async getAll(query: Filter<T>): Promise<WithId<T>[]> {
     return (await (await this.getCollection()).find(query)).toArray();
   }
 
-  async exists(query: FilterQuery<T>): Promise<boolean> {
+  async exists(query: Filter<T>): Promise<boolean> {
     return (await (await this.getCollection()).count(query, {})) > 0;
   }
 
   async getAllPaged(
-    query: FilterQuery<T>,
+    query: Filter<T>,
     sortKey: DeepKeys<T>,
-    sortDirection: number,
+    sortDirection: SortDirection,
     page: number,
     take: number
-  ): Promise<T[]> {
+  ): Promise<WithId<T>[]> {
     let cursor = (await this.getCollection()).find(query as any);
     if (sortKey as any) {
       cursor = cursor.sort(sortKey as any, sortDirection);
@@ -152,12 +153,12 @@ export class DocumentManager<T extends {_id: ObjectId}> {
   }
 
   async getAllCursor(
-    query: FilterQuery<T>,
+    query: Filter<T>,
     sortKey: DeepKeys<T>,
-    sortDirection: number,
+    sortDirection: SortDirection,
     page: number,
     take: number
-  ): Promise<Cursor<T>> {
+  ): Promise<FindCursor<WithId<T>>> {
     let cursor = (await this.getCollection()).find(query);
     if (sortKey as any) {
       cursor = cursor.sort(sortKey as any, sortDirection);
@@ -165,11 +166,11 @@ export class DocumentManager<T extends {_id: ObjectId}> {
     return cursor.skip(page * take).limit(take);
   }
 
-  async count(query: FilterQuery<T>): Promise<number> {
+  async count(query: Filter<T>): Promise<number> {
     return await (await this.getCollection()).count(query, {});
   }
 
-  async ensureIndex(spec: any, options: IndexOptions): Promise<string> {
+  async ensureIndex(spec: any, options: CreateIndexesOptions): Promise<string> {
     console.log('ensure index');
     const s = await (await this.getCollection()).createIndex(spec, options);
     console.log('ensured index');

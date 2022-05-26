@@ -1,6 +1,6 @@
 {
   "name": "mongo-safe",
-  "version": "2.4.4",
+  "version": "3.0.6",
   "author": "Salvatore <dested@gmail.com>",
   "homepage": "https://github.com/dested/mongo-safe",
   "license": "MIT",
@@ -11,25 +11,27 @@
   },
   "scripts": {
     "tsc-t": "tsc -p ./tsconfig.tests.json",
+    "v": "tsc -v",
     "test": "jest",
-    "debug-test": "node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand "
+    "debug-test": "node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand ",
+    "prepublish": "tsc"
   },
-  "peerDependencies": {
-  },
+  "peerDependencies": {},
   "devDependencies": {
+    "@types/bson": "4.2.0",
     "@types/jest": "^22.2.3",
-    "@types/bson": "^4.0.3",
-    "mongodb": "^3.5.8",
-    "bson": "^4.2.2",
+    "bson": "4.6.4",
     "conditional-type-checks": "^1.0.5",
     "jest": "^26.6.3",
-    "prettier": "^2.2.1",
-    "ts-jest": "^26.4.4",
-    "ts-loader": "^8.0.11",
+    "mongodb": "4.6.0",
+    "prettier": "^2.6.2",
+    "patch-package":"6.4.7",
+    "ts-jest": "^27.0.5",
+    "ts-loader": "^9.2.6",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "tslint-eslint-rules": "^5.4.0",
     "tslint-plugin-prettier": "^2.3.0",
-    "typescript": "4.1.2"
+    "typescript": "4.7.2"
   }
 }
